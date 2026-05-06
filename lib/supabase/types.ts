@@ -201,6 +201,7 @@ export type Database = {
           display_name: string | null
           display_name_bn: string | null
           id: string
+          is_banned: boolean
           updated_at: string
         }
         Insert: {
@@ -210,6 +211,7 @@ export type Database = {
           display_name?: string | null
           display_name_bn?: string | null
           id: string
+          is_banned?: boolean
           updated_at?: string
         }
         Update: {
@@ -219,6 +221,7 @@ export type Database = {
           display_name?: string | null
           display_name_bn?: string | null
           id?: string
+          is_banned?: boolean
           updated_at?: string
         }
         Relationships: []
