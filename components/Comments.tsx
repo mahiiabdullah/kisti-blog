@@ -76,6 +76,13 @@ export const Comments = ({ postId }: { postId: string }) => {
     e.preventDefault();
     if (!user) return;
     
+    // Check if user is banned before submitting
+    const { data: profile } = await supabase.from("profiles").select("is_banned").eq("id", user.id).maybeSingle();
+    if (profile?.is_banned) {
+      toast.error("Your account has been restricted from commenting.");
+      return;
+    }
+
     const lastUserComment = items.find(c => c.user_id === user.id);
     if (lastUserComment) {
       const elapsed = Date.now() - new Date(lastUserComment.created_at).getTime();
