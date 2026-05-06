@@ -58,8 +58,7 @@ export default function PostPage() {
         .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id,
                  post_translations(lang, title, excerpt, body, footnotes, citations),
                  post_tags(tag),
-                 post_images(url, caption, position),
-                 profiles(display_name, display_name_bn)`)
+                 post_images(url, caption, position)`)
         .eq("slug", slug)
         .eq("status", "published")
         .maybeSingle();
@@ -73,6 +72,19 @@ export default function PostPage() {
 
       if (data) {
         const p = data as any as PostData;
+        
+        // Manually fetch author profile due to missing DB foreign key mapping
+        if (p.author_id) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("display_name, display_name_bn")
+            .eq("id", p.author_id)
+            .maybeSingle();
+          if (profile) {
+            p.profiles = profile;
+          }
+        }
+
         setPost(p);
         const langs = p.post_translations.map((t) => t.lang);
         if (langs[0]) setLang(langs[0]);

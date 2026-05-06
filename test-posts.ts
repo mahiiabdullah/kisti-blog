@@ -12,11 +12,11 @@ for (const line of env.split("\n")) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function test() {
-  const { data: c1, error: err1 } = await supabase.from("comments").select("id, profiles(display_name)").limit(1);
-  console.log("Comments with 'profiles':", c1, err1);
+  const { data: posts1, error: err1 } = await supabase.from("posts").select("id, slug, profiles(display_name)").limit(1);
+  console.log("With 'profiles':", posts1, err1);
 
-  const { data: c2, error: err2 } = await supabase.from("comments").select("id, profiles:user_id(display_name)").limit(1);
-  console.log("Comments with 'profiles:user_id':", c2, err2);
+  const { data: posts2, error: err2 } = await supabase.from("posts").select("id, slug, profiles:author_id(display_name)").limit(1);
+  console.log("With 'profiles:author_id':", posts2, err2);
 }
 
 test();

@@ -12,11 +12,8 @@ for (const line of env.split("\n")) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function test() {
-  const { data: c1, error: err1 } = await supabase.from("comments").select("id, profiles(display_name)").limit(1);
-  console.log("Comments with 'profiles':", c1, err1);
-
-  const { data: c2, error: err2 } = await supabase.from("comments").select("id, profiles:user_id(display_name)").limit(1);
-  console.log("Comments with 'profiles:user_id':", c2, err2);
+  const { data, error } = await supabase.from("profiles").select("*").limit(1);
+  console.log("Profiles:", data, error);
 }
 
 test();

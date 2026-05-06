@@ -42,12 +42,32 @@ export const Comments = ({ postId }: { postId: string }) => {
   const load = useCallback(async () => {
     const { data, error } = await supabase
       .from("comments")
-      .select("id, body, created_at, approved, user_id, profiles(display_name, display_name_bn)")
+      .select("id, body, created_at, approved, user_id")
       .eq("post_id", postId)
       .order("created_at", { ascending: true });
     
-    if (error) console.error("Comments error:", error);
-    setItems((data ?? []) as any);
+    if (error) {
+      console.error("Comments error:", error);
+      setItems([]);
+      return;
+    }
+
+    if (data && data.length > 0) {
+      const userIds = Array.from(new Set(data.map(c => c.user_id)));
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, display_name, display_name_bn")
+        .in("id", userIds);
+
+      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const enrichedData = data.map((c: any) => ({
+        ...c,
+        profiles: profileMap.get(c.user_id) || null
+      }));
+      setItems(enrichedData as any);
+    } else {
+      setItems([]);
+    }
   }, [postId]);
 
   useEffect(() => { load(); }, [load]);
