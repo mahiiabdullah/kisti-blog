@@ -1,0 +1,181 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* কিস্তি (kiSti) — Bengali literary design system
+   All colors HSL. Tokens only. */
+
+@layer base {
+  :root {
+    /* Warm paper palette */
+    --background: 40 38% 96%;
+    --foreground: 25 25% 14%;
+
+    --card: 40 40% 98%;
+    --card-foreground: 25 25% 14%;
+
+    --popover: 40 40% 98%;
+    --popover-foreground: 25 25% 14%;
+
+    /* Deep indigo ink */
+    --primary: 225 45% 22%;
+    --primary-foreground: 40 38% 96%;
+
+    /* Terracotta accent */
+    --accent: 14 60% 48%;
+    --accent-foreground: 40 38% 96%;
+
+    --secondary: 38 28% 90%;
+    --secondary-foreground: 25 25% 14%;
+
+    --muted: 38 22% 90%;
+    --muted-foreground: 25 12% 38%;
+
+    --destructive: 0 65% 45%;
+    --destructive-foreground: 40 38% 96%;
+
+    --border: 30 20% 84%;
+    --input: 30 20% 84%;
+    --ring: 225 45% 22%;
+
+    --radius: 0.25rem;
+
+    /* Brand tokens */
+    --ink: 25 30% 12%;
+    --paper: 40 38% 96%;
+    --paper-deep: 38 30% 92%;
+    --gold: 38 60% 50%;
+    --indigo: 225 45% 22%;
+    --terracotta: 14 60% 48%;
+
+    --gradient-paper: linear-gradient(180deg, hsl(40 40% 97%) 0%, hsl(38 32% 92%) 100%);
+    --gradient-ink: linear-gradient(135deg, hsl(225 45% 22%), hsl(225 35% 14%));
+    --shadow-soft: 0 1px 2px hsl(25 25% 14% / 0.04), 0 8px 24px -12px hsl(25 25% 14% / 0.12);
+    --shadow-deep: 0 4px 20px -6px hsl(25 25% 14% / 0.18);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 25 18% 9%;
+    --foreground: 40 30% 92%;
+
+    --card: 25 18% 11%;
+    --card-foreground: 40 30% 92%;
+
+    --popover: 25 18% 11%;
+    --popover-foreground: 40 30% 92%;
+
+    --primary: 40 35% 88%;
+    --primary-foreground: 25 25% 14%;
+
+    --accent: 14 65% 58%;
+    --accent-foreground: 25 25% 10%;
+
+    --secondary: 25 14% 16%;
+    --secondary-foreground: 40 30% 92%;
+
+    --muted: 25 12% 16%;
+    --muted-foreground: 40 12% 64%;
+
+    --destructive: 0 60% 45%;
+    --destructive-foreground: 40 30% 92%;
+
+    --border: 25 12% 20%;
+    --input: 25 12% 20%;
+    --ring: 40 35% 88%;
+
+    --ink: 40 30% 92%;
+    --paper: 25 18% 9%;
+    --paper-deep: 25 16% 12%;
+    --gold: 38 70% 62%;
+    --indigo: 225 35% 70%;
+    --terracotta: 14 65% 58%;
+
+    --gradient-paper: linear-gradient(180deg, hsl(25 18% 10%) 0%, hsl(25 16% 7%) 100%);
+    --gradient-ink: linear-gradient(135deg, hsl(40 30% 92%), hsl(40 20% 78%));
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Hind Siliguri', 'Noto Serif Bengali', 'Cormorant Garamond', serif;
+    font-feature-settings: "liga", "kern";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: hsl(var(--accent) / 0.25);
+    color: hsl(var(--foreground));
+  }
+}
+
+@layer components {
+  .font-bn {
+    font-family: 'Noto Serif Bengali', 'Hind Siliguri', serif;
+  }
+  .font-bn-sans {
+    font-family: 'Hind Siliguri', sans-serif;
+  }
+  .font-en {
+    font-family: 'Cormorant Garamond', 'Georgia', serif;
+  }
+  .font-en-sans {
+    font-family: 'Inter', sans-serif;
+  }
+  .font-ar {
+    font-family: 'Amiri', serif;
+  }
+
+  .ornament::before,
+  .ornament::after {
+    content: '';
+    display: inline-block;
+    width: 2.5rem;
+    height: 1px;
+    background: hsl(var(--border));
+    vertical-align: middle;
+    margin: 0 0.75rem;
+  }
+
+  .prose-kisti p {
+    @apply leading-[1.9] text-[1.0625rem] mb-6;
+  }
+  .prose-kisti h2 {
+    @apply text-2xl md:text-3xl mt-12 mb-4;
+  }
+  .prose-kisti blockquote {
+    @apply border-l-2 border-accent pl-6 italic text-muted-foreground my-8;
+  }
+
+  .paper-texture {
+    background-image:
+      radial-gradient(hsl(var(--ink) / 0.025) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+}
