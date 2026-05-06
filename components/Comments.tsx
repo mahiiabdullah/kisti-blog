@@ -40,11 +40,13 @@ export const Comments = ({ postId }: { postId: string }) => {
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("comments")
-      .select("id, body, created_at, approved, user_id, profiles:user_id(display_name, display_name_bn)")
+      .select("id, body, created_at, approved, user_id, profiles(display_name, display_name_bn)")
       .eq("post_id", postId)
       .order("created_at", { ascending: true });
+    
+    if (error) console.error("Comments error:", error);
     setItems((data ?? []) as any);
   }, [postId]);
 

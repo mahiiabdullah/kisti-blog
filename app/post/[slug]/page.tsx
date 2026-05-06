@@ -58,7 +58,8 @@ export default function PostPage() {
         .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id,
                  post_translations(lang, title, excerpt, body, footnotes, citations),
                  post_tags(tag),
-                 post_images(url, caption, position)`)
+                 post_images(url, caption, position),
+                 profiles(display_name, display_name_bn)`)
         .eq("slug", slug)
         .eq("status", "published")
         .maybeSingle();
