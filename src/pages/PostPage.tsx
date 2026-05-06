@@ -33,20 +33,28 @@ const PostPage = () => {
   const [post, setPost] = useState<PostData | null>(null);
   const [lang, setLang] = useState<LangCode>("bn");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!slug) return;
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("posts")
         .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id,
                  post_translations(lang, title, excerpt, body, footnotes, citations),
                  post_tags(tag),
-                 post_images(url, caption, position),
-                 profiles:author_id(display_name, display_name_bn)`)
+                 post_images(url, caption, position)`)
         .eq("slug", slug)
         .eq("status", "published")
         .maybeSingle();
+
+      if (error) {
+        console.error("Error loading post:", error);
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+
       if (data) {
         const p = data as any as PostData;
         setPost(p);
@@ -96,6 +104,7 @@ const PostPage = () => {
       <SiteFooter />
     </div>
   );
+  if (error) return <NotFound />;
   if (!post) return <NotFound />;
 
   const t = post.post_translations.find((x) => x.lang === lang) ?? post.post_translations[0];

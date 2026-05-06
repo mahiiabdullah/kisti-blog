@@ -5,6 +5,15 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  // Helpful dev-time log — Vite only exposes envs prefixed with VITE_
+  // If these are missing the client will fail to make requests.
+  // Keep a console error rather than throwing so app can render and show UI errors.
+  // Inspect browser console/network for more details.
+  // eslint-disable-next-line no-console
+  console.error('Supabase env vars missing: VITE_SUPABASE_URL or VITE_SUPABASE_PUBLISHABLE_KEY');
+}
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 

@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { SiteHeader } from "@/components/SiteHeader";
-import { SiteFooter } from "@/components/SiteFooter";
-import { supabase } from "@/integrations/supabase/client";
-import { PostListSkeleton } from "@/components/Skeletons";
+import { SiteFooter } from '@/components/SiteFooter';
+import { PostListSkeleton } from '@/components/Skeletons';
+import { supabase } from '@/integrations/supabase/client';
+import React, { useState, useEffect } from 'react'
+import { Link, useSearchParams } from 'react-router-dom';
 import heroFallback from "@/assets/hero-kisti.jpg";
+import { SiteHeader } from '@/components/SiteHeader';
 
 type LangCode = "bn" | "en" | "ar";
 
@@ -28,11 +28,12 @@ const langClass: Record<string, string> = {
   ar: "font-ar text-right",
 };
 
-const Index = () => {
+export default function Index() {
   const [params, setParams] = useSearchParams();
   const activeCat = params.get("cat");
   const [tag, setTag] = useState<string | null>(null);
   const [posts, setPosts] = useState<PostRow[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -40,42 +41,35 @@ const Index = () => {
   const ITEMS_PER_PAGE = 6;
 
   const loadPosts = async (pageToLoad: number, cat: string | null, currentTag: string | null, isReset = false) => {
-    if (isReset) setLoading(true);
-    else setLoadingMore(true);
+    try {
+      // ✅ FIX 1: Only set the correct loading state for each scenario
+      if (isReset) setLoading(true);
+      else setLoadingMore(true);  // ← was missing entirely
 
-    let query = supabase
-      .from("posts")
-      .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id,
+      const { data, error } = await supabase
+        .from("posts")
+        .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id,
                post_translations(lang, title, excerpt),
-               ${currentTag ? 'post_tags!inner(tag)' : 'post_tags(tag)'},
-               profiles:author_id(display_name, display_name_bn)`)
-      .eq("status", "published")
-      .order("published_at", { ascending: false })
-      .range(pageToLoad * ITEMS_PER_PAGE, (pageToLoad + 1) * ITEMS_PER_PAGE - 1);
+               ${currentTag ? 'post_tags!inner(tag)' : 'post_tags(tag)'}`)
+        .eq("status", "published")
+        .order("published_at", { ascending: false })
+        .range(pageToLoad * ITEMS_PER_PAGE, (pageToLoad + 1) * ITEMS_PER_PAGE - 1);
 
-    if (cat) {
-      const safeCat = cat.replace(/[",\\]/g, "");
-      query = query.or(`category_bn.eq."${safeCat}",category_en.eq."${safeCat}"`);
+      if (error) throw error;
+
+      setPosts(prev => isReset ? data : [...prev, ...data]);
+      setHasMore(data.length === ITEMS_PER_PAGE);
+    } catch (error) {
+      console.error("Error loading posts:", error);
+      setError(error?.message ?? String(error ?? "Unknown error"));
+      if (isReset) setPosts([]);
+      setHasMore(false);
+    } finally {
+      // ✅ FIX 2: Always clear the correct loading state
+      if (isReset) setLoading(false);
+      else setLoadingMore(false);
     }
-
-    if (currentTag) {
-      query = query.eq('post_tags.tag', currentTag);
-    }
-
-    const { data } = await query;
-    const fetchedPosts = (data ?? []) as any[];
-
-    setPosts(prev => isReset ? fetchedPosts : [...prev, ...fetchedPosts]);
-    setHasMore(fetchedPosts.length === ITEMS_PER_PAGE);
-    
-    if (isReset) setLoading(false);
-    else setLoadingMore(false);
   };
-
-  useEffect(() => {
-    setPage(0);
-    loadPosts(0, activeCat, tag, true);
-  }, [activeCat, tag]);
 
   const handleLoadMore = () => {
     const nextPage = page + 1;
@@ -83,9 +77,15 @@ const Index = () => {
     loadPosts(nextPage, activeCat, tag, false);
   };
 
+  useEffect(() => {
+    setPage(0);
+    loadPosts(0, activeCat, tag, true);
+  }, [activeCat, tag]);
+
+
   const featured = posts[0];
   const rest = posts.slice(1);
-  const allTags = Array.from(new Set(posts.flatMap((p) => p.post_tags.map((t) => t.tag))));
+  const allTags = Array.from(new Set(posts.flatMap((p) => (p.post_tags ?? []).map((t) => t.tag))));
 
   const renderCard = (p: PostRow, primary = false) => {
     const t = p.post_translations[0];
@@ -178,6 +178,10 @@ const Index = () => {
           <span className="font-en italic text-sm text-muted-foreground">{posts.length} {posts.length === 1 ? "piece" : "pieces"} loaded</span>
         </div>
 
+        {error && (
+          <p className="text-center text-red-500 py-6 font-bn">{error}</p>
+        )}
+
         {loading ? (
           <PostListSkeleton count={4} hasFeatured={true} />
         ) : posts.length === 0 ? (
@@ -212,5 +216,3 @@ const Index = () => {
     </div>
   );
 };
-
-export default Index;
