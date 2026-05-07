@@ -19,15 +19,19 @@ interface Props {
   tags?: string[]; images?: PreviewImage[];
 }
 
-const renderBody = (body: string) =>
-  body.split(/\n\s*\n/).map((para, i) => {
+const renderBody = (body: string) => {
+  if (body.trim().startsWith("<")) {
+    return <div dangerouslySetInnerHTML={{ __html: body.replace(/\[\^(\d+)\]/g, '<sup id="prev-fnref-$1" class="ml-0.5"><a href="#prev-fn-$1" class="text-accent hover:underline">[$1]</a></sup>') }} className="rich-body" />;
+  }
+  return body.split(/\n\s*\n/).map((para, i) => {
     const parts = para.split(/(\[\^\d+\])/g);
-    return (<p key={i}>{parts.map((part, j) => {
+    return (<p key={i} className="mb-4">{parts.map((part, j) => {
       const m = part.match(/\[\^(\d+)\]/);
-      if (m) return <sup key={j}><a href={`#prev-fn-${m[1]}`} className="text-accent ml-0.5 hover:underline">[{m[1]}]</a></sup>;
+      if (m) return <sup key={j} id={`prev-fnref-${m[1]}`}><a href={`#prev-fn-${m[1]}`} className="text-accent ml-0.5 hover:underline">[{m[1]}]</a></sup>;
       return <span key={j}>{part}</span>;
     })}</p>);
   });
+};
 
 export function PostPreview({ translations, coverUrl, categoryBn, categoryEn, readingMinutes, tags = [], images = [] }: Props) {
   const available = (Object.keys(translations) as Lang[]).filter((l) => translations[l].title.trim());
@@ -77,7 +81,7 @@ export function PostPreview({ translations, coverUrl, categoryBn, categoryEn, re
         {t.excerpt && <p className={`${langClass[lang]} italic text-muted-foreground text-center mb-6`} dir={dir}>{t.excerpt}</p>}
         {t.body && <div className={`prose-kisti ${langClass[lang]} max-w-none text-sm`} dir={dir}>{renderBody(t.body)}</div>}
         {sortedImages.length > 0 && <div className="mt-8 space-y-6">{sortedImages.map((img, i) => <figure key={i}><img src={img.url} alt={img.caption ?? ""} className="w-full" />{img.caption && <figcaption className="text-center text-xs italic text-muted-foreground mt-2 font-en">{img.caption}</figcaption>}</figure>)}</div>}
-        {t.footnotes.length > 0 && <section className="mt-10 pt-6 border-t border-border/60" dir={dir}><h2 className="font-en-sans uppercase text-[10px] tracking-[0.25em] text-muted-foreground mb-4" dir="ltr">Footnotes · টীকা</h2><ol className={`${langClass[lang]} space-y-2 text-xs text-muted-foreground`}>{t.footnotes.map((f) => <li key={f.id} id={`prev-fn-${f.id}`} className="leading-relaxed"><span className="text-accent mr-2">[{f.id}]</span>{f.text}</li>)}</ol></section>}
+        {t.footnotes.length > 0 && <section className="mt-10 pt-6 border-t border-border/60" dir={dir}><h2 className="font-en-sans uppercase text-[10px] tracking-[0.25em] text-muted-foreground mb-4" dir="ltr">Footnotes · টীকা</h2><ol className={`${langClass[lang]} space-y-2 text-xs text-muted-foreground`}>{t.footnotes.map((f) => <li key={f.id} id={`prev-fn-${f.id}`} className="leading-relaxed"><span className="text-accent mr-2">[{f.id}]</span>{f.text}<a href={`#prev-fnref-${f.id}`} className="ml-1 text-accent hover:underline inline-block">↩</a></li>)}</ol></section>}
         {t.citations.length > 0 && <section className="mt-8 pt-6 border-t border-border/60" dir={dir}><h2 className="font-en-sans uppercase text-[10px] tracking-[0.25em] text-muted-foreground mb-4" dir="ltr">Citations</h2><ul className={`${langClass[lang]} space-y-2 text-xs text-muted-foreground`}>{t.citations.map((c, i) => <li key={i} className="leading-relaxed">{c.url ? <a href={c.url} target="_blank" rel="noreferrer" className="hover:text-foreground underline-offset-2 hover:underline">{c.label || c.url}</a> : <span>{c.label}</span>}</li>)}</ul></section>}
         {tags.length > 0 && <div className="mt-10 pt-6 border-t border-border/60 flex flex-wrap gap-2">{tags.map((tag) => <span key={tag} className="text-[10px] px-2 py-0.5 border border-border rounded-full text-muted-foreground">#{tag}</span>)}</div>}
       </article>
