@@ -178,4 +178,24 @@
       radial-gradient(hsl(var(--ink) / 0.025) 1px, transparent 1px);
     background-size: 22px 22px;
   }
+
+  /* Rich text body (from TipTap editor) */
+  .rich-body p { @apply leading-[1.9] text-[1.0625rem] mb-4; }
+  .rich-body h2 { @apply text-2xl md:text-3xl mt-10 mb-4 font-bold; }
+  .rich-body h3 { @apply text-xl md:text-2xl mt-8 mb-3 font-semibold; }
+  .rich-body h4 { @apply text-lg mt-6 mb-2 font-semibold; }
+  .rich-body blockquote {
+    @apply border-l-2 border-accent pl-6 italic text-muted-foreground my-8;
+  }
+  .rich-body ul { @apply list-disc pl-6 my-4 space-y-1; }
+  .rich-body ol { @apply list-decimal pl-6 my-4 space-y-1; }
+  .rich-body li { @apply leading-[1.8]; }
+  .rich-body a { @apply text-accent underline underline-offset-4 hover:decoration-accent/60; }
+  .rich-body mark { @apply bg-accent/15 px-1 py-0.5 rounded-sm; }
+  .rich-body img {
+    @apply max-w-full h-auto rounded-sm my-6 mx-auto;
+  }
+  .rich-body strong { @apply font-bold; }
+  .rich-body em { @apply italic; }
+  .rich-body u { @apply underline; }
 }

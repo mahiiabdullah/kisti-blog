@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { Menu, X, Search, ChevronDown } from "lucide-react";
@@ -21,42 +21,29 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-const nav = [
+interface NavCategory {
+  id: string;
+  name_bn: string;
+  name_en: string | null;
+  parent_id: string | null;
+  is_main: boolean;
+  position: number;
+  children?: NavCategory[];
+}
+
+interface NavItem {
+  to?: string;
+  label: string;
+  items?: { to: string; label: string }[];
+}
+
+// Fallback nav in case categories haven't loaded
+const fallbackNav: NavItem[] = [
   { to: "/", label: "প্রচ্ছদ" },
-  {
-    label: "ইসলাম ও আধুনিকতা",
-    items: [
-      { to: "/?cat=সেক্যুলারিজম ও ধর্ম", label: "সেক্যুলারিজম ও ধর্ম" },
-      { to: "/?cat=উত্তর-আধুনিকতা", label: "উত্তর-আধুনিকতা" },
-      { to: "/?cat=মুসলিম আধুনিকতাবাদ", label: "মুসলিম আধুনিকতাবাদ" },
-      { to: "/?cat=ইসলামি পুনরুজ্জীবন", label: "ইসলামি পুনরুজ্জীবন" },
-    ],
-  },
-  {
-    label: "শরিয়া ও ফিকহ",
-    items: [
-      { to: "/?cat=উসুলুল ফিকহ", label: "উসুলুল ফিকহ" },
-      { to: "/?cat=সমসাময়িক মাসায়েল", label: "সমসাময়িক মাসায়েল" },
-      { to: "/?cat=মাকাসিদ আশ-শরিয়া", label: "মাকাসিদ আশ-শরিয়া" },
-      { to: "/?cat=তুলনামূলক ফিকহ", label: "তুলনামূলক ফিকহ" },
-    ],
-  },
-  {
-    label: "রাজনৈতিক ইসলাম",
-    items: [
-      { to: "/?cat=খেলাফত ও রাষ্ট্রতত্ত্ব", label: "খেলাফত ও রাষ্ট্রতত্ত্ব" },
-      { to: "/?cat=গণতন্ত্র ও ইসলাম", label: "গণতন্ত্র ও ইসলাম" },
-      { to: "/?cat=ইসলামী আন্দোলন", label: "ইসলামী আন্দোলন" },
-    ],
-  },
-  { to: "/?cat=ইতিহাস ও সভ্যতা", label: "ইতিহাস ও সভ্যতা" },
-  { to: "/?cat=তত্ত্ব ও দর্শন", label: "তত্ত্ব ও দর্শন" },
-  { to: "/?cat=বাংলাদেশ প্রসঙ্গ", label: "বাংলাদেশ প্রসঙ্গ" },
-  { to: "/?cat=গ্রন্থালোচনা", label: "গ্রন্থালোচনা" },
 ];
 
 // Desktop dropdown menu component
-const DesktopNavMenu = ({ items, label }: { items: typeof nav[0]["items"]; label: string }) => {
+const DesktopNavMenu = ({ items, label }: { items: { to: string; label: string }[]; label: string }) => {
   return (
     <div className="relative group">
       <button className="flex items-center gap-1 px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground">
@@ -65,7 +52,7 @@ const DesktopNavMenu = ({ items, label }: { items: typeof nav[0]["items"]; label
       </button>
       <div className="absolute left-0 mt-0 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
         <div className="bg-popover border border-border rounded-lg shadow-lg py-2">
-          {items?.map((item) => (
+          {items.map((item) => (
             <Link
               key={item.to}
               href={item.to}
@@ -81,7 +68,7 @@ const DesktopNavMenu = ({ items, label }: { items: typeof nav[0]["items"]; label
 };
 
 // Mobile menu component
-const MobileNavMenu = () => {
+const MobileNavMenu = ({ nav }: { nav: NavItem[] }) => {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   const toggleExpand = (label: string) => {
@@ -142,6 +129,42 @@ export const SiteHeader = () => {
   const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [nav, setNav] = useState<NavItem[]>(fallbackNav);
+
+  // Load categories dynamically
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("categories")
+        .select("*")
+        .order("position", { ascending: true });
+
+      if (data && data.length > 0) {
+        const all = data as NavCategory[];
+        const mains = all.filter(c => !c.parent_id).sort((a, b) => a.position - b.position);
+        const built: NavItem[] = [{ to: "/", label: "প্রচ্ছদ" }];
+
+        for (const m of mains) {
+          const children = all.filter(c => c.parent_id === m.id).sort((a, b) => a.position - b.position);
+          if (children.length > 0) {
+            built.push({
+              label: m.name_bn,
+              items: children.map(c => ({
+                to: `/?cat=${c.id}`,
+                label: c.name_bn,
+              })),
+            });
+          } else {
+            built.push({
+              to: `/?cat=${m.id}`,
+              label: m.name_bn,
+            });
+          }
+        }
+        setNav(built);
+      }
+    })();
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -166,7 +189,7 @@ export const SiteHeader = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-0">
+          <nav className="hidden lg:flex items-center gap-0">
             {nav.map((n) => (
               <div key={n.label}>
                 {n.items ? (
@@ -246,7 +269,7 @@ export const SiteHeader = () => {
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
                 <button
-                  className="md:hidden p-2 text-foreground transition-colors hover:text-muted-foreground"
+                  className="lg:hidden p-2 text-foreground transition-colors hover:text-muted-foreground"
                   aria-label="Toggle Mobile Menu"
                 >
                   {isMobileMenuOpen ? (
@@ -256,13 +279,13 @@ export const SiteHeader = () => {
                   )}
                 </button>
               </SheetTrigger>
-              <MobileNavMenu />
+              <MobileNavMenu nav={nav} />
             </Sheet>
           </div>
         </div>
 
         {/* Mobile Search Bar */}
-        <form onSubmit={handleSearch} className="md:hidden pb-3">
+        <form onSubmit={handleSearch} className="lg:hidden pb-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input

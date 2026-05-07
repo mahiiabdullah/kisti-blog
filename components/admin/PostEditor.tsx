@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Upload, Trash2, Plus, Eye, EyeOff } from "lucide-react";
+import dynamic from "next/dynamic";
+import { ArrowLeft, Upload, Trash2, Plus, Eye, EyeOff, X, ChevronDown } from "lucide-react";
 import { PostPreview } from "@/components/PostPreview";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,6 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+
+// Lazy load the rich text editor to avoid SSR issues
+const RichTextEditor = dynamic(() => import("@/components/admin/RichTextEditor"), { ssr: false, loading: () => <div className="border border-border p-4 text-muted-foreground">Loading editor…</div> });
 
 type Lang = "bn" | "en" | "ar";
 const LANGS: Lang[] = ["bn", "en", "ar"];
@@ -23,6 +27,15 @@ interface TranslationDraft {
   citations: { label: string; url?: string }[];
 }
 interface ImageDraft { id?: string; url: string; caption: string; position: number; }
+
+interface CategoryItem {
+  id: string;
+  name_bn: string;
+  name_en: string | null;
+  parent_id: string | null;
+  is_main: boolean;
+  children?: CategoryItem[];
+}
 
 const emptyTranslation = (lang: Lang): TranslationDraft => ({
   lang, title: "", excerpt: "", body: "", footnotes: [], citations: [],
@@ -41,12 +54,10 @@ export default function AdminPostEditor() {
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [activeLang, setActiveLang] = useState<Lang>("bn");
-  const [showPreview, setShowPreview] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
 
   const [slug, setSlug] = useState("");
   const [status, setStatus] = useState<"draft" | "published">("draft");
-  const [categoryBn, setCategoryBn] = useState("");
-  const [categoryEn, setCategoryEn] = useState("");
   const [coverUrl, setCoverUrl] = useState("");
   const [readingMinutes, setReadingMinutes] = useState(5);
   const [tags, setTags] = useState<string[]>([]);
@@ -56,6 +67,29 @@ export default function AdminPostEditor() {
   });
   const [images, setImages] = useState<ImageDraft[]>([]);
 
+  // Category system
+  const [allCategories, setAllCategories] = useState<CategoryItem[]>([]);
+  const [selectedCatIds, setSelectedCatIds] = useState<string[]>([]);
+  const [catDropdownOpen, setCatDropdownOpen] = useState(false);
+
+  // Backward compat
+  const [categoryBn, setCategoryBn] = useState("");
+  const [categoryEn, setCategoryEn] = useState("");
+
+  // Load categories
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("categories").select("*").order("position");
+      if (data) {
+        const all = data as CategoryItem[];
+        const mains = all.filter(c => !c.parent_id);
+        for (const m of mains) m.children = all.filter(c => c.parent_id === m.id);
+        setAllCategories(mains);
+      }
+    })();
+  }, []);
+
+  // Load existing post
   useEffect(() => {
     if (isNew) return;
     (async () => {
@@ -80,6 +114,11 @@ export default function AdminPostEditor() {
       }
       setTranslations(next);
       setImages((data.post_images as any[]).map((i) => ({ id: i.id, url: i.url, caption: i.caption ?? "", position: i.position ?? 0 })).sort((a, b) => a.position - b.position));
+
+      // Load post_categories
+      const { data: postCats } = await supabase.from("post_categories").select("category_id").eq("post_id", id!);
+      if (postCats) setSelectedCatIds(postCats.map((pc: any) => pc.category_id));
+
       setLoading(false);
     })();
   }, [id, isNew, router]);
@@ -124,6 +163,21 @@ export default function AdminPostEditor() {
     setTagInput("");
   };
 
+  // Toggle category selection
+  const toggleCategory = (catId: string) => {
+    setSelectedCatIds(prev => prev.includes(catId) ? prev.filter(id => id !== catId) : [...prev, catId]);
+  };
+
+  // Get a flat list of all categories for label display
+  const getFlatCats = useCallback((): CategoryItem[] => {
+    const flat: CategoryItem[] = [];
+    for (const m of allCategories) {
+      flat.push(m);
+      if (m.children) flat.push(...m.children);
+    }
+    return flat;
+  }, [allCategories]);
+
   const save = async (publish?: boolean) => {
     if (!user) return;
     const finalSlug = slug.trim() || slugify(translations.bn.title || translations.en.title);
@@ -133,9 +187,19 @@ export default function AdminPostEditor() {
     setSaving(true);
     try {
       const newStatus = publish === undefined ? status : (publish ? "published" : "draft");
+
+      // Backward compat: sync category_bn/en from first selected category
+      let finalCatBn = categoryBn;
+      let finalCatEn = categoryEn;
+      if (selectedCatIds.length > 0) {
+        const flat = getFlatCats();
+        const first = flat.find(c => c.id === selectedCatIds[0]);
+        if (first) { finalCatBn = first.name_bn; finalCatEn = first.name_en ?? ""; }
+      }
+
       const payload = {
         slug: finalSlug, author_id: user.id, status: newStatus,
-        category_bn: categoryBn || null, category_en: categoryEn || null,
+        category_bn: finalCatBn || null, category_en: finalCatEn || null,
         cover_url: coverUrl || null, reading_minutes: readingMinutes,
         published_at: newStatus === "published" ? (status === "published" ? undefined : new Date().toISOString()) : null,
       };
@@ -150,6 +214,7 @@ export default function AdminPostEditor() {
         if (error) throw error;
       }
 
+      // Translations
       const { error: tDelErr } = await supabase.from("post_translations").delete().eq("post_id", postId!);
       if (tDelErr) throw tDelErr;
       const tRows = LANGS.filter((l) => translations[l].title.trim()).map((l) => ({
@@ -159,13 +224,26 @@ export default function AdminPostEditor() {
       }));
       if (tRows.length) { const { error: tInsErr } = await supabase.from("post_translations").insert(tRows); if (tInsErr) throw tInsErr; }
 
+      // Tags
       const { error: tgDelErr } = await supabase.from("post_tags").delete().eq("post_id", postId!);
       if (tgDelErr) throw tgDelErr;
       if (tags.length) { const { error: tgInsErr } = await supabase.from("post_tags").insert(tags.map((tag) => ({ post_id: postId!, tag }))); if (tgInsErr) throw tgInsErr; }
 
+      // Images
       const { error: imgDelErr } = await supabase.from("post_images").delete().eq("post_id", postId!);
       if (imgDelErr) throw imgDelErr;
       if (images.length) { const { error: imgInsErr } = await supabase.from("post_images").insert(images.map((img, i) => ({ post_id: postId!, url: img.url, caption: img.caption || null, position: i }))); if (imgInsErr) throw imgInsErr; }
+
+      // Categories (new system)
+      try {
+        await supabase.from("post_categories").delete().eq("post_id", postId!);
+        if (selectedCatIds.length > 0) {
+          await supabase.from("post_categories").insert(selectedCatIds.map(cid => ({ post_id: postId!, category_id: cid })));
+        }
+      } catch (e) {
+        // Table may not exist yet, silently ignore
+        console.warn("post_categories save skipped:", e);
+      }
 
       toast.success(newStatus === "published" ? "প্রকাশিত!" : "Saved as draft");
       if (isNew) router.push(`/admin/posts/${postId}`);
@@ -184,14 +262,14 @@ export default function AdminPostEditor() {
       <Link href="/admin" className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground mb-8 font-en-sans">
         <ArrowLeft className="w-3 h-3" /> All posts
       </Link>
-      <div className="flex items-baseline justify-between mb-10">
+      <div className="flex flex-col sm:flex-row items-start sm:items-baseline justify-between mb-10 gap-4">
         <h1 className="font-bn text-4xl">{isNew ? "নতুন পোস্ট" : "সম্পাদনা"}</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowPreview((v) => !v)} className="rounded-none">
-            {showPreview ? <><EyeOff className="w-4 h-4 mr-1" />Hide preview</> : <><Eye className="w-4 h-4 mr-1" />Show preview</>}
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" onClick={() => setShowPreview((v) => !v)} className="rounded-none text-xs sm:text-sm">
+            {showPreview ? <><EyeOff className="w-4 h-4 mr-1" />Hide preview</> : <><Eye className="w-4 h-4 mr-1" />Preview</>}
           </Button>
-          <Button variant="outline" onClick={() => save(false)} disabled={saving} className="rounded-none">Save draft</Button>
-          <Button onClick={() => save(true)} disabled={saving} className="bg-foreground text-background hover:bg-foreground/90 rounded-none">
+          <Button variant="outline" onClick={() => save(false)} disabled={saving} className="rounded-none text-xs sm:text-sm">Save draft</Button>
+          <Button onClick={() => save(true)} disabled={saving} className="bg-foreground text-background hover:bg-foreground/90 rounded-none text-xs sm:text-sm">
             {status === "published" ? "Update" : "Publish"}
           </Button>
         </div>
@@ -199,21 +277,88 @@ export default function AdminPostEditor() {
 
       <div className={showPreview ? "grid grid-cols-1 lg:grid-cols-2 gap-8" : ""}>
         <div className={showPreview ? "min-w-0" : ""}>
-          <section className="border border-border p-6 mb-8 space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
+          {/* Metadata */}
+          <section className="border border-border p-4 sm:p-6 mb-8 space-y-4">
+            <div className="grid sm:grid-cols-2 gap-4">
               <div><Label className="text-xs uppercase tracking-wider font-en-sans">Slug</Label><Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="auto from title" /></div>
               <div><Label className="text-xs uppercase tracking-wider font-en-sans">Reading minutes</Label><Input type="number" min={1} value={readingMinutes} onChange={(e) => setReadingMinutes(parseInt(e.target.value) || 5)} /></div>
-              <div><Label className="text-xs uppercase tracking-wider font-en-sans">Category (BN)</Label><Input value={categoryBn} onChange={(e) => setCategoryBn(e.target.value)} className="font-bn" /></div>
-              <div><Label className="text-xs uppercase tracking-wider font-en-sans">Category (EN)</Label><Input value={categoryEn} onChange={(e) => setCategoryEn(e.target.value)} /></div>
             </div>
+
+            {/* Category dropdown */}
+            <div>
+              <Label className="text-xs uppercase tracking-wider font-en-sans">Categories</Label>
+              <div className="relative mt-1">
+                <button
+                  type="button"
+                  onClick={() => setCatDropdownOpen(!catDropdownOpen)}
+                  className="w-full flex items-center justify-between px-3 py-2 border border-border bg-background text-left text-sm"
+                >
+                  <span className="truncate font-bn">
+                    {selectedCatIds.length === 0
+                      ? <span className="text-muted-foreground font-en-sans">Select categories…</span>
+                      : getFlatCats().filter(c => selectedCatIds.includes(c.id)).map(c => c.name_bn).join(", ")}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 ml-2 shrink-0 transition-transform ${catDropdownOpen ? "rotate-180" : ""}`} />
+                </button>
+                {catDropdownOpen && (
+                  <div className="absolute z-50 w-full mt-1 border border-border bg-background shadow-lg max-h-60 overflow-y-auto">
+                    {allCategories.map(main => (
+                      <div key={main.id}>
+                        <button
+                          type="button"
+                          onClick={() => toggleCategory(main.id)}
+                          className={`w-full px-4 py-2 text-sm text-left flex items-center gap-2 hover:bg-secondary/50 font-bn font-semibold ${selectedCatIds.includes(main.id) ? "bg-accent/10 text-accent" : ""}`}
+                        >
+                          <span className={`w-3.5 h-3.5 border rounded-sm flex items-center justify-center text-[10px] ${selectedCatIds.includes(main.id) ? "bg-accent border-accent text-white" : "border-border"}`}>
+                            {selectedCatIds.includes(main.id) ? "✓" : ""}
+                          </span>
+                          {main.name_bn}
+                        </button>
+                        {main.children?.map(sub => (
+                          <button
+                            key={sub.id}
+                            type="button"
+                            onClick={() => toggleCategory(sub.id)}
+                            className={`w-full pl-10 pr-4 py-2 text-sm text-left flex items-center gap-2 hover:bg-secondary/50 font-bn ${selectedCatIds.includes(sub.id) ? "bg-accent/10 text-accent" : "text-muted-foreground"}`}
+                          >
+                            <span className={`w-3.5 h-3.5 border rounded-sm flex items-center justify-center text-[10px] ${selectedCatIds.includes(sub.id) ? "bg-accent border-accent text-white" : "border-border"}`}>
+                              {selectedCatIds.includes(sub.id) ? "✓" : ""}
+                            </span>
+                            {sub.name_bn}
+                          </button>
+                        ))}
+                      </div>
+                    ))}
+                    {allCategories.length === 0 && (
+                      <div className="px-4 py-3 text-sm text-muted-foreground font-en-sans">No categories. Run SQL migration first.</div>
+                    )}
+                  </div>
+                )}
+              </div>
+              {/* Selected category pills */}
+              {selectedCatIds.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {getFlatCats().filter(c => selectedCatIds.includes(c.id)).map(c => (
+                    <span key={c.id} className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-accent/10 text-accent border border-accent/20 rounded-sm font-bn">
+                      {c.name_bn}
+                      <button type="button" onClick={() => toggleCategory(c.id)} className="hover:text-destructive"><X className="w-3 h-3" /></button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Cover image */}
             <div>
               <Label className="text-xs uppercase tracking-wider font-en-sans">Cover image</Label>
-              <div className="flex items-center gap-3 mt-1">
+              <div className="flex items-center gap-3 mt-1 flex-wrap">
                 {coverUrl && <img src={coverUrl} alt="" className="w-24 h-16 object-cover" />}
                 <label className="flex items-center gap-2 px-3 py-2 border border-border text-sm cursor-pointer hover:bg-secondary"><Upload className="w-4 h-4" /> Upload<input type="file" accept="image/*" className="hidden" onChange={onCoverUpload} /></label>
                 {coverUrl && <button onClick={() => setCoverUrl("")} className="text-xs text-destructive">remove</button>}
               </div>
             </div>
+
+            {/* Tags */}
             <div>
               <Label className="text-xs uppercase tracking-wider font-en-sans">Tags</Label>
               <div className="flex flex-wrap gap-2 mt-1">
@@ -223,27 +368,41 @@ export default function AdminPostEditor() {
             </div>
           </section>
 
-          <div className="flex gap-2 mb-4 border-b border-border">
-            {LANGS.map((l) => (<button key={l} onClick={() => setActiveLang(l)} className={`px-4 py-2 text-sm border-b-2 -mb-px transition-colors ${activeLang === l ? "border-accent text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{LANG_LABEL[l]} {translations[l].title && <span className="text-accent ml-1">●</span>}</button>))}
+          {/* Language tabs */}
+          <div className="flex gap-2 mb-4 border-b border-border overflow-x-auto">
+            {LANGS.map((l) => (<button key={l} onClick={() => setActiveLang(l)} className={`px-4 py-2 text-sm border-b-2 -mb-px transition-colors whitespace-nowrap ${activeLang === l ? "border-accent text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{LANG_LABEL[l]} {translations[l].title && <span className="text-accent ml-1">●</span>}</button>))}
           </div>
 
+          {/* Translation content */}
           <section className="space-y-4 mb-8" dir={dir}>
             <div><Label className="text-xs uppercase tracking-wider font-en-sans" dir="ltr">Title</Label><Input value={t.title} onChange={(e) => updateT(activeLang, { title: e.target.value })} className={`text-2xl h-14 ${activeLang === "bn" ? "font-bn" : activeLang === "ar" ? "font-ar" : "font-en"}`} /></div>
             <div><Label className="text-xs uppercase tracking-wider font-en-sans" dir="ltr">Excerpt</Label><Textarea value={t.excerpt} onChange={(e) => updateT(activeLang, { excerpt: e.target.value })} rows={2} /></div>
-            <div><Label className="text-xs uppercase tracking-wider font-en-sans" dir="ltr">Body</Label><Textarea value={t.body} onChange={(e) => updateT(activeLang, { body: e.target.value })} rows={18} className="font-mono text-sm leading-relaxed" /></div>
+            <div>
+              <Label className="text-xs uppercase tracking-wider font-en-sans" dir="ltr">Body</Label>
+              <RichTextEditor
+                content={t.body}
+                onChange={(html) => updateT(activeLang, { body: html })}
+                placeholder="Write your article here…"
+                dir={dir}
+                className={activeLang === "bn" ? "font-bn" : activeLang === "ar" ? "font-ar" : "font-en"}
+              />
+            </div>
+            {/* Footnotes */}
             <div className="border border-border p-4">
               <div className="flex items-center justify-between mb-3"><Label className="text-xs uppercase tracking-wider font-en-sans" dir="ltr">Footnotes</Label><Button type="button" size="sm" variant="outline" onClick={() => addFootnote(activeLang)} className="rounded-none"><Plus className="w-3 h-3 mr-1" />Add</Button></div>
               <div className="space-y-2">{t.footnotes.map((fn, i) => (<div key={i} className="flex gap-2 items-start"><span className="text-accent text-sm pt-2">[{fn.id}]</span><Textarea value={fn.text} rows={2} onChange={(e) => updateT(activeLang, { footnotes: t.footnotes.map((x, j) => j === i ? { ...x, text: e.target.value } : x) })} /><Button type="button" variant="ghost" size="icon" onClick={() => updateT(activeLang, { footnotes: t.footnotes.filter((_, j) => j !== i) })}><Trash2 className="w-4 h-4 text-destructive" /></Button></div>))}</div>
             </div>
+            {/* Citations */}
             <div className="border border-border p-4">
               <div className="flex items-center justify-between mb-3"><Label className="text-xs uppercase tracking-wider font-en-sans" dir="ltr">Citations</Label><Button type="button" size="sm" variant="outline" onClick={() => addCitation(activeLang)} className="rounded-none"><Plus className="w-3 h-3 mr-1" />Add</Button></div>
-              <div className="space-y-2">{t.citations.map((c, i) => (<div key={i} className="flex gap-2 items-center"><Input placeholder="Label" value={c.label} onChange={(e) => updateT(activeLang, { citations: t.citations.map((x, j) => j === i ? { ...x, label: e.target.value } : x) })} /><Input placeholder="URL" value={c.url ?? ""} onChange={(e) => updateT(activeLang, { citations: t.citations.map((x, j) => j === i ? { ...x, url: e.target.value } : x) })} /><Button type="button" variant="ghost" size="icon" onClick={() => updateT(activeLang, { citations: t.citations.filter((_, j) => j !== i) })}><Trash2 className="w-4 h-4 text-destructive" /></Button></div>))}</div>
+              <div className="space-y-2">{t.citations.map((c, i) => (<div key={i} className="flex gap-2 items-center flex-wrap sm:flex-nowrap"><Input placeholder="Label" value={c.label} onChange={(e) => updateT(activeLang, { citations: t.citations.map((x, j) => j === i ? { ...x, label: e.target.value } : x) })} /><Input placeholder="URL" value={c.url ?? ""} onChange={(e) => updateT(activeLang, { citations: t.citations.map((x, j) => j === i ? { ...x, url: e.target.value } : x) })} /><Button type="button" variant="ghost" size="icon" onClick={() => updateT(activeLang, { citations: t.citations.filter((_, j) => j !== i) })}><Trash2 className="w-4 h-4 text-destructive" /></Button></div>))}</div>
             </div>
           </section>
 
-          <section className="border border-border p-6 mb-8">
-            <div className="flex items-center justify-between mb-4"><Label className="text-xs uppercase tracking-wider font-en-sans">Inline images</Label><label className="flex items-center gap-2 px-3 py-2 border border-border text-sm cursor-pointer hover:bg-secondary"><Upload className="w-4 h-4" /> Upload<input type="file" accept="image/*" multiple className="hidden" onChange={onImageUpload} /></label></div>
-            <div className="space-y-3">{images.map((img, i) => (<div key={i} className="flex gap-3 items-start border border-border p-3"><img src={img.url} alt="" className="w-24 h-16 object-cover" /><Input placeholder="Caption" value={img.caption} onChange={(e) => setImages(images.map((x, j) => j === i ? { ...x, caption: e.target.value } : x))} /><Button variant="ghost" size="icon" onClick={() => setImages(images.filter((_, j) => j !== i))}><Trash2 className="w-4 h-4 text-destructive" /></Button></div>))}{images.length === 0 && <p className="text-xs text-muted-foreground">No additional images.</p>}</div>
+          {/* Inline images */}
+          <section className="border border-border p-4 sm:p-6 mb-8">
+            <div className="flex items-center justify-between mb-4"><Label className="text-xs uppercase tracking-wider font-en-sans">Gallery images</Label><label className="flex items-center gap-2 px-3 py-2 border border-border text-sm cursor-pointer hover:bg-secondary"><Upload className="w-4 h-4" /> Upload<input type="file" accept="image/*" multiple className="hidden" onChange={onImageUpload} /></label></div>
+            <div className="space-y-3">{images.map((img, i) => (<div key={i} className="flex gap-3 items-start border border-border p-3 flex-wrap sm:flex-nowrap"><img src={img.url} alt="" className="w-24 h-16 object-cover shrink-0" /><Input placeholder="Caption" value={img.caption} onChange={(e) => setImages(images.map((x, j) => j === i ? { ...x, caption: e.target.value } : x))} /><Button variant="ghost" size="icon" onClick={() => setImages(images.filter((_, j) => j !== i))}><Trash2 className="w-4 h-4 text-destructive" /></Button></div>))}{images.length === 0 && <p className="text-xs text-muted-foreground">No additional images.</p>}</div>
           </section>
         </div>
 
@@ -252,7 +411,7 @@ export default function AdminPostEditor() {
             <div className="lg:sticky lg:top-4">
               <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3 font-en-sans flex items-center gap-2"><Eye className="w-3 h-3" /> Live preview</div>
               <div className="border border-border bg-background overflow-hidden max-h-[calc(100vh-8rem)] overflow-y-auto">
-                <PostPreview translations={translations} coverUrl={coverUrl} categoryBn={categoryBn} categoryEn={categoryEn} readingMinutes={readingMinutes} tags={tags} images={images} />
+                <PostPreview translations={translations} coverUrl={coverUrl} categoryBn={categoryBn || getFlatCats().find(c => c.id === selectedCatIds[0])?.name_bn || ""} categoryEn={categoryEn || getFlatCats().find(c => c.id === selectedCatIds[0])?.name_en || ""} readingMinutes={readingMinutes} tags={tags} images={images} />
               </div>
             </div>
           </aside>

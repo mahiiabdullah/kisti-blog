@@ -49,6 +49,54 @@ export type Database = {
           },
         ]
       }
+      categories: {
+        Row: {
+          id: string
+          name_bn: string
+          name_en: string | null
+          parent_id: string | null
+          is_main: boolean
+          position: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name_bn: string
+          name_en?: string | null
+          parent_id?: string | null
+          is_main?: boolean
+          position?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name_bn?: string
+          name_en?: string | null
+          parent_id?: string | null
+          is_main?: boolean
+          position?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
+      post_categories: {
+        Row: {
+          id: string
+          post_id: string
+          category_id: string
+        }
+        Insert: {
+          id?: string
+          post_id: string
+          category_id: string
+        }
+        Update: {
+          id?: string
+          post_id?: string
+          category_id?: string
+        }
+        Relationships: []
+      }
       post_images: {
         Row: {
           caption: string | null

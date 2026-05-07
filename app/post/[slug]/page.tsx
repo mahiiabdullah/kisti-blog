@@ -209,18 +209,24 @@ export default function PostPage() {
       <article className="container max-w-3xl py-12 md:py-16 flex-1">
         {t.body && (
           <div className={`prose-kisti ${langClass[lang]} max-w-none`} dir={dir}>
-            <ReactMarkdown
-              components={{
-                a: ({ node, ...props }) => {
-                  if (props.href?.startsWith('#fn-')) {
-                    return <sup className="ml-0.5"><a {...props} className="text-accent hover:underline">{props.children}</a></sup>;
+            {t.body.trim().startsWith("<") ? (
+              /* Rich text HTML from TipTap editor */
+              <div dangerouslySetInnerHTML={{ __html: t.body }} className="rich-body" />
+            ) : (
+              /* Legacy Markdown rendering */
+              <ReactMarkdown
+                components={{
+                  a: ({ node, ...props }) => {
+                    if (props.href?.startsWith('#fn-')) {
+                      return <sup className="ml-0.5"><a {...props} className="text-accent hover:underline">{props.children}</a></sup>;
+                    }
+                    return <a {...props} className="text-accent hover:underline decoration-border underline-offset-4" target="_blank" rel="noopener noreferrer" />;
                   }
-                  return <a {...props} className="text-accent hover:underline decoration-border underline-offset-4" target="_blank" rel="noopener noreferrer" />;
-                }
-              }}
-            >
-              {t.body.replace(/\[\^(\d+)\]/g, '[\\[^$1\\]](#fn-$1)')}
-            </ReactMarkdown>
+                }}
+              >
+                {t.body.replace(/\[\^(\d+)\]/g, '[\\[^$1\\]](#fn-$1)')}
+              </ReactMarkdown>
+            )}
           </div>
         )}
 
