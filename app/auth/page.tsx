@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { z } from "zod";
+import { Eye, EyeOff } from "lucide-react";
 
 const schema = z.object({
   email: z.string().trim().email().max(255),
@@ -24,6 +25,7 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   if (!loading && user) {
     router.push(isAdmin ? "/admin" : "/profile");
@@ -53,7 +55,7 @@ export default function AuthPage() {
           setBusy(false);
           return;
         }
-        toast.success("Account created. You can sign in now.");
+        toast.success("Registration successful! Please check your email inbox to verify your account.");
         setMode("signin");
         setBusy(false);
       } else {
@@ -95,7 +97,24 @@ export default function AuthPage() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="pw" className="font-en-sans text-xs uppercase tracking-wider">Password</Label>
-          <Input id="pw" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} />
+          <div className="relative">
+            <Input 
+              id="pw" 
+              type={showPassword ? "text" : "password"} 
+              required 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              minLength={6} 
+              className="pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
         <Button type="submit" disabled={busy} className="w-full bg-foreground text-background hover:bg-foreground/90 rounded-none font-en-sans uppercase tracking-wider text-xs h-11">
           {busy ? "..." : mode === "signin" ? "Sign in" : "Create account"}
