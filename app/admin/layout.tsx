@@ -56,11 +56,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Mobile nav */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-border bg-card z-50 flex justify-around py-2 px-4">
-        {links.slice(0, 4).map(({ href, label, icon: Icon }) => {
+      <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-border bg-card z-50 flex justify-around py-2 px-1">
+        {links.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || (href !== "/admin" && pathname.startsWith(href));
           return (
-            <Link key={href} href={href} className={`flex flex-col items-center gap-1 text-[10px] px-2 py-1 ${isActive ? "text-accent" : "text-muted-foreground"}`}>
+            <Link key={href} href={href} className={`flex flex-col items-center gap-0.5 text-[9px] px-1 py-1 ${isActive ? "text-accent" : "text-muted-foreground"}`}>
               <Icon className="w-4 h-4" />
               <span>{label}</span>
             </Link>
