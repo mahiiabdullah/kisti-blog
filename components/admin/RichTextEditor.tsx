@@ -198,6 +198,12 @@ export default function RichTextEditor({ content, onChange, placeholder = "Write
               
               <div className="w-px h-4 bg-border mx-1" />
 
+              <ToolButton onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive('heading', { level: 2 })} title="Heading 2">
+                <span className="text-xs font-bold px-1">H2</span>
+              </ToolButton>
+              <ToolButton onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive('heading', { level: 3 })} title="Heading 3">
+                <span className="text-xs font-bold px-1">H3</span>
+              </ToolButton>
               <ToolButton onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} title="Quote">
                 <Quote className="w-4 h-4" />
               </ToolButton>
@@ -225,7 +231,19 @@ export default function RichTextEditor({ content, onChange, placeholder = "Write
               <ToolButton onClick={setLink} active={editor.isActive("link")} title="Link">
                 <LinkIcon className="w-4 h-4" />
               </ToolButton>
+              <ToolButton onClick={insertImage} title="Insert Image">
+                <ImagePlus className="w-4 h-4" />
+              </ToolButton>
               
+              <div className="w-px h-4 bg-border mx-1" />
+
+              <ToolButton onClick={() => editor.chain().focus().undo().run()} title="Undo">
+                <Undo2 className="w-4 h-4" />
+              </ToolButton>
+              <ToolButton onClick={() => editor.chain().focus().redo().run()} title="Redo">
+                <Redo2 className="w-4 h-4" />
+              </ToolButton>
+
               <div className="w-px h-4 bg-border mx-1" />
 
               <ToolButton onClick={() => setShowMore(false)} title="Less Options">
