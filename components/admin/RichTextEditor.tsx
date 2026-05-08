@@ -9,14 +9,14 @@ import Underline from "@tiptap/extension-underline";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
 import Highlight from "@tiptap/extension-highlight";
-import { useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import {
   Bold, Italic, Underline as UnderlineIcon, Quote, Highlighter,
   List, ListOrdered, Link as LinkIcon, ImagePlus, AlignLeft, AlignCenter, AlignRight,
-  Undo2, Redo2,
+  Undo2, Redo2, MoreHorizontal, X
 } from "lucide-react";
 
 interface RichTextEditorProps {
@@ -30,6 +30,7 @@ interface RichTextEditorProps {
 export default function RichTextEditor({ content, onChange, placeholder = "Write your content...", dir = "ltr", className = "" }: RichTextEditorProps) {
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showMore, setShowMore] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -180,22 +181,81 @@ export default function RichTextEditor({ content, onChange, placeholder = "Write
       {/* Dynamic Popups */}
       {editor && (
         <BubbleMenu editor={editor} className="flex items-center gap-0.5 bg-background border border-border shadow-md rounded-md p-1">
-          <ToolButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold">
-            <Bold className="w-4 h-4" />
-          </ToolButton>
-          <ToolButton onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} title="Italic">
-            <Italic className="w-4 h-4" />
-          </ToolButton>
-          <ToolButton onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")} title="Underline">
-            <UnderlineIcon className="w-4 h-4" />
-          </ToolButton>
-          <div className="w-px h-4 bg-border mx-1" />
-          <ToolButton onClick={() => editor.chain().focus().toggleHighlight().run()} active={editor.isActive("highlight")} title="Highlight">
-            <Highlighter className="w-4 h-4" />
-          </ToolButton>
-          <ToolButton onClick={setLink} active={editor.isActive("link")} title="Link">
-            <LinkIcon className="w-4 h-4" />
-          </ToolButton>
+          {showMore ? (
+            <>
+              <ToolButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold">
+                <Bold className="w-4 h-4" />
+              </ToolButton>
+              <ToolButton onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} title="Italic">
+                <Italic className="w-4 h-4" />
+              </ToolButton>
+              <ToolButton onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")} title="Underline">
+                <UnderlineIcon className="w-4 h-4" />
+              </ToolButton>
+              <ToolButton onClick={() => editor.chain().focus().toggleHighlight().run()} active={editor.isActive("highlight")} title="Highlight">
+                <Highlighter className="w-4 h-4" />
+              </ToolButton>
+              
+              <div className="w-px h-4 bg-border mx-1" />
+
+              <ToolButton onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} title="Quote">
+                <Quote className="w-4 h-4" />
+              </ToolButton>
+              <ToolButton onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} title="Bullet List">
+                <List className="w-4 h-4" />
+              </ToolButton>
+              <ToolButton onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")} title="Numbered List">
+                <ListOrdered className="w-4 h-4" />
+              </ToolButton>
+
+              <div className="w-px h-4 bg-border mx-1" />
+
+              <ToolButton onClick={() => editor.chain().focus().setTextAlign("left").run()} active={editor.isActive({ textAlign: "left" })} title="Align Left">
+                <AlignLeft className="w-4 h-4" />
+              </ToolButton>
+              <ToolButton onClick={() => editor.chain().focus().setTextAlign("center").run()} active={editor.isActive({ textAlign: "center" })} title="Align Center">
+                <AlignCenter className="w-4 h-4" />
+              </ToolButton>
+              <ToolButton onClick={() => editor.chain().focus().setTextAlign("right").run()} active={editor.isActive({ textAlign: "right" })} title="Align Right">
+                <AlignRight className="w-4 h-4" />
+              </ToolButton>
+
+              <div className="w-px h-4 bg-border mx-1" />
+
+              <ToolButton onClick={setLink} active={editor.isActive("link")} title="Link">
+                <LinkIcon className="w-4 h-4" />
+              </ToolButton>
+              
+              <div className="w-px h-4 bg-border mx-1" />
+
+              <ToolButton onClick={() => setShowMore(false)} title="Less Options">
+                <X className="w-4 h-4 text-muted-foreground" />
+              </ToolButton>
+            </>
+          ) : (
+            <>
+              <ToolButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold">
+                <Bold className="w-4 h-4" />
+              </ToolButton>
+              <ToolButton onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} title="Italic">
+                <Italic className="w-4 h-4" />
+              </ToolButton>
+              <ToolButton onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")} title="Underline">
+                <UnderlineIcon className="w-4 h-4" />
+              </ToolButton>
+              <div className="w-px h-4 bg-border mx-1" />
+              <ToolButton onClick={() => editor.chain().focus().toggleHighlight().run()} active={editor.isActive("highlight")} title="Highlight">
+                <Highlighter className="w-4 h-4" />
+              </ToolButton>
+              <ToolButton onClick={setLink} active={editor.isActive("link")} title="Link">
+                <LinkIcon className="w-4 h-4" />
+              </ToolButton>
+              <div className="w-px h-4 bg-border mx-1" />
+              <ToolButton onClick={() => setShowMore(true)} title="More Options">
+                <MoreHorizontal className="w-4 h-4" />
+              </ToolButton>
+            </>
+          )}
         </BubbleMenu>
       )}
 
