@@ -1,6 +1,7 @@
 "use client";
 
-import { useEditor, EditorContent, BubbleMenu, FloatingMenu } from "@tiptap/react";
+import { useEditor, EditorContent } from "@tiptap/react";
+import { BubbleMenu, FloatingMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
@@ -178,7 +179,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "Write
 
       {/* Dynamic Popups */}
       {editor && (
-        <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }} className="flex items-center gap-0.5 bg-background border border-border shadow-md rounded-md p-1">
+        <BubbleMenu editor={editor} className="flex items-center gap-0.5 bg-background border border-border shadow-md rounded-md p-1">
           <ToolButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold">
             <Bold className="w-4 h-4" />
           </ToolButton>
@@ -199,7 +200,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "Write
       )}
 
       {editor && (
-        <FloatingMenu editor={editor} tippyOptions={{ duration: 100, placement: 'right' }} className="flex items-center gap-0.5 bg-background border border-border shadow-md rounded-md p-1 ml-4">
+        <FloatingMenu editor={editor} className="flex items-center gap-0.5 bg-background border border-border shadow-md rounded-md p-1 ml-4">
           <ToolButton onClick={insertImage} title="Insert Image">
             <ImagePlus className="w-4 h-4" />
           </ToolButton>
