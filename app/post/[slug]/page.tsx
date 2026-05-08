@@ -23,7 +23,6 @@ interface PostData {
   published_at: string | null; reading_minutes: number | null; author_id: string;
   post_translations: Translation[];
   post_tags: { tag: string }[];
-  post_images: { url: string; caption: string | null; position: number }[];
   profiles?: { display_name: string | null; display_name_bn: string | null } | null;
 }
 
@@ -57,8 +56,7 @@ export default function PostPage() {
         .from("posts")
         .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id,
                  post_translations(lang, title, excerpt, body, footnotes, citations),
-                 post_tags(tag),
-                 post_images(url, caption, position)`)
+                 post_tags(tag)`)
         .eq("slug", slug)
         .eq("status", "published")
         .maybeSingle();
@@ -120,13 +118,23 @@ export default function PostPage() {
   const dir = lang === "ar" ? "rtl" : "ltr";
   const author = post.profiles?.display_name_bn ?? post.profiles?.display_name ?? "—";
   const available = post.post_translations.map((x) => x.lang);
-  const sortedImages = [...post.post_images].sort((a, b) => a.position - b.position);
   const categoryDisplay = lang === "bn" ? post.category_bn : post.category_en;
   const dateFormatted = post.published_at
     ? new Date(post.published_at).toLocaleDateString("bn-BD", { year: "numeric", month: "long", day: "numeric" })
     : null;
 
   const currentUrl = typeof window !== "undefined" ? window.location.href : "";
+
+  const handleLinkClick = (e: React.MouseEvent<HTMLElement>) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'A' && target.getAttribute('href')?.startsWith('#fn')) {
+      e.preventDefault();
+      const id = target.getAttribute('href')?.substring(1);
+      if (id) {
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
 
   return (
     <>
@@ -206,12 +214,12 @@ export default function PostPage() {
         <img src={post.cover_url || heroFallback} alt={t.title} className="w-full aspect-video object-cover rounded-sm" />
       </figure>
 
-      <article className="container max-w-3xl py-12 md:py-16 flex-1">
+      <article className="container max-w-3xl py-12 md:py-16 flex-1" onClick={handleLinkClick}>
         {t.body && (
           <div className={`prose-kisti ${langClass[lang]} max-w-none`} dir={dir}>
             {t.body.trim().startsWith("<") ? (
               /* Rich text HTML from TipTap editor */
-              <div dangerouslySetInnerHTML={{ __html: t.body.replace(/\[\^(\d+)\]/g, '<sup id="fnref-$1" class="ml-0.5"><a href="#fn-$1" class="text-accent hover:underline">[$1]</a></sup>') }} className="rich-body" />
+              <div dangerouslySetInnerHTML={{ __html: t.body.replace(/\[\^(\d+)\]/g, '<sup id="fnref-$1" class="ml-0.5 scroll-m-24"><a href="#fn-$1" class="text-accent hover:underline">[$1]</a></sup>') }} className="rich-body" />
             ) : (
               /* Legacy Markdown rendering */
               <ReactMarkdown
@@ -219,7 +227,7 @@ export default function PostPage() {
                   a: ({ node, ...props }) => {
                     if (props.href?.startsWith('#fn-')) {
                       const fnId = props.href.replace('#fn-', '');
-                      return <sup id={`fnref-${fnId}`} className="ml-0.5"><a {...props} className="text-accent hover:underline">{props.children}</a></sup>;
+                      return <sup id={`fnref-${fnId}`} className="ml-0.5 scroll-m-24"><a {...props} className="text-accent hover:underline">{props.children}</a></sup>;
                     }
                     return <a {...props} className="text-accent hover:underline decoration-border underline-offset-4" target="_blank" rel="noopener noreferrer" />;
                   }
@@ -230,25 +238,12 @@ export default function PostPage() {
             )}
           </div>
         )}
-
-        {sortedImages.length > 0 && (
-          <div className="mt-12 space-y-8">
-            {sortedImages.map((img, i) => (
-              <figure key={i}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={img.url} alt={img.caption ?? ""} className="w-full" />
-                {img.caption && <figcaption className="text-center text-sm italic text-muted-foreground mt-3 font-en">{img.caption}</figcaption>}
-              </figure>
-            ))}
-          </div>
-        )}
-
         {Array.isArray(t.footnotes) && t.footnotes.length > 0 && (
           <section className="mt-16 pt-8 border-t border-border/60" dir={dir}>
             <h2 className="font-en-sans uppercase text-xs tracking-[0.25em] text-muted-foreground mb-6" dir="ltr">Footnotes · টীকা</h2>
             <ol className={`${langClass[lang]} space-y-3 text-sm text-muted-foreground`}>
               {t.footnotes.map((f: any) => (
-                <li key={f.id} id={`fn-${f.id}`} className="leading-relaxed">
+                <li key={f.id} id={`fn-${f.id}`} className="leading-relaxed scroll-m-24">
                   <span className="text-accent mr-2">[{f.id}]</span>
                   {f.text}
                   <a href={`#fnref-${f.id}`} className="ml-2 text-accent hover:underline inline-block" aria-label="Back to content">↩</a>

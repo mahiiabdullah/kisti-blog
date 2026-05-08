@@ -116,7 +116,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "Write
   return (
     <div className="border border-border rounded-sm overflow-hidden bg-background">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 p-2 border-b border-border bg-secondary/30">
+      <div className="flex flex-wrap items-center gap-0.5 p-2 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10 shadow-sm">
         <ToolButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold">
           <Bold className="w-4 h-4" />
         </ToolButton>

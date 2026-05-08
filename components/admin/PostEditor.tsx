@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { calculateReadingTime } from "@/lib/utils/readingTime";
 
 // Lazy load the rich text editor to avoid SSR issues
 const RichTextEditor = dynamic(() => import("@/components/admin/RichTextEditor"), { ssr: false, loading: () => <div className="border border-border p-4 text-muted-foreground">Loading editor…</div> });
@@ -26,7 +27,6 @@ interface TranslationDraft {
   footnotes: { id: number; text: string }[];
   citations: { label: string; url?: string }[];
 }
-interface ImageDraft { id?: string; url: string; caption: string; position: number; }
 
 interface CategoryItem {
   id: string;
@@ -65,7 +65,6 @@ export default function AdminPostEditor() {
   const [translations, setTranslations] = useState<Record<Lang, TranslationDraft>>({
     bn: emptyTranslation("bn"), en: emptyTranslation("en"), ar: emptyTranslation("ar"),
   });
-  const [images, setImages] = useState<ImageDraft[]>([]);
 
   // Category system
   const [allCategories, setAllCategories] = useState<CategoryItem[]>([]);
@@ -113,7 +112,6 @@ export default function AdminPostEditor() {
         }
       }
       setTranslations(next);
-      setImages((data.post_images as any[]).map((i) => ({ id: i.id, url: i.url, caption: i.caption ?? "", position: i.position ?? 0 })).sort((a, b) => a.position - b.position));
 
       // Load post_categories
       const { data: postCats } = await supabase.from("post_categories").select("category_id").eq("post_id", id!);
@@ -138,14 +136,6 @@ export default function AdminPostEditor() {
   const onCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
     const url = await uploadFile(file, "covers"); if (url) { setCoverUrl(url); toast.success("Cover uploaded"); }
-  };
-
-  const onImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files; if (!files) return;
-    for (const file of Array.from(files)) {
-      const url = await uploadFile(file, "images");
-      if (url) setImages((p) => [...p, { url, caption: "", position: p.length }]);
-    }
   };
 
   const addFootnote = (lang: Lang) => {
@@ -177,6 +167,13 @@ export default function AdminPostEditor() {
     }
     return flat;
   }, [allCategories]);
+
+  // Auto calculate reading time
+  useEffect(() => {
+    if (loading) return;
+    const time = calculateReadingTime(translations[activeLang].body);
+    setReadingMinutes(time);
+  }, [translations[activeLang].body, activeLang, loading]);
 
   const save = async (publish?: boolean) => {
     if (!user) return;
@@ -229,11 +226,6 @@ export default function AdminPostEditor() {
       if (tgDelErr) throw tgDelErr;
       if (tags.length) { const { error: tgInsErr } = await supabase.from("post_tags").insert(tags.map((tag) => ({ post_id: postId!, tag }))); if (tgInsErr) throw tgInsErr; }
 
-      // Images
-      const { error: imgDelErr } = await supabase.from("post_images").delete().eq("post_id", postId!);
-      if (imgDelErr) throw imgDelErr;
-      if (images.length) { const { error: imgInsErr } = await supabase.from("post_images").insert(images.map((img, i) => ({ post_id: postId!, url: img.url, caption: img.caption || null, position: i }))); if (imgInsErr) throw imgInsErr; }
-
       // Categories (new system)
       try {
         await supabase.from("post_categories").delete().eq("post_id", postId!);
@@ -258,15 +250,15 @@ export default function AdminPostEditor() {
   const dir = activeLang === "ar" ? "rtl" : "ltr";
 
   return (
-    <div className={showPreview ? "max-w-[1600px]" : "max-w-4xl"}>
+    <div className="max-w-full">
       <Link href="/admin" className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground mb-8 font-en-sans">
         <ArrowLeft className="w-3 h-3" /> All posts
       </Link>
       <div className="flex flex-col sm:flex-row items-start sm:items-baseline justify-between mb-10 gap-4">
         <h1 className="font-bn text-4xl">{isNew ? "নতুন পোস্ট" : "সম্পাদনা"}</h1>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" onClick={() => setShowPreview((v) => !v)} className="rounded-none text-xs sm:text-sm">
-            {showPreview ? <><EyeOff className="w-4 h-4 mr-1" />Hide preview</> : <><Eye className="w-4 h-4 mr-1" />Preview</>}
+          <Button variant="outline" onClick={() => setShowPreview((v) => !v)} className="lg:hidden rounded-none text-xs sm:text-sm">
+            {showPreview ? <><EyeOff className="w-4 h-4 mr-1" />Edit</> : <><Eye className="w-4 h-4 mr-1" />Preview</>}
           </Button>
           <Button variant="outline" onClick={() => save(false)} disabled={saving} className="rounded-none text-xs sm:text-sm">Save draft</Button>
           <Button onClick={() => save(true)} disabled={saving} className="bg-foreground text-background hover:bg-foreground/90 rounded-none text-xs sm:text-sm">
@@ -275,13 +267,13 @@ export default function AdminPostEditor() {
         </div>
       </div>
 
-      <div className={showPreview ? "grid grid-cols-1 lg:grid-cols-2 gap-8" : ""}>
-        <div className={showPreview ? "min-w-0" : ""}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start h-[calc(100vh-14rem)]">
+        <div className={`min-w-0 flex flex-col h-full overflow-y-auto pr-2 ${showPreview ? "hidden lg:flex" : "flex"}`}>
           {/* Metadata */}
-          <section className="border border-border p-4 sm:p-6 mb-8 space-y-4">
+          <section className="border border-border p-4 sm:p-6 mb-8 space-y-4 shrink-0">
             <div className="grid sm:grid-cols-2 gap-4">
               <div><Label className="text-xs uppercase tracking-wider font-en-sans">Slug</Label><Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="auto from title" /></div>
-              <div><Label className="text-xs uppercase tracking-wider font-en-sans">Reading minutes</Label><Input type="number" min={1} value={readingMinutes} onChange={(e) => setReadingMinutes(parseInt(e.target.value) || 5)} /></div>
+              <div><Label className="text-xs uppercase tracking-wider font-en-sans text-muted-foreground">Reading minutes (Auto)</Label><Input type="number" min={1} value={readingMinutes} readOnly className="bg-secondary/20 text-muted-foreground" /></div>
             </div>
 
             {/* Category dropdown */}
@@ -398,24 +390,16 @@ export default function AdminPostEditor() {
               <div className="space-y-2">{t.citations.map((c, i) => (<div key={i} className="flex gap-2 items-center flex-wrap sm:flex-nowrap"><Input placeholder="Label" value={c.label} onChange={(e) => updateT(activeLang, { citations: t.citations.map((x, j) => j === i ? { ...x, label: e.target.value } : x) })} /><Input placeholder="URL" value={c.url ?? ""} onChange={(e) => updateT(activeLang, { citations: t.citations.map((x, j) => j === i ? { ...x, url: e.target.value } : x) })} /><Button type="button" variant="ghost" size="icon" onClick={() => updateT(activeLang, { citations: t.citations.filter((_, j) => j !== i) })}><Trash2 className="w-4 h-4 text-destructive" /></Button></div>))}</div>
             </div>
           </section>
-
-          {/* Inline images */}
-          <section className="border border-border p-4 sm:p-6 mb-8">
-            <div className="flex items-center justify-between mb-4"><Label className="text-xs uppercase tracking-wider font-en-sans">Gallery images</Label><label className="flex items-center gap-2 px-3 py-2 border border-border text-sm cursor-pointer hover:bg-secondary"><Upload className="w-4 h-4" /> Upload<input type="file" accept="image/*" multiple className="hidden" onChange={onImageUpload} /></label></div>
-            <div className="space-y-3">{images.map((img, i) => (<div key={i} className="flex gap-3 items-start border border-border p-3 flex-wrap sm:flex-nowrap"><img src={img.url} alt="" className="w-24 h-16 object-cover shrink-0" /><Input placeholder="Caption" value={img.caption} onChange={(e) => setImages(images.map((x, j) => j === i ? { ...x, caption: e.target.value } : x))} /><Button variant="ghost" size="icon" onClick={() => setImages(images.filter((_, j) => j !== i))}><Trash2 className="w-4 h-4 text-destructive" /></Button></div>))}{images.length === 0 && <p className="text-xs text-muted-foreground">No additional images.</p>}</div>
-          </section>
         </div>
 
-        {showPreview && (
-          <aside className="min-w-0">
-            <div className="lg:sticky lg:top-4">
-              <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3 font-en-sans flex items-center gap-2"><Eye className="w-3 h-3" /> Live preview</div>
-              <div className="border border-border bg-background overflow-hidden max-h-[calc(100vh-8rem)] overflow-y-auto">
-                <PostPreview translations={translations} coverUrl={coverUrl} categoryBn={categoryBn || getFlatCats().find(c => c.id === selectedCatIds[0])?.name_bn || ""} categoryEn={categoryEn || getFlatCats().find(c => c.id === selectedCatIds[0])?.name_en || ""} readingMinutes={readingMinutes} tags={tags} images={images} />
-              </div>
+        <aside className={`min-w-0 h-full ${!showPreview ? "hidden lg:block" : "block"}`}>
+          <div className="h-full flex flex-col">
+            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3 font-en-sans flex items-center gap-2 shrink-0"><Eye className="w-3 h-3" /> Live preview</div>
+            <div className="border border-border bg-background overflow-y-auto flex-1">
+              <PostPreview translations={translations} coverUrl={coverUrl} categoryBn={categoryBn || getFlatCats().find(c => c.id === selectedCatIds[0])?.name_bn || ""} categoryEn={categoryEn || getFlatCats().find(c => c.id === selectedCatIds[0])?.name_en || ""} readingMinutes={readingMinutes} tags={tags} />
             </div>
-          </aside>
-        )}
+          </div>
+        </aside>
       </div>
     </div>
   );
