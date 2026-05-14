@@ -40,6 +40,7 @@ create table public.profiles (
   display_name_bn text,
   avatar_url text,
   bio text,
+  is_banned boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

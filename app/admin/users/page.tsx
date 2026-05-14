@@ -54,10 +54,28 @@ export default function AdminUsers() {
 
   const removeUser = async (userId: string) => {
     if (!confirm("Are you sure? This will delete the user's profile and ALL their comments permanently.")) return;
-    const { error } = await supabase.from("profiles").delete().eq("id", userId);
-    if (error) return toast.error(error.message);
-    toast.success("User removed successfully");
-    load();
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await fetch(`/api/users/${userId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${session?.access_token}`,
+        },
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete user");
+      }
+      
+      toast.success("User removed successfully");
+      load();
+    } catch (error: any) {
+      toast.error(error.message);
+    }
   };
 
   return (
