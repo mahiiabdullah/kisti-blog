@@ -25,6 +25,7 @@ interface NavCategory {
   id: string;
   name_bn: string;
   name_en: string | null;
+  slug?: string | null;
   parent_id: string | null;
   is_main: boolean;
   position: number;
@@ -140,7 +141,7 @@ export const SiteHeader = () => {
         .order("position", { ascending: true });
 
       if (data && data.length > 0) {
-        const all = data as NavCategory[];
+        const all = data as unknown as NavCategory[];
         const mains = all.filter(c => !c.parent_id).sort((a, b) => a.position - b.position);
         const built: NavItem[] = [{ to: "/", label: "প্রচ্ছদ" }];
 
@@ -150,13 +151,13 @@ export const SiteHeader = () => {
             built.push({
               label: m.name_bn,
               items: children.map(c => ({
-                to: `/?cat=${c.id}`,
+                to: c.slug ? `/category/${c.slug}` : `/?cat=${c.id}`, // fallback during migration
                 label: c.name_bn,
               })),
             });
           } else {
             built.push({
-              to: `/?cat=${m.id}`,
+              to: m.slug ? `/category/${m.slug}` : `/?cat=${m.id}`, // fallback during migration
               label: m.name_bn,
             });
           }

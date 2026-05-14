@@ -23,6 +23,7 @@ interface CategoryInfo {
   id: string;
   name_bn: string;
   name_en: string | null;
+  slug?: string;
 }
 
 interface PostData {
@@ -109,7 +110,7 @@ export default function PostPage() {
           const catIds = pcData.map((pc: any) => pc.category_id);
           const { data: catDetails } = await supabase
             .from("categories")
-            .select("id, name_bn, name_en")
+            .select("id, name_bn, name_en, slug")
             .in("id", catIds);
           
           if (catDetails && catDetails.length > 0) {
@@ -185,7 +186,7 @@ export default function PostPage() {
             {hasNewCategories ? (
               <>
                 <ChevronRight className="w-3 h-3 text-muted-foreground/50" />
-                <Link href={`/?cat=${postCategories[0].id}`} className="hover:text-foreground transition-colors">
+                <Link href={postCategories[0].slug ? `/category/${postCategories[0].slug}` : `/?cat=${postCategories[0].id}`} className="hover:text-foreground transition-colors">
                   {lang === "bn" ? postCategories[0].name_bn : (postCategories[0].name_en || postCategories[0].name_bn)}
                 </Link>
               </>
@@ -204,7 +205,7 @@ export default function PostPage() {
           <div className="flex flex-wrap gap-2 mb-4">
             {hasNewCategories ? (
               postCategories.map((cat) => (
-                <Link key={cat.id} href={`/?cat=${cat.id}`} className="inline-block text-xs font-bn-sans px-3 py-1 bg-accent text-white rounded-sm hover:bg-accent/90 transition-colors">
+                <Link key={cat.id} href={cat.slug ? `/category/${cat.slug}` : `/?cat=${cat.id}`} className="inline-block text-xs font-bn-sans px-3 py-1 bg-accent text-white rounded-sm hover:bg-accent/90 transition-colors">
                   {lang === "bn" ? cat.name_bn : (cat.name_en || cat.name_bn)}
                 </Link>
               ))

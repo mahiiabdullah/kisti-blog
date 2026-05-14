@@ -74,6 +74,7 @@ export default function AdminPostEditor() {
   const [allCategories, setAllCategories] = useState<CategoryItem[]>([]);
   const [selectedCatIds, setSelectedCatIds] = useState<string[]>([]);
   const [catDropdownOpen, setCatDropdownOpen] = useState(false);
+  const [catSearchQuery, setCatSearchQuery] = useState("");
 
   // Backward compat
   const [categoryBn, setCategoryBn] = useState("");
@@ -127,8 +128,18 @@ export default function AdminPostEditor() {
       setTranslations(next);
 
       // Load post_categories
+      let loadedCatIds: string[] = [];
       const { data: postCats } = await supabase.from("post_categories").select("category_id").eq("post_id", id!);
-      if (postCats) setSelectedCatIds(postCats.map((pc: any) => pc.category_id));
+      if (postCats && postCats.length > 0) {
+        loadedCatIds = postCats.map((pc: any) => pc.category_id);
+      } else if (data.category_bn) {
+        // Fallback for legacy posts that haven't been migrated to post_categories yet
+        const { data: legacyCat } = await supabase.from("categories").select("id").eq("name_bn", data.category_bn).maybeSingle();
+        if (legacyCat) {
+          loadedCatIds = [legacyCat.id];
+        }
+      }
+      setSelectedCatIds(loadedCatIds);
 
       setLoading(false);
     })();
@@ -354,34 +365,52 @@ export default function AdminPostEditor() {
                   <ChevronDown className={`w-4 h-4 ml-2 shrink-0 transition-transform ${catDropdownOpen ? "rotate-180" : ""}`} />
                 </button>
                 {catDropdownOpen && (
-                  <div className="absolute z-50 w-full mt-1 border border-border bg-background shadow-lg max-h-60 overflow-y-auto">
-                    {allCategories.map(main => (
-                      <div key={main.id}>
-                        <button
-                          type="button"
-                          onClick={() => toggleCategory(main.id)}
-                          className={`w-full px-4 py-2 text-sm text-left flex items-center gap-2 hover:bg-secondary/50 font-bn font-semibold ${selectedCatIds.includes(main.id) ? "bg-accent/10 text-accent" : ""}`}
-                        >
-                          <span className={`w-3.5 h-3.5 border rounded-sm flex items-center justify-center text-[10px] ${selectedCatIds.includes(main.id) ? "bg-accent border-accent text-white" : "border-border"}`}>
-                            {selectedCatIds.includes(main.id) ? "✓" : ""}
-                          </span>
-                          {main.name_bn}
-                        </button>
-                        {main.children?.map(sub => (
-                          <button
-                            key={sub.id}
-                            type="button"
-                            onClick={() => toggleCategory(sub.id)}
-                            className={`w-full pl-10 pr-4 py-2 text-sm text-left flex items-center gap-2 hover:bg-secondary/50 font-bn ${selectedCatIds.includes(sub.id) ? "bg-accent/10 text-accent" : "text-muted-foreground"}`}
-                          >
-                            <span className={`w-3.5 h-3.5 border rounded-sm flex items-center justify-center text-[10px] ${selectedCatIds.includes(sub.id) ? "bg-accent border-accent text-white" : "border-border"}`}>
-                              {selectedCatIds.includes(sub.id) ? "✓" : ""}
-                            </span>
-                            {sub.name_bn}
-                          </button>
-                        ))}
-                      </div>
-                    ))}
+                  <div className="absolute z-50 w-full mt-1 border border-border bg-background shadow-lg max-h-60 overflow-y-auto flex flex-col">
+                    <div className="p-2 sticky top-0 bg-background border-b border-border">
+                      <Input 
+                        placeholder="Search categories..." 
+                        value={catSearchQuery}
+                        onChange={(e) => setCatSearchQuery(e.target.value)}
+                        className="h-8 text-xs font-bn"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                    {allCategories.map(main => {
+                      const matchMain = main.name_bn.includes(catSearchQuery) || (main.name_en && main.name_en.toLowerCase().includes(catSearchQuery.toLowerCase()));
+                      const filteredChildren = main.children?.filter(sub => sub.name_bn.includes(catSearchQuery) || (sub.name_en && sub.name_en.toLowerCase().includes(catSearchQuery.toLowerCase()))) || [];
+                      
+                      if (!matchMain && filteredChildren.length === 0 && catSearchQuery) return null;
+
+                      return (
+                        <div key={main.id}>
+                          {(!catSearchQuery || matchMain) && (
+                            <button
+                              type="button"
+                              onClick={() => toggleCategory(main.id)}
+                              className={`w-full px-4 py-2 text-sm text-left flex items-center gap-2 hover:bg-secondary/50 font-bn font-semibold ${selectedCatIds.includes(main.id) ? "bg-accent/10 text-accent" : ""}`}
+                            >
+                              <span className={`w-3.5 h-3.5 border rounded-sm flex items-center justify-center text-[10px] ${selectedCatIds.includes(main.id) ? "bg-accent border-accent text-white" : "border-border"}`}>
+                                {selectedCatIds.includes(main.id) ? "✓" : ""}
+                              </span>
+                              {main.name_bn}
+                            </button>
+                          )}
+                          {filteredChildren.map(sub => (
+                            <button
+                              key={sub.id}
+                              type="button"
+                              onClick={() => toggleCategory(sub.id)}
+                              className={`w-full pl-10 pr-4 py-2 text-sm text-left flex items-center gap-2 hover:bg-secondary/50 font-bn ${selectedCatIds.includes(sub.id) ? "bg-accent/10 text-accent" : "text-muted-foreground"}`}
+                            >
+                              <span className={`w-3.5 h-3.5 border rounded-sm flex items-center justify-center text-[10px] ${selectedCatIds.includes(sub.id) ? "bg-accent border-accent text-white" : "border-border"}`}>
+                                {selectedCatIds.includes(sub.id) ? "✓" : ""}
+                              </span>
+                              {sub.name_bn}
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })}
                     {allCategories.length === 0 && (
                       <div className="px-4 py-3 text-sm text-muted-foreground font-en-sans">No categories. Run SQL migration first.</div>
                     )}

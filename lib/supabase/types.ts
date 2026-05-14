@@ -163,6 +163,10 @@ export type Database = {
           id: string
           name_bn: string
           name_en: string | null
+          slug: string | null
+          description: string | null
+          icon_url: string | null
+          is_active: boolean
           parent_id: string | null
           is_main: boolean
           position: number
@@ -172,6 +176,10 @@ export type Database = {
           id?: string
           name_bn: string
           name_en?: string | null
+          slug?: string | null
+          description?: string | null
+          icon_url?: string | null
+          is_active?: boolean
           parent_id?: string | null
           is_main?: boolean
           position?: number
@@ -181,6 +189,10 @@ export type Database = {
           id?: string
           name_bn?: string
           name_en?: string | null
+          slug?: string | null
+          description?: string | null
+          icon_url?: string | null
+          is_active?: boolean
           parent_id?: string | null
           is_main?: boolean
           position?: number
