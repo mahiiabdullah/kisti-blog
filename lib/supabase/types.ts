@@ -14,6 +14,115 @@ export type Database = {
   }
   public: {
     Tables: {
+      post_stats: {
+        Row: {
+          post_id: string
+          view_count: number | null
+          unique_visitors: number | null
+          updated_at: string
+        }
+        Insert: {
+          post_id: string
+          view_count?: number | null
+          unique_visitors?: number | null
+          updated_at?: string
+        }
+        Update: {
+          post_id?: string
+          view_count?: number | null
+          unique_visitors?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_stats_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: true
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      post_views: {
+        Row: {
+          id: string
+          post_id: string
+          session_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          post_id: string
+          session_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          post_id?: string
+          session_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_views_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      writers: {
+        Row: {
+          id: string
+          name: string
+          bengali_name: string
+          slug: string
+          bio: string | null
+          profile_image: string | null
+          nationality: string | null
+          birth_year: number | null
+          death_year: number | null
+          social_links: Json | null
+          is_featured: boolean | null
+          is_visible: boolean | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          bengali_name: string
+          slug: string
+          bio?: string | null
+          profile_image?: string | null
+          nationality?: string | null
+          birth_year?: number | null
+          death_year?: number | null
+          social_links?: Json | null
+          is_featured?: boolean | null
+          is_visible?: boolean | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          bengali_name?: string
+          slug?: string
+          bio?: string | null
+          profile_image?: string | null
+          nationality?: string | null
+          birth_year?: number | null
+          death_year?: number | null
+          social_links?: Json | null
+          is_featured?: boolean | null
+          is_visible?: boolean | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           approved: boolean
@@ -212,6 +321,9 @@ export type Database = {
           slug: string
           status: Database["public"]["Enums"]["post_status"]
           updated_at: string
+          writer_id: string | null
+          is_translation: boolean | null
+          translator_id: string | null
         }
         Insert: {
           author_id: string
@@ -225,6 +337,9 @@ export type Database = {
           slug: string
           status?: Database["public"]["Enums"]["post_status"]
           updated_at?: string
+          writer_id?: string | null
+          is_translation?: boolean | null
+          translator_id?: string | null
         }
         Update: {
           author_id?: string
@@ -238,8 +353,26 @@ export type Database = {
           slug?: string
           status?: Database["public"]["Enums"]["post_status"]
           updated_at?: string
+          writer_id?: string | null
+          is_translation?: boolean | null
+          translator_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "posts_writer_id_fkey"
+            columns: ["writer_id"]
+            isOneToOne: false
+            referencedRelation: "writers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_translator_id_fkey"
+            columns: ["translator_id"]
+            isOneToOne: false
+            referencedRelation: "writers"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       profiles: {
         Row: {
@@ -300,6 +433,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      increment_post_view: {
+        Args: {
+          p_post_id: string
+          p_session_id: string
+        }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

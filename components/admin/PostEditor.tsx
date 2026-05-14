@@ -59,6 +59,10 @@ export default function AdminPostEditor() {
   const [slug, setSlug] = useState("");
   const [status, setStatus] = useState<"draft" | "published">("draft");
   const [coverUrl, setCoverUrl] = useState("");
+  const [writerId, setWriterId] = useState<string>("");
+  const [isTranslation, setIsTranslation] = useState<boolean>(false);
+  const [translatorId, setTranslatorId] = useState<string>("");
+  const [allWriters, setAllWriters] = useState<any[]>([]);
   const [readingMinutes, setReadingMinutes] = useState(5);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
@@ -75,15 +79,21 @@ export default function AdminPostEditor() {
   const [categoryBn, setCategoryBn] = useState("");
   const [categoryEn, setCategoryEn] = useState("");
 
-  // Load categories
+  // Load categories and writers
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from("categories").select("*").order("position");
-      if (data) {
-        const all = data as CategoryItem[];
+      const [catsRes, writersRes] = await Promise.all([
+        supabase.from("categories").select("*").order("position"),
+        supabase.from("writers").select("id, name, bengali_name").order("name")
+      ]);
+      if (catsRes.data) {
+        const all = catsRes.data as CategoryItem[];
         const mains = all.filter(c => !c.parent_id);
         for (const m of mains) m.children = all.filter(c => c.parent_id === m.id);
         setAllCategories(mains);
+      }
+      if (writersRes.data) {
+        setAllWriters(writersRes.data);
       }
     })();
   }, []);
@@ -102,6 +112,9 @@ export default function AdminPostEditor() {
       setStatus(data.status);
       setCategoryBn(data.category_bn ?? "");
       setCategoryEn(data.category_en ?? "");
+      setWriterId(data.writer_id ?? "");
+      setIsTranslation(data.is_translation ?? false);
+      setTranslatorId(data.translator_id ?? "");
       setCoverUrl(data.cover_url ?? "");
       setReadingMinutes(data.reading_minutes ?? 5);
       setTags((data.post_tags as any[]).map((t) => t.tag));
@@ -198,6 +211,9 @@ export default function AdminPostEditor() {
         slug: finalSlug, author_id: user.id, status: newStatus,
         category_bn: finalCatBn || null, category_en: finalCatEn || null,
         cover_url: coverUrl || null, reading_minutes: readingMinutes,
+        writer_id: writerId || null,
+        is_translation: isTranslation,
+        translator_id: isTranslation ? (translatorId || null) : null,
         published_at: newStatus === "published" ? (status === "published" ? undefined : new Date().toISOString()) : null,
       };
 
@@ -274,6 +290,51 @@ export default function AdminPostEditor() {
             <div className="grid sm:grid-cols-2 gap-4">
               <div><Label className="text-xs uppercase tracking-wider font-en-sans">Slug</Label><Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="auto from title" /></div>
               <div><Label className="text-xs uppercase tracking-wider font-en-sans text-muted-foreground">Reading minutes (Auto)</Label><Input type="number" min={1} value={readingMinutes} readOnly className="bg-secondary/20 text-muted-foreground" /></div>
+            </div>
+
+            {/* Writer & Translation */}
+            <div className="grid sm:grid-cols-2 gap-4 border border-border p-4 bg-secondary/10">
+              <div>
+                <Label className="text-xs uppercase tracking-wider font-en-sans">লেখক (Writer)</Label>
+                <select 
+                  value={writerId} 
+                  onChange={(e) => setWriterId(e.target.value)}
+                  className="w-full mt-1 px-3 py-2 border border-border bg-background text-sm font-bn"
+                >
+                  <option value="">[ Select Writer ]</option>
+                  {allWriters.map(w => (
+                    <option key={w.id} value={w.id}>{w.bengali_name} ({w.name})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-2 justify-end">
+                <label className="flex items-center gap-2 text-sm font-bn cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={isTranslation} 
+                    onChange={(e) => setIsTranslation(e.target.checked)} 
+                    className="rounded-none border-border"
+                  />
+                  This is a translated writing
+                </label>
+                
+                {isTranslation && (
+                  <div className="animate-in fade-in slide-in-from-top-2">
+                    <Label className="text-xs uppercase tracking-wider font-en-sans">অনুবাদক (Translator)</Label>
+                    <select 
+                      value={translatorId} 
+                      onChange={(e) => setTranslatorId(e.target.value)}
+                      className="w-full mt-1 px-3 py-2 border border-border bg-background text-sm font-bn"
+                    >
+                      <option value="">[ Select Translator ]</option>
+                      {allWriters.map(w => (
+                        <option key={w.id} value={w.id}>{w.bengali_name} ({w.name})</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Category dropdown */}

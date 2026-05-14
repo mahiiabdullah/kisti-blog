@@ -4,12 +4,14 @@ import { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { LayoutDashboard, FileText, MessageSquare, Image, Users, LogOut, ChevronLeft, FolderTree } from "lucide-react";
+import { LayoutDashboard, FileText, MessageSquare, Image, Users, LogOut, ChevronLeft, FolderTree, PenTool, TrendingUp } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
 const links = [
   { href: "/admin", label: "Posts", icon: FileText },
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/analytics", label: "Analytics", icon: TrendingUp },
+  { href: "/admin/writers", label: "Writers", icon: PenTool },
   { href: "/admin/comments", label: "Comments", icon: MessageSquare },
   { href: "/admin/categories", label: "Categories", icon: FolderTree },
   { href: "/admin/media", label: "Media", icon: Image },

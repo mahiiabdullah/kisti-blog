@@ -11,12 +11,16 @@ DROP FUNCTION IF EXISTS public.touch_updated_at() CASCADE;
 DROP FUNCTION IF EXISTS public.has_role(uuid, public.app_role) CASCADE;
 DROP FUNCTION IF EXISTS public.is_admin(uuid) CASCADE;
 DROP FUNCTION IF EXISTS public.rls_auto_enable() CASCADE;
+DROP FUNCTION IF EXISTS public.increment_post_view(uuid, text) CASCADE;
 
+DROP TABLE IF EXISTS public.post_stats CASCADE;
+DROP TABLE IF EXISTS public.post_views CASCADE;
 DROP TABLE IF EXISTS public.comments CASCADE;
 DROP TABLE IF EXISTS public.post_tags CASCADE;
 DROP TABLE IF EXISTS public.post_images CASCADE;
 DROP TABLE IF EXISTS public.post_translations CASCADE;
 DROP TABLE IF EXISTS public.posts CASCADE;
+DROP TABLE IF EXISTS public.writers CASCADE;
 DROP TABLE IF EXISTS public.user_roles CASCADE;
 DROP TABLE IF EXISTS public.profiles CASCADE;
 
@@ -52,7 +56,7 @@ alter table public.user_roles enable row level security;
 -- Security invoker role checks (safe for public schema)
 create or replace function public.has_role(_user_id uuid, _role app_role)
 returns boolean
-language sql stable set search_path = ''
+language sql stable security invoker set search_path = ''
 as $$
   select exists (
     select 1 from public.user_roles
@@ -62,7 +66,7 @@ $$;
 
 create or replace function public.is_admin(_user_id uuid)
 returns boolean
-language sql stable set search_path = ''
+language sql stable security invoker set search_path = ''
 as $$
   select exists (
     select 1 from public.user_roles
@@ -76,13 +80,33 @@ grant execute on function public.is_admin(uuid) to public;
 
 -- ====================================================================================
 
--- 3. POSTS & CONTENT
+-- 3. CONTENT (WRITERS, POSTS, ANALYTICS)
+
+create table public.writers (
+  id uuid primary key default gen_random_uuid(),
+  slug text not null unique,
+  name text not null,
+  bengali_name text not null,
+  bio text,
+  nationality text,
+  birth_year int,
+  death_year int,
+  profile_image text,
+  is_visible boolean default true,
+  is_featured boolean default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create type public.post_status as enum ('draft','published');
 
 create table public.posts (
   id uuid primary key default gen_random_uuid(),
   slug text not null unique,
   author_id uuid not null references public.profiles(id) on delete cascade,
+  writer_id uuid references public.writers(id) on delete set null,
+  translator_id uuid references public.writers(id) on delete set null,
+  is_translation boolean not null default false,
   cover_url text,
   category_bn text,
   category_en text,
@@ -130,11 +154,28 @@ create table public.comments (
   created_at timestamptz not null default now()
 );
 
+create table public.post_views (
+  id uuid primary key default gen_random_uuid(),
+  post_id uuid not null references public.posts(id) on delete cascade,
+  session_id text not null,
+  viewed_at timestamptz not null default now()
+);
+
+create table public.post_stats (
+  post_id uuid primary key references public.posts(id) on delete cascade,
+  view_count bigint not null default 0,
+  unique_visitors bigint not null default 0,
+  last_viewed_at timestamptz not null default now()
+);
+
+alter table public.writers enable row level security;
 alter table public.posts enable row level security;
 alter table public.post_translations enable row level security;
 alter table public.post_images enable row level security;
 alter table public.post_tags enable row level security;
 alter table public.comments enable row level security;
+alter table public.post_views enable row level security;
+alter table public.post_stats enable row level security;
 
 -- ====================================================================================
 
@@ -150,6 +191,11 @@ create policy "anyone read roles" on public.user_roles for select using (true);
 create policy "super_admin manage roles" on public.user_roles for all
   using (public.has_role(auth.uid(), 'super_admin'))
   with check (public.has_role(auth.uid(), 'super_admin'));
+
+-- writers
+create policy "writers readable by all" on public.writers for select using (true);
+create policy "admins manage writers" on public.writers for all
+  using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
 
 -- posts
 create policy "published posts readable" on public.posts for select using (status = 'published' or public.is_admin(auth.uid()));
@@ -181,6 +227,10 @@ create policy "approved comments readable" on public.comments for select using (
 create policy "logged in users post comments" on public.comments for insert with check (auth.uid() = user_id);
 create policy "admins moderate comments" on public.comments for update using (public.is_admin(auth.uid()));
 create policy "admins or owner delete comments" on public.comments for delete using (public.is_admin(auth.uid()) or user_id = auth.uid());
+
+-- post_views / post_stats
+create policy "stats readable by all" on public.post_stats for select using (true);
+create policy "admins read views" on public.post_views for select using (public.is_admin(auth.uid()));
 
 -- ====================================================================================
 
@@ -218,28 +268,72 @@ revoke execute on function public.touch_updated_at() from public, anon, authenti
 
 create trigger profiles_touch before update on public.profiles
   for each row execute function public.touch_updated_at();
+create trigger writers_touch before update on public.writers
+  for each row execute function public.touch_updated_at();
 create trigger posts_touch before update on public.posts
   for each row execute function public.touch_updated_at();
 
 -- ====================================================================================
 
--- 6. INDEXES FOR PERFORMANCE
+-- 6. RPC FUNCTIONS
+
+-- Function to safely increment views with basic session-based anti-spam cooling (1 hour)
+CREATE OR REPLACE FUNCTION public.increment_post_view(p_post_id uuid, p_session_id text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  v_last_view timestamptz;
+BEGIN
+  -- Check the last time this session viewed this specific post
+  SELECT viewed_at INTO v_last_view
+  FROM public.post_views
+  WHERE post_id = p_post_id AND session_id = p_session_id
+  ORDER BY viewed_at DESC
+  LIMIT 1;
+
+  -- Only register a new view if it's the first time OR if 1 hour has passed since the last view
+  IF v_last_view IS NULL OR (now() - v_last_view) > interval '1 hour' THEN
+    -- Log the raw view
+    INSERT INTO public.post_views (post_id, session_id)
+    VALUES (p_post_id, p_session_id);
+
+    -- Upsert the aggregated stats table
+    INSERT INTO public.post_stats (post_id, view_count, unique_visitors, last_viewed_at)
+    VALUES (p_post_id, 1, 1, now())
+    ON CONFLICT (post_id) DO UPDATE SET
+      view_count = post_stats.view_count + 1,
+      unique_visitors = post_stats.unique_visitors + 1,
+      last_viewed_at = now();
+  END IF;
+END;
+$$;
+
+-- Revoke execute from public/anon/authenticated to prevent abuse.
+-- It should only be called via the service_role key in the Next.js API route.
+REVOKE EXECUTE ON FUNCTION public.increment_post_view(uuid, text) FROM public, anon, authenticated;
+
+-- ====================================================================================
+
+-- 7. INDEXES FOR PERFORMANCE
 
 CREATE INDEX IF NOT EXISTS posts_status_published_at_idx ON posts(status, published_at DESC);
 CREATE INDEX IF NOT EXISTS post_translations_post_id_idx ON post_translations(post_id);
 CREATE INDEX IF NOT EXISTS post_tags_post_id_idx ON post_tags(post_id);
 CREATE INDEX IF NOT EXISTS comments_post_id_approved_idx ON comments(post_id, approved);
+CREATE INDEX IF NOT EXISTS post_views_post_session_idx ON post_views(post_id, session_id);
 
 -- ====================================================================================
 
--- 7. STORAGE BUCKETS
+-- 8. STORAGE BUCKETS
 
 -- Ensure media bucket exists
 insert into storage.buckets (id, name, public) values ('media','media', true)
 on conflict (id) do nothing;
 
 -- Secure bucket policies (prevent full listing from public)
--- First, drop any rogue public read policies
 DROP POLICY IF EXISTS "Public Read" ON storage.objects;
 DROP POLICY IF EXISTS "Public Read Media" ON storage.objects;
 DROP POLICY IF EXISTS "media public read" ON storage.objects;

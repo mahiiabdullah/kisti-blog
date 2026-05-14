@@ -9,6 +9,7 @@ import { Comments } from "@/components/Comments";
 import { PhotoCardGenerator } from "@/components/PhotoCardGenerator";
 import { PostPageSkeleton } from "@/components/Skeletons";
 import { ShareButtons } from "@/components/ShareButtons";
+import { ViewTracker } from "@/components/ViewTracker";
 import ReactMarkdown from "react-markdown";
 
 type LangCode = "bn" | "en" | "ar";
@@ -21,6 +22,10 @@ interface Translation { lang: LangCode; title: string; excerpt: string | null; b
 interface PostData {
   id: string; slug: string; cover_url: string | null; category_bn: string | null; category_en: string | null;
   published_at: string | null; reading_minutes: number | null; author_id: string;
+  is_translation?: boolean;
+  writer?: { slug: string; name: string; bengali_name: string } | null;
+  translator?: { slug: string; name: string; bengali_name: string } | null;
+  post_stats?: { view_count: number }[] | null;
   post_translations: Translation[];
   post_tags: { tag: string }[];
   profiles?: { display_name: string | null; display_name_bn: string | null } | null;
@@ -54,7 +59,10 @@ export default function PostPage() {
     (async () => {
       const { data, error } = await supabase
         .from("posts")
-        .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id,
+        .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id, is_translation,
+                 writer:writers!posts_writer_id_fkey(slug, name, bengali_name),
+                 translator:writers!posts_translator_id_fkey(slug, name, bengali_name),
+                 post_stats(view_count),
                  post_translations(lang, title, excerpt, body, footnotes, citations),
                  post_tags(tag)`)
         .eq("slug", slug)
@@ -122,6 +130,7 @@ export default function PostPage() {
   const dateFormatted = post.published_at
     ? new Date(post.published_at).toLocaleDateString("bn-BD", { year: "numeric", month: "long", day: "numeric" })
     : null;
+  const viewCount = post.post_stats?.[0]?.view_count ?? 0;
 
   const currentUrl = typeof window !== "undefined" ? window.location.href : "";
 
@@ -175,8 +184,25 @@ export default function PostPage() {
           </h1>
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0 text-sm text-muted-foreground mb-3">
-            <div className="flex items-center gap-1.5">
-              <span className="font-bn text-foreground font-medium">{author}</span>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {post.is_translation ? (
+                <>
+                  <span className="font-bn text-foreground font-medium flex gap-2 items-center">
+                    <span className="text-muted-foreground text-xs font-bn">মূল লেখক:</span> 
+                    {post.writer ? <Link href={`/writers/${post.writer.slug}`} className="hover:text-accent transition-colors">{post.writer.bengali_name}</Link> : "—"}
+                  </span>
+                  <span className="hidden sm:inline mx-3 text-border">·</span>
+                  <span className="font-bn text-foreground font-medium flex gap-2 items-center">
+                    <span className="text-muted-foreground text-xs font-bn">অনুবাদ:</span> 
+                    {post.translator ? <Link href={`/writers/${post.translator.slug}`} className="hover:text-accent transition-colors">{post.translator.bengali_name}</Link> : "—"}
+                  </span>
+                </>
+              ) : (
+                <span className="font-bn text-foreground font-medium flex gap-2 items-center">
+                  <span className="text-muted-foreground text-xs font-bn">লেখক:</span> 
+                  {post.writer ? <Link href={`/writers/${post.writer.slug}`} className="hover:text-accent transition-colors">{post.writer.bengali_name}</Link> : author}
+                </span>
+              )}
             </div>
             {post.published_at && (
               <>
@@ -194,6 +220,14 @@ export default function PostPage() {
               <BookOpen className="w-3 h-3" />
               {post.reading_minutes ?? 5} মিনিটে পড়ুন
             </span>
+            {viewCount > 0 && (
+              <>
+                <span className="hidden sm:inline text-border">·</span>
+                <span className="flex items-center gap-1">
+                  👁 {viewCount}
+                </span>
+              </>
+            )}
           </div>
 
           {available.length > 1 && (
@@ -292,6 +326,7 @@ export default function PostPage() {
 
         <Comments postId={post.id} />
       </article>
+      <ViewTracker postId={post.id} />
     </>
   );
 }
