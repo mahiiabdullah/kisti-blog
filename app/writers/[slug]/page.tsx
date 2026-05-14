@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
-import { PostCard } from "@/components/PostCard"; // Assuming there's a PostCard or similar component
+
 
 interface WriterPageProps {
   params: { slug: string };
