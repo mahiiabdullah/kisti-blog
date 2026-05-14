@@ -13,6 +13,8 @@ DROP FUNCTION IF EXISTS public.is_admin(uuid) CASCADE;
 DROP FUNCTION IF EXISTS public.rls_auto_enable() CASCADE;
 DROP FUNCTION IF EXISTS public.increment_post_view(uuid, text) CASCADE;
 
+DROP TABLE IF EXISTS public.post_categories CASCADE;
+DROP TABLE IF EXISTS public.categories CASCADE;
 DROP TABLE IF EXISTS public.post_stats CASCADE;
 DROP TABLE IF EXISTS public.post_views CASCADE;
 DROP TABLE IF EXISTS public.comments CASCADE;
@@ -82,6 +84,16 @@ grant execute on function public.is_admin(uuid) to public;
 
 -- 3. CONTENT (WRITERS, POSTS, ANALYTICS)
 
+create table public.categories (
+  id uuid primary key default gen_random_uuid(),
+  name_bn text not null,
+  name_en text,
+  parent_id uuid references public.categories(id) on delete cascade,
+  is_main boolean not null default false,
+  position int not null default 0,
+  created_at timestamptz not null default now()
+);
+
 create table public.writers (
   id uuid primary key default gen_random_uuid(),
   slug text not null unique,
@@ -129,6 +141,12 @@ create table public.post_translations (
   unique (post_id, lang)
 );
 
+create table public.post_categories (
+  id uuid primary key default gen_random_uuid(),
+  post_id uuid not null references public.posts(id) on delete cascade,
+  category_id uuid not null references public.categories(id) on delete cascade
+);
+
 create table public.post_images (
   id uuid primary key default gen_random_uuid(),
   post_id uuid not null references public.posts(id) on delete cascade,
@@ -168,6 +186,8 @@ create table public.post_stats (
   last_viewed_at timestamptz not null default now()
 );
 
+alter table public.categories enable row level security;
+alter table public.post_categories enable row level security;
 alter table public.writers enable row level security;
 alter table public.posts enable row level security;
 alter table public.post_translations enable row level security;
@@ -191,6 +211,15 @@ create policy "anyone read roles" on public.user_roles for select using (true);
 create policy "super_admin manage roles" on public.user_roles for all
   using (public.has_role(auth.uid(), 'super_admin'))
   with check (public.has_role(auth.uid(), 'super_admin'));
+
+-- categories
+create policy "categories readable by all" on public.categories for select using (true);
+create policy "admins manage categories" on public.categories for all
+  using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
+
+create policy "post_categories readable by all" on public.post_categories for select using (true);
+create policy "admins manage post_categories" on public.post_categories for all
+  using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
 
 -- writers
 create policy "writers readable by all" on public.writers for select using (true);
