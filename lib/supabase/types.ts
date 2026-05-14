@@ -205,6 +205,12 @@ export type Database = {
           id: string
           post_id: string
           category_id: string
+          categories?: {
+            id: string
+            name_bn: string
+            name_en: string | null
+            slug: string | null
+          }
         }
         Insert: {
           id?: string
@@ -216,7 +222,22 @@ export type Database = {
           post_id?: string
           category_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "post_categories_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       post_images: {
         Row: {

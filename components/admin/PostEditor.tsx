@@ -254,14 +254,13 @@ export default function AdminPostEditor() {
       if (tags.length) { const { error: tgInsErr } = await supabase.from("post_tags").insert(tags.map((tag) => ({ post_id: postId!, tag }))); if (tgInsErr) throw tgInsErr; }
 
       // Categories (new system)
-      try {
-        await supabase.from("post_categories").delete().eq("post_id", postId!);
-        if (selectedCatIds.length > 0) {
-          await supabase.from("post_categories").insert(selectedCatIds.map(cid => ({ post_id: postId!, category_id: cid })));
+      await supabase.from("post_categories").delete().eq("post_id", postId!);
+      if (selectedCatIds.length > 0) {
+        const { error: catInsertError } = await supabase.from("post_categories").insert(selectedCatIds.map(cid => ({ post_id: postId!, category_id: cid })));
+        if (catInsertError) {
+          console.error("Failed to save post_categories:", catInsertError);
+          throw catInsertError;
         }
-      } catch (e) {
-        // Table may not exist yet, silently ignore
-        console.warn("post_categories save skipped:", e);
       }
 
       toast.success(newStatus === "published" ? "প্রকাশিত!" : "Saved as draft");

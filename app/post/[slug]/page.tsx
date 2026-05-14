@@ -35,6 +35,7 @@ interface PostData {
   post_stats?: { view_count: number }[] | null;
   post_translations: Translation[];
   post_tags: { tag: string }[];
+  post_categories?: { categories: CategoryInfo | null }[];
   profiles?: { display_name: string | null; display_name_bn: string | null } | null;
   categories?: CategoryInfo[];
 }
@@ -73,7 +74,8 @@ export default function PostPage() {
                  translator:writers!posts_translator_id_fkey(slug, name, bengali_name),
                  post_stats(view_count),
                  post_translations(lang, title, excerpt, body, footnotes, citations),
-                 post_tags(tag)`)
+                 post_tags(tag),
+                 post_categories(categories(id, name_bn, name_en, slug))`)
         .eq("slug", slug)
         .eq("status", "published")
         .maybeSingle();
@@ -100,22 +102,14 @@ export default function PostPage() {
           }
         }
 
-        // Fetch categories from the junction table (two simple queries, no join)
-        const { data: pcData } = await supabase
-          .from("post_categories")
-          .select("category_id")
-          .eq("post_id", p.id);
-
-        if (pcData && pcData.length > 0) {
-          const catIds = pcData.map((pc: any) => pc.category_id);
-          const { data: catDetails } = await supabase
-            .from("categories")
-            .select("id, name_bn, name_en, slug")
-            .in("id", catIds);
-          
-          if (catDetails && catDetails.length > 0) {
-            setPostCategories(catDetails as CategoryInfo[]);
-            p.categories = catDetails as CategoryInfo[];
+        // Map joined categories
+        if (p.post_categories && p.post_categories.length > 0) {
+          const cats = p.post_categories
+            .map((pc) => pc.categories)
+            .filter((c): c is CategoryInfo => c != null);
+          if (cats.length > 0) {
+            setPostCategories(cats);
+            p.categories = cats;
           }
         }
 
@@ -154,8 +148,6 @@ export default function PostPage() {
   const dir = lang === "ar" ? "rtl" : "ltr";
   const author = post.profiles?.display_name_bn ?? post.profiles?.display_name ?? "—";
   const available = post.post_translations.map((x) => x.lang);
-  const categoryDisplay = lang === "bn" ? post.category_bn : post.category_en;
-  const hasNewCategories = postCategories.length > 0;
   const dateFormatted = post.published_at
     ? new Date(post.published_at).toLocaleDateString("bn-BD", { year: "numeric", month: "long", day: "numeric" })
     : null;
@@ -183,34 +175,27 @@ export default function PostPage() {
               <Home className="w-3 h-3" />
               <span>প্রচ্ছদ</span>
             </Link>
-            {hasNewCategories ? (
+            {postCategories.length > 0 && (
               <>
                 <ChevronRight className="w-3 h-3 text-muted-foreground/50" />
                 <Link href={postCategories[0].slug ? `/category/${postCategories[0].slug}` : `/?cat=${postCategories[0].id}`} className="hover:text-foreground transition-colors">
                   {lang === "bn" ? postCategories[0].name_bn : (postCategories[0].name_en || postCategories[0].name_bn)}
                 </Link>
               </>
-            ) : categoryDisplay ? (
-              <>
-                <ChevronRight className="w-3 h-3 text-muted-foreground/50" />
-                <Link href={`/?cat=${encodeURIComponent(post.category_bn || "")}`} className="hover:text-foreground transition-colors">
-                  {categoryDisplay}
-                </Link>
-              </>
-            ) : null}
+            )}
             <ChevronRight className="w-3 h-3 text-muted-foreground/50" />
             <span className="text-foreground/70 line-clamp-1">{t.title}</span>
           </nav>
 
           <div className="flex flex-wrap gap-2 mb-4">
-            {hasNewCategories ? (
+            {postCategories.length > 0 ? (
               postCategories.map((cat) => (
-                <Link key={cat.id} href={cat.slug ? `/category/${cat.slug}` : `/?cat=${cat.id}`} className="inline-block text-xs font-bn-sans px-3 py-1 bg-accent text-white rounded-sm hover:bg-accent/90 transition-colors">
+                <Link key={cat.id} href={cat.slug ? `/category/${cat.slug}` : `/?cat=${cat.id}`} className="inline-block text-xs font-bn-sans px-3 py-1 bg-amber-900/10 text-amber-900 dark:text-amber-400 border border-amber-900/20 rounded-sm hover:bg-amber-900/20 dark:hover:bg-amber-400/20 transition-colors">
                   {lang === "bn" ? cat.name_bn : (cat.name_en || cat.name_bn)}
                 </Link>
               ))
             ) : post.category_bn ? (
-              <Link href={`/?cat=${encodeURIComponent(post.category_bn)}`} className="inline-block text-xs font-bn-sans px-3 py-1 bg-accent text-white rounded-sm hover:bg-accent/90 transition-colors">
+              <Link href={`/category/${encodeURIComponent(post.category_bn.toLowerCase().replace(/\s+/g, '-'))}`} className="inline-block text-xs font-bn-sans px-3 py-1 bg-amber-900/10 text-amber-900 dark:text-amber-400 border border-amber-900/20 rounded-sm hover:bg-amber-900/20 dark:hover:bg-amber-400/20 transition-colors">
                 {post.category_bn}
               </Link>
             ) : null}
@@ -363,7 +348,7 @@ export default function PostPage() {
           cover={post.cover_url || heroFallback}
           lang={lang}
           date={post.published_at}
-          categoryBn={post.category_bn}
+          categoryBn={postCategories[0]?.name_bn ?? post.category_bn}
         />
 
         <Comments postId={post.id} />

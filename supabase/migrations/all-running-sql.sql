@@ -87,8 +87,12 @@ grant execute on function public.is_admin(uuid) to public;
 
 create table public.categories (
   id uuid primary key default gen_random_uuid(),
+  slug text unique,
   name_bn text not null,
   name_en text,
+  description text,
+  icon_url text,
+  is_active boolean not null default true,
   parent_id uuid references public.categories(id) on delete cascade,
   is_main boolean not null default false,
   position int not null default 0,
@@ -145,7 +149,8 @@ create table public.post_translations (
 create table public.post_categories (
   id uuid primary key default gen_random_uuid(),
   post_id uuid not null references public.posts(id) on delete cascade,
-  category_id uuid not null references public.categories(id) on delete cascade
+  category_id uuid not null references public.categories(id) on delete cascade,
+  unique (post_id, category_id)
 );
 
 create table public.post_images (
@@ -354,6 +359,7 @@ CREATE INDEX IF NOT EXISTS post_translations_post_id_idx ON post_translations(po
 CREATE INDEX IF NOT EXISTS post_tags_post_id_idx ON post_tags(post_id);
 CREATE INDEX IF NOT EXISTS comments_post_id_approved_idx ON comments(post_id, approved);
 CREATE INDEX IF NOT EXISTS post_views_post_session_idx ON post_views(post_id, session_id);
+CREATE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug);
 
 -- ====================================================================================
 
@@ -381,3 +387,5 @@ create policy "admins update media" on storage.objects for update
 
 create policy "admins delete media" on storage.objects for delete
   using (bucket_id = 'media' and public.is_admin(auth.uid()));
+
+-- File successfully consolidated and cleaned via MCP.
