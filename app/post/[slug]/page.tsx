@@ -99,16 +99,23 @@ export default function PostPage() {
           }
         }
 
-        // Fetch categories from the junction table
+        // Fetch categories from the junction table (two simple queries, no join)
         const { data: pcData } = await supabase
           .from("post_categories")
-          .select("category_id, categories:categories!inner(id, name_bn, name_en)")
+          .select("category_id")
           .eq("post_id", p.id);
 
         if (pcData && pcData.length > 0) {
-          const cats = pcData.map((pc: any) => pc.categories as CategoryInfo).filter(Boolean);
-          setPostCategories(cats);
-          p.categories = cats;
+          const catIds = pcData.map((pc: any) => pc.category_id);
+          const { data: catDetails } = await supabase
+            .from("categories")
+            .select("id, name_bn, name_en")
+            .in("id", catIds);
+          
+          if (catDetails && catDetails.length > 0) {
+            setPostCategories(catDetails as CategoryInfo[]);
+            p.categories = catDetails as CategoryInfo[];
+          }
         }
 
         setPost(p);
