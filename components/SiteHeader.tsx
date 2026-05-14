@@ -161,7 +161,14 @@ export const SiteHeader = () => {
             });
           }
         }
+        
+        // Add the public writers page
+        built.push({ to: "/writers", label: "লেখকবৃন্দ" });
+        
         setNav(built);
+      } else {
+        // Fallback when no categories exist but we still want the writers link
+        setNav([{ to: "/", label: "প্রচ্ছদ" }, { to: "/writers", label: "লেখকবৃন্দ" }]);
       }
     })();
   }, []);
