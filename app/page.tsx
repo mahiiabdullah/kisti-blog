@@ -57,6 +57,7 @@ function HomePageInner() {
       else setLoadingMore(true);
 
       let postIds: string[] | null = null;
+      let legacyCatName: string | null = null;
 
       // If filtering by category (UUID or legacy name)
       if (cat) {
@@ -70,7 +71,9 @@ function HomePageInner() {
             .or(`id.eq.${cat},parent_id.eq.${cat}`);
           
           if (catData && catData.length > 0) {
-            setCatLabel(catData.find(c => c.id === cat)?.name_bn ?? catData[0].name_bn);
+            const foundName = catData.find(c => c.id === cat)?.name_bn ?? catData[0].name_bn;
+            setCatLabel(foundName);
+            legacyCatName = foundName;
             const catIds = catData.map(c => c.id);
             const { data: pcData } = await supabase
               .from("post_categories")
@@ -81,6 +84,7 @@ function HomePageInner() {
         } else {
           // Legacy: filter by category_bn text
           setCatLabel(cat);
+          legacyCatName = cat;
         }
       } else {
         setCatLabel(null);
@@ -97,14 +101,25 @@ function HomePageInner() {
       // Apply filter
       if (postIds !== null) {
         if (postIds.length === 0) {
-          // No matching posts
-          setPosts(isReset ? [] : posts);
-          setHasMore(false);
-          if (isReset) setLoading(false);
-          else setLoadingMore(false);
-          return;
+          if (legacyCatName) {
+            // Fallback entirely to legacy text
+            query = query.eq("category_bn", legacyCatName);
+          } else {
+            // No matching posts
+            setPosts(isReset ? [] : posts);
+            setHasMore(false);
+            if (isReset) setLoading(false);
+            else setLoadingMore(false);
+            return;
+          }
+        } else {
+          if (legacyCatName) {
+            // Mix of new and legacy
+            query = query.or(`id.in.(${postIds.join(',')}),category_bn.eq.${legacyCatName}`);
+          } else {
+            query = query.in("id", postIds);
+          }
         }
-        query = query.in("id", postIds);
       } else if (cat && !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(cat)) {
         // Legacy text-based filter
         query = query.eq("category_bn", cat);

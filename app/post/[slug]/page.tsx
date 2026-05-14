@@ -192,7 +192,9 @@ export default function PostPage() {
             ) : categoryDisplay ? (
               <>
                 <ChevronRight className="w-3 h-3 text-muted-foreground/50" />
-                <span className="text-foreground/70">{categoryDisplay}</span>
+                <Link href={`/?cat=${encodeURIComponent(post.category_bn || "")}`} className="hover:text-foreground transition-colors">
+                  {categoryDisplay}
+                </Link>
               </>
             ) : null}
             <ChevronRight className="w-3 h-3 text-muted-foreground/50" />
@@ -207,9 +209,9 @@ export default function PostPage() {
                 </Link>
               ))
             ) : post.category_bn ? (
-              <span className="inline-block text-xs font-bn-sans px-3 py-1 bg-accent text-white rounded-sm">
+              <Link href={`/?cat=${encodeURIComponent(post.category_bn)}`} className="inline-block text-xs font-bn-sans px-3 py-1 bg-accent text-white rounded-sm hover:bg-accent/90 transition-colors">
                 {post.category_bn}
-              </span>
+              </Link>
             ) : null}
             {post.post_tags.slice(0, 2).map(({ tag }) => (
               <span key={tag} className="inline-block text-xs font-bn-sans px-3 py-1 bg-secondary text-foreground/80 rounded-sm">
