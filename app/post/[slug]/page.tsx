@@ -19,6 +19,12 @@ const langLabel: Record<LangCode, string> = { bn: "বাংলা", en: "Englis
 const heroFallback = "/hero-kisti.jpg";
 
 interface Translation { lang: LangCode; title: string; excerpt: string | null; body: string | null; footnotes: any; citations?: { label: string; url?: string }[]; }
+interface CategoryInfo {
+  id: string;
+  name_bn: string;
+  name_en: string | null;
+}
+
 interface PostData {
   id: string; slug: string; cover_url: string | null; category_bn: string | null; category_en: string | null;
   published_at: string | null; reading_minutes: number | null; author_id: string;
@@ -29,6 +35,7 @@ interface PostData {
   post_translations: Translation[];
   post_tags: { tag: string }[];
   profiles?: { display_name: string | null; display_name_bn: string | null } | null;
+  categories?: CategoryInfo[];
 }
 
 const timeAgo = (dateStr: string): string => {
@@ -52,6 +59,7 @@ export default function PostPage() {
   const [post, setPost] = useState<PostData | null>(null);
   const [lang, setLang] = useState<LangCode>("bn");
   const [loading, setLoading] = useState(true);
+  const [postCategories, setPostCategories] = useState<CategoryInfo[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -91,6 +99,18 @@ export default function PostPage() {
           }
         }
 
+        // Fetch categories from the junction table
+        const { data: pcData } = await supabase
+          .from("post_categories")
+          .select("category_id, categories:categories!inner(id, name_bn, name_en)")
+          .eq("post_id", p.id);
+
+        if (pcData && pcData.length > 0) {
+          const cats = pcData.map((pc: any) => pc.categories as CategoryInfo).filter(Boolean);
+          setPostCategories(cats);
+          p.categories = cats;
+        }
+
         setPost(p);
         const langs = p.post_translations.map((t) => t.lang);
         if (langs[0]) setLang(langs[0]);
@@ -127,6 +147,7 @@ export default function PostPage() {
   const author = post.profiles?.display_name_bn ?? post.profiles?.display_name ?? "—";
   const available = post.post_translations.map((x) => x.lang);
   const categoryDisplay = lang === "bn" ? post.category_bn : post.category_en;
+  const hasNewCategories = postCategories.length > 0;
   const dateFormatted = post.published_at
     ? new Date(post.published_at).toLocaleDateString("bn-BD", { year: "numeric", month: "long", day: "numeric" })
     : null;
@@ -154,24 +175,35 @@ export default function PostPage() {
               <Home className="w-3 h-3" />
               <span>প্রচ্ছদ</span>
             </Link>
-            {categoryDisplay && (
+            {hasNewCategories ? (
               <>
                 <ChevronRight className="w-3 h-3 text-muted-foreground/50" />
-                <Link href={`/?cat=${encodeURIComponent(post.category_bn || "")}`} className="hover:text-foreground transition-colors">
-                  {categoryDisplay}
+                <Link href={`/?cat=${postCategories[0].id}`} className="hover:text-foreground transition-colors">
+                  {lang === "bn" ? postCategories[0].name_bn : (postCategories[0].name_en || postCategories[0].name_bn)}
                 </Link>
               </>
-            )}
+            ) : categoryDisplay ? (
+              <>
+                <ChevronRight className="w-3 h-3 text-muted-foreground/50" />
+                <span className="text-foreground/70">{categoryDisplay}</span>
+              </>
+            ) : null}
             <ChevronRight className="w-3 h-3 text-muted-foreground/50" />
             <span className="text-foreground/70 line-clamp-1">{t.title}</span>
           </nav>
 
           <div className="flex flex-wrap gap-2 mb-4">
-            {post.category_bn && (
-              <Link href={`/?cat=${encodeURIComponent(post.category_bn)}`} className="inline-block text-xs font-bn-sans px-3 py-1 bg-accent text-white rounded-sm hover:bg-accent/90 transition-colors">
+            {hasNewCategories ? (
+              postCategories.map((cat) => (
+                <Link key={cat.id} href={`/?cat=${cat.id}`} className="inline-block text-xs font-bn-sans px-3 py-1 bg-accent text-white rounded-sm hover:bg-accent/90 transition-colors">
+                  {lang === "bn" ? cat.name_bn : (cat.name_en || cat.name_bn)}
+                </Link>
+              ))
+            ) : post.category_bn ? (
+              <span className="inline-block text-xs font-bn-sans px-3 py-1 bg-accent text-white rounded-sm">
                 {post.category_bn}
-              </Link>
-            )}
+              </span>
+            ) : null}
             {post.post_tags.slice(0, 2).map(({ tag }) => (
               <span key={tag} className="inline-block text-xs font-bn-sans px-3 py-1 bg-secondary text-foreground/80 rounded-sm">
                 {tag}
