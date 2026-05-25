@@ -5,13 +5,14 @@ node_modules
 .next
 out
 
-# Environment
+# Environment variables — NEVER commit these
 .env
 .env.*
 !.env.example
 
 # Build
 dist
+tsconfig.tsbuildinfo
 
 # IDE
 .vscode/*
@@ -37,7 +38,4 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Misc
-*.local
 bun.lockb
-
-.vercel

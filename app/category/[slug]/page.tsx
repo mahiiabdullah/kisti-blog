@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from 'next'
 
@@ -21,8 +22,8 @@ export async function generateMetadata(
   if (!data) return { title: "Category Not Found | KiSti" };
 
   return {
-    title: `${data.name_bn} - কিস্তি (KiSti)`,
-    description: data.description || `${data.name_bn} বিষয়ক লেখাসমূহ।`,
+    title: `${data.name_bn} — কিশতী`,
+    description: data.description || `${data.name_bn} বিষয়ক লেখাসমূহ।`,
     alternates: {
       canonical: `/category/${params.slug}`
     }
@@ -119,14 +120,17 @@ export default async function CategoryPage({ params }: PageProps) {
               return (
                 <Link href={`/post/${p.slug}`} key={p.id} className="group block">
                   <article className="grid md:grid-cols-12 gap-6 items-center">
-                    <div className="md:col-span-5 overflow-hidden bg-paper-deep">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={p.cover_url || "/hero-kisti.jpg"}
-                        alt=""
-                        className="w-full aspect-video object-cover transition-transform duration-700 group-hover:scale-[1.02] mix-blend-multiply dark:mix-blend-screen opacity-90"
-                      />
-                    </div>
+                    {p.cover_url && (
+                      <div className="md:col-span-5 overflow-hidden bg-paper-deep rounded-sm">
+                        <Image
+                          src={p.cover_url}
+                          alt={t.title}
+                          width={600}
+                          height={338}
+                          className="w-full aspect-video object-cover transition-transform duration-700 group-hover:scale-[1.02] mix-blend-multiply dark:mix-blend-screen opacity-90"
+                        />
+                      </div>
+                    )}
                     <div className="md:col-span-7" dir={lang === "ar" ? "rtl" : "ltr"}>
                       <div className="flex items-center gap-3 text-xs uppercase tracking-[0.18em] text-muted-foreground mb-2 font-en-sans" dir="ltr">
                         {p.published_at && <time>{new Date(p.published_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</time>}

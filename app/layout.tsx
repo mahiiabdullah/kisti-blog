@@ -7,11 +7,11 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "কিস্তি (kiSti) — রাষ্ট্র, ইতিহাস ও চিন্তার রেখাচিত্র",
+  title: "কিশতী — রাষ্ট্র, ইতিহাস ও চিন্তার রেখাচিত্র",
   description:
-    "কিস্তি — রাষ্ট্র, ইতিহাস ও চিন্তার রেখাচিত্র। সাহিত্য, ইতিহাস এবং দর্শনের একটি বহুভাষিক ব্লগ।",
+    "কিশতী — রাষ্ট্র, ইতিহাস ও চিন্তার রেখাচিত্র। সাহিত্য, ইতিহাস এবং দর্শনের একটি বহুভাষিক প্রকাশনা।",
   openGraph: {
-    title: "কিস্তি (kiSti)",
+    title: "কিশতী",
     description: "রাষ্ট্র, ইতিহাস ও চিন্তার রেখাচিত্র।",
     type: "website",
   },

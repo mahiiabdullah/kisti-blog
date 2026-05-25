@@ -2,50 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
-/* কিস্তি (kiSti) — Bengali literary design system
+/* কিশতী — Bengali literary design system
    All colors HSL. Tokens only. */
 
 @layer base {
   :root {
-    /* Warm paper palette */
-    --background: 40 38% 96%;
-    --foreground: 25 25% 14%;
+    /* Warm parchment/cream background — matches the editorial newspaper feel */
+    --background: 40 32% 94%;
+    --foreground: 225 25% 12%;
 
-    --card: 40 40% 98%;
-    --card-foreground: 25 25% 14%;
+    --card: 40 30% 97%;
+    --card-foreground: 225 25% 12%;
 
-    --popover: 40 40% 98%;
-    --popover-foreground: 25 25% 14%;
+    --popover: 40 30% 97%;
+    --popover-foreground: 225 25% 12%;
 
-    /* Deep indigo ink */
-    --primary: 225 45% 22%;
-    --primary-foreground: 40 38% 96%;
+    /* Deep indigo-navy — same as the section headers in the screenshot */
+    --primary: 225 48% 22%;
+    --primary-foreground: 40 32% 95%;
 
-    /* Terracotta accent */
+    /* Gold/amber — category labels, section titles */
     --accent: 14 60% 48%;
-    --accent-foreground: 40 38% 96%;
+    --accent-foreground: 40 32% 95%;
 
-    --secondary: 38 28% 90%;
-    --secondary-foreground: 25 25% 14%;
+    --secondary: 38 22% 90%;
+    --secondary-foreground: 225 25% 14%;
 
-    --muted: 38 22% 90%;
-    --muted-foreground: 25 12% 38%;
+    --muted: 38 18% 91%;
+    --muted-foreground: 225 12% 40%;
 
     --destructive: 0 65% 45%;
-    --destructive-foreground: 40 38% 96%;
+    --destructive-foreground: 40 32% 95%;
 
-    --border: 30 20% 84%;
-    --input: 30 20% 84%;
-    --ring: 225 45% 22%;
+    --border: 225 15% 82%;
+    --input: 225 15% 82%;
+    --ring: 225 48% 22%;
 
-    --radius: 0.25rem;
+    --radius: 0.15rem;
 
     /* Brand tokens */
-    --ink: 25 30% 12%;
-    --paper: 40 38% 96%;
-    --paper-deep: 38 30% 92%;
-    --gold: 38 60% 50%;
-    --indigo: 225 45% 22%;
+    --ink: 225 30% 10%;
+    --paper: 40 32% 94%;
+    --paper-deep: 38 25% 90%;
+    --gold: 40 75% 46%;
+    --indigo: 225 48% 22%;
     --terracotta: 14 60% 48%;
 
     --gradient-paper: linear-gradient(180deg, hsl(40 40% 97%) 0%, hsl(38 32% 92%) 100%);
@@ -136,6 +136,10 @@
 }
 
 @layer components {
+  /* Editorial hover utility — needs to be in @layer components for purge safety */
+  .hover\:text-gold:hover { color: hsl(var(--gold)); }
+  .hover\:border-gold:hover { border-color: hsl(var(--gold)); }
+
   .font-bn {
     font-family: 'Noto Serif Bengali', 'Hind Siliguri', serif;
   }
@@ -164,7 +168,8 @@
   }
 
   .prose-kisti p {
-    @apply leading-[1.9] text-[1.0625rem] mb-6;
+    @apply leading-[1.9] text-[1.125rem] mb-6;
+    word-break: break-word;
   }
   .prose-kisti h2 {
     @apply text-2xl md:text-3xl mt-12 mb-4;
@@ -179,11 +184,33 @@
     background-size: 22px 22px;
   }
 
-  /* Rich text body (from TipTap editor) */
-  .rich-body p { @apply leading-[1.9] text-[1.0625rem] mb-4; }
+  /* ================================================
+     Rich text body (from TipTap editor)
+     ================================================ */
+
+  /* Typography */
+  .rich-body p {
+    @apply leading-[1.9] mb-4;
+    font-size: 1.125rem;
+    word-break: break-word;
+    letter-spacing: -0.005em;
+  }
   .rich-body h2 { @apply text-2xl md:text-3xl mt-10 mb-4 font-bold; }
   .rich-body h3 { @apply text-xl md:text-2xl mt-8 mb-3 font-semibold; }
   .rich-body h4 { @apply text-lg mt-6 mb-2 font-semibold; }
+
+  /* Drop cap on first paragraph */
+  .rich-body > p:first-child::first-letter {
+    float: left;
+    font-size: 4.5em;
+    line-height: 0.85;
+    padding-right: 0.08em;
+    padding-top: 0.05em;
+    color: hsl(var(--accent));
+    font-family: 'Noto Serif Bengali', serif;
+    font-weight: 700;
+  }
+
   .rich-body blockquote {
     @apply border-l-2 border-accent pl-6 italic text-muted-foreground my-8;
   }
@@ -192,10 +219,165 @@
   .rich-body li { @apply leading-[1.8]; }
   .rich-body a { @apply text-accent underline underline-offset-4 hover:decoration-accent/60; }
   .rich-body mark { @apply bg-accent/15 px-1 py-0.5 rounded-sm; }
-  .rich-body img {
-    @apply max-w-full h-auto rounded-sm my-6 mx-auto;
-  }
   .rich-body strong { @apply font-bold; }
   .rich-body em { @apply italic; }
   .rich-body u { @apply underline; }
+  .rich-body s { @apply line-through text-muted-foreground; }
+  .rich-body hr {
+    @apply my-10 border-0 border-t border-border/60;
+  }
+
+  /* Images */
+  .rich-body img {
+    @apply max-w-full h-auto rounded-sm my-6;
+  }
+  .rich-body img.float-left {
+    float: left;
+    margin: 0.25em 1.5em 1em 0;
+    max-width: 45%;
+  }
+  .rich-body img.float-right {
+    float: right;
+    margin: 0.25em 0 1em 1.5em;
+    max-width: 45%;
+  }
+  .rich-body figure {
+    @apply my-8 text-center;
+  }
+  .rich-body figcaption {
+    @apply text-sm text-muted-foreground mt-2 font-bn-sans italic;
+  }
+
+  /* Code */
+  .rich-body code {
+    @apply bg-secondary text-foreground px-1.5 py-0.5 rounded text-sm font-mono;
+    font-family: 'Fira Code', 'Courier New', monospace;
+  }
+  .rich-body pre {
+    @apply bg-secondary border border-border rounded-sm p-4 my-6 overflow-x-auto;
+  }
+  .rich-body pre code {
+    @apply bg-transparent p-0 text-sm leading-relaxed;
+  }
+
+  /* Tables */
+  .rich-body table {
+    @apply w-full border-collapse my-6 text-sm;
+  }
+  .rich-body thead {
+    @apply bg-secondary/60;
+  }
+  .rich-body th {
+    @apply text-left px-4 py-3 font-semibold border border-border text-foreground;
+  }
+  .rich-body td {
+    @apply px-4 py-3 border border-border text-foreground/90 leading-relaxed;
+  }
+  .rich-body tr:nth-child(even) td {
+    @apply bg-secondary/20;
+  }
+  .rich-body tr:hover td {
+    @apply bg-secondary/40;
+  }
+
+  /* Callout blocks */
+  .rich-body .callout {
+    @apply rounded-sm border-l-4 p-4 my-6;
+  }
+  .rich-body .callout-info {
+    @apply bg-blue-50 border-blue-400 dark:bg-blue-950/30 dark:border-blue-500;
+  }
+  .rich-body .callout-warning {
+    @apply bg-amber-50 border-amber-400 dark:bg-amber-950/30 dark:border-amber-500;
+  }
+  .rich-body .callout-quote {
+    @apply bg-secondary/40 border-accent;
+  }
+
+  /* TipTap editor styles (moved from inline <style jsx global>) */
+  .prose-editor {
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+  .prose-editor p { margin: 0.75em 0; }
+  .prose-editor h2 { font-size: 1.5em; font-weight: 700; margin: 1.5em 0 0.5em; }
+  .prose-editor h3 { font-size: 1.25em; font-weight: 600; margin: 1.25em 0 0.5em; }
+  .prose-editor h4 { font-size: 1.1em; font-weight: 600; margin: 1em 0 0.5em; }
+  .prose-editor blockquote {
+    border-left: 3px solid hsl(var(--accent));
+    padding-left: 1em;
+    margin: 1em 0;
+    color: hsl(var(--muted-foreground));
+    font-style: italic;
+  }
+  .prose-editor ul { list-style: disc; padding-left: 1.5em; margin: 0.75em 0; }
+  .prose-editor ol { list-style: decimal; padding-left: 1.5em; margin: 0.75em 0; }
+  .prose-editor li { margin: 0.25em 0; }
+  .prose-editor mark { background: hsl(var(--accent) / 0.2); padding: 0.1em 0.3em; border-radius: 2px; }
+  .prose-editor a, .editor-link { color: hsl(var(--accent)); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .prose-editor img, .editor-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    margin: 1em 0;
+  }
+  .prose-editor img.float-left {
+    float: left;
+    margin: 0.25em 1.5em 1em 0;
+    max-width: 45%;
+  }
+  .prose-editor img.float-right {
+    float: right;
+    margin: 0.25em 0 1em 1.5em;
+    max-width: 45%;
+  }
+  .prose-editor s { text-decoration: line-through; color: hsl(var(--muted-foreground)); }
+  .prose-editor hr { border: 0; border-top: 1px solid hsl(var(--border)); margin: 2em 0; }
+  .prose-editor code {
+    background: hsl(var(--secondary));
+    padding: 0.1em 0.4em;
+    border-radius: 3px;
+    font-size: 0.875em;
+    font-family: monospace;
+  }
+  .prose-editor pre {
+    background: hsl(var(--secondary));
+    border: 1px solid hsl(var(--border));
+    border-radius: 4px;
+    padding: 1em;
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+  .prose-editor pre code { background: none; padding: 0; }
+  .prose-editor table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+  }
+  .prose-editor th, .prose-editor td {
+    border: 1px solid hsl(var(--border));
+    padding: 0.5em 1em;
+    text-align: left;
+  }
+  .prose-editor th {
+    background: hsl(var(--secondary));
+    font-weight: 600;
+  }
+  .prose-editor .selectedCell {
+    background: hsl(var(--accent) / 0.1);
+  }
+  .prose-editor .callout {
+    border-left: 4px solid hsl(var(--accent));
+    background: hsl(var(--secondary) / 0.5);
+    border-radius: 4px;
+    padding: 0.75em 1em;
+    margin: 1em 0;
+  }
+  .prose-editor p.is-editor-empty:first-child::before {
+    color: hsl(var(--muted-foreground));
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
 }

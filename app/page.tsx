@@ -1,13 +1,17 @@
 "use client";
 
-import { PostListSkeleton } from "@/components/Skeletons";
-import { supabase } from "@/lib/supabase/client";
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import {
+  BookOpen, Scale, Landmark, Lightbulb, ScrollText,
+  Users, PenSquare, ChevronRight, Hash,
+} from "lucide-react";
+import { supabase } from "@/lib/supabase/client";
 
-type LangCode = "bn" | "en" | "ar";
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-interface PostRow {
+interface Post {
   id: string;
   slug: string;
   cover_url: string | null;
@@ -15,208 +19,473 @@ interface PostRow {
   category_en: string | null;
   published_at: string | null;
   reading_minutes: number | null;
-  author_id: string;
+  is_featured?: boolean;
   post_translations: { lang: string; title: string; excerpt: string | null }[];
-  post_tags: { tag: string }[];
   profiles?: { display_name: string | null; display_name_bn: string | null } | null;
 }
 
-const langClass: Record<string, string> = {
-  bn: "font-bn",
-  en: "font-en",
-  ar: "font-ar text-right",
-};
-
-const heroFallback = "/hero-kisti.jpg";
-
-export default function HomePage() {
-  return (
-    <Suspense fallback={<PostListSkeleton count={4} hasFeatured={true} />}>
-      <HomePageInner />
-    </Suspense>
-  );
+interface Category {
+  id: string;
+  name_bn: string;
+  name_en: string | null;
+  slug: string | null;
+  position: number;
 }
 
-function HomePageInner() {
-  const [tag, setTag] = useState<string | null>(null);
-  const [posts, setPosts] = useState<PostRow[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const ITEMS_PER_PAGE = 6;
+interface Writer {
+  id: string;
+  name: string;
+  bengali_name: string | null;
+  post_count: number;
+}
 
-  const loadPosts = async (pageToLoad: number, currentTag: string | null, isReset = false) => {
-    try {
-      if (isReset) setLoading(true);
-      else setLoadingMore(true);
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-      let query = supabase
-        .from("posts")
-        .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id,
-               post_translations(lang, title, excerpt),
-               ${currentTag ? 'post_tags!inner(tag)' : 'post_tags(tag)'}`)
-        .eq("status", "published")
-        .order("published_at", { ascending: false });
+const getCategoryIcon = (nameBn: string | null) => {
+  if (!nameBn) return BookOpen;
+  if (nameBn.includes("ইতিহাস")) return ScrollText;
+  if (nameBn.includes("আইন")) return Scale;
+  if (nameBn.includes("রাষ্ট্র")) return Landmark;
+  if (nameBn.includes("চিন্তা") || nameBn.includes("সমকালীন")) return Lightbulb;
+  if (nameBn.includes("বই")) return BookOpen;
+  if (nameBn.includes("চিন্তাবিদ")) return Users;
+  return PenSquare;
+};
 
-      const { data, error: fetchError } = await query
-        .range(pageToLoad * ITEMS_PER_PAGE, (pageToLoad + 1) * ITEMS_PER_PAGE - 1);
+const WRITER_COLORS = [
+  "hsl(225,45%,30%)",
+  "hsl(14,60%,44%)",
+  "hsl(160,45%,32%)",
+  "hsl(38,55%,42%)",
+  "hsl(290,35%,40%)",
+  "hsl(200,50%,36%)",
+];
 
-      if (fetchError) throw fetchError;
+const toBengaliDate = (dateStr: string) => {
+  try {
+    const d = new Date(dateStr);
+    const months = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+    const bn = (n: number) => n.toString().replace(/\d/g, (x) => "০১২৩৪৫৬৭৮৯"[+x]);
+    return `${bn(d.getDate())} ${months[d.getMonth()]} ${bn(d.getFullYear())}`;
+  } catch { return ""; }
+};
 
-      setPosts(prev => isReset ? (data ?? []) : [...prev, ...(data ?? [])]);
-      setHasMore((data?.length ?? 0) === ITEMS_PER_PAGE);
-    } catch (error: any) {
-      console.error("Error loading posts:", error);
-      setError(error?.message ?? String(error ?? "Unknown error"));
-      if (isReset) setPosts([]);
-      setHasMore(false);
-    } finally {
-      if (isReset) setLoading(false);
-      else setLoadingMore(false);
-    }
-  };
+const getBengaliNum = (n: number) => n.toString().replace(/\d/g, (x) => "০১২৩৪৫৬৭৮৯"[+x]);
 
-  const handleLoadMore = () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    loadPosts(nextPage, tag, false);
-  };
+const getInitials = (name: string) => {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] || "") + (parts[1][0] || "");
+  return name.substring(0, 2);
+};
 
-  useEffect(() => {
-    setPage(0);
-    loadPosts(0, tag, true);
-  }, [tag]);
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
-  const featured = posts[0];
-  const rest = posts.slice(1);
-  const allTags = Array.from(new Set(posts.flatMap((p) => (p.post_tags ?? []).map((t) => t.tag))));
-
-  const renderCard = (p: PostRow, primary = false) => {
-    const t = p.post_translations[0];
-    if (!t) return null;
-    const lang = (t.lang as LangCode) ?? "bn";
-    const dir = lang === "ar" ? "rtl" : "ltr";
-    const author = p.profiles?.display_name_bn ?? p.profiles?.display_name ?? "—";
-
-    return (
-      <Link href={`/post/${p.slug}`} key={p.id} className={`group block ${primary ? "md:col-span-2" : ""}`}>
-        <article className="grid md:grid-cols-12 gap-6 items-start">
-          <div className={`${primary ? "md:col-span-7" : "md:col-span-12"} overflow-hidden bg-paper-deep`}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={p.cover_url || heroFallback}
-              alt=""
-              loading="lazy"
-              className="w-full aspect-[16/10] object-cover transition-transform duration-700 group-hover:scale-[1.02] mix-blend-multiply dark:mix-blend-screen opacity-90"
-            />
-          </div>
-          <div className={primary ? "md:col-span-5" : "md:col-span-12"} dir={dir}>
-            <div className="flex items-center gap-3 text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3 font-en-sans" dir="ltr">
-              <span className="text-accent">{lang === "bn" ? p.category_bn : p.category_en}</span>
-              <span className="w-6 h-px bg-border" />
-              {p.published_at && <time>{new Date(p.published_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</time>}
-            </div>
-            <h3 className={`${langClass[lang]} ${primary ? "text-3xl md:text-4xl" : "text-2xl"} leading-tight mb-3 group-hover:text-accent transition-colors`}>
-              {t.title}
-            </h3>
-            {t.excerpt && (
-              <p className={`${langClass[lang]} text-muted-foreground leading-relaxed mb-4`}>{t.excerpt}</p>
-            )}
-            <div className="font-en-sans text-xs text-muted-foreground" dir="ltr">
-              <span className="font-bn">{author}</span>
-              <span className="mx-2">·</span>
-              <span>{p.reading_minutes ?? 5} min read</span>
-            </div>
-          </div>
-        </article>
-      </Link>
-    );
-  };
+/** Left column — large featured article */
+const FeaturedCard = ({ post }: { post: Post }) => {
+  const t = post.post_translations[0];
+  if (!t) return null;
+  const Icon = getCategoryIcon(post.category_bn);
 
   return (
-    <>
-      <section className="relative border-b border-border/60 paper-texture">
-        <div className="container max-w-6xl py-20 md:py-28 grid md:grid-cols-12 gap-10 items-center">
-          <div className="md:col-span-7 animate-fade-up">
-            <div className="font-bn uppercase text-xs tracking-[0.3em] text-accent mb-6">
-              রাষ্ট্র, ইতিহাস ও চিন্তার রেখাচিত্র
+    <article>
+      <Link href={`/post/${post.slug}`} className="group block mb-3">
+        <div className="aspect-[4/3] bg-primary overflow-hidden relative">
+          {post.cover_url ? (
+            <Image
+              src={post.cover_url}
+              alt={t.title}
+              fill
+              className="object-cover opacity-75 group-hover:opacity-85 group-hover:scale-105 transition-all duration-500"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-primary">
+              <Icon className="w-20 h-20 text-white/10" />
             </div>
-            <h1 className="font-bn text-5xl md:text-7xl leading-[1.05] text-foreground mb-6">
-              চিন্তার <span className="text-accent italic">কিস্তি</span>
-            </h1>
-            <p className="font-en text-xl md:text-2xl italic text-muted-foreground leading-relaxed max-w-xl">
-              &quot;Between two words there is a third — unspoken, yet structurally essential.&quot;
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-4 sm:gap-6 text-xs uppercase tracking-[0.2em] font-en-sans text-muted-foreground">
-              <span>বাংলা</span><span className="hidden sm:block w-6 h-px bg-border" /><span>English</span>
-              <span className="hidden sm:block w-6 h-px bg-border" /><span className="font-ar text-base normal-case tracking-normal">العربية</span>
-            </div>
-          </div>
-          <div className="md:col-span-5 animate-fade-in">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={heroFallback} alt="A solitary boat drifting on still water" width={1536} height={1024} className="w-full mix-blend-multiply dark:mix-blend-screen opacity-90" />
-          </div>
+          )}
         </div>
-      </section>
-
-      {allTags.length > 0 && (
-        <section className="border-b border-border/60 bg-background/40">
-          <div className="container max-w-6xl py-5 flex items-center gap-3 overflow-x-auto">
-            <span className="font-en-sans uppercase text-[10px] tracking-[0.25em] text-muted-foreground shrink-0">Tags ·</span>
-            {allTags.map((t) => (
-              <button key={t} onClick={() => setTag(tag === t ? null : t)}
-                className={`shrink-0 text-xs px-3 py-1 border rounded-full transition-colors ${tag === t ? "bg-foreground text-background border-foreground" : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/40"}`}>
-                {t}
-              </button>
-            ))}
-            {tag && (
-              <Link href="/" onClick={() => setTag(null)} className="shrink-0 text-xs px-3 py-1 text-accent hover:underline">clear</Link>
-            )}
-          </div>
-        </section>
+      </Link>
+      {post.category_bn && (
+        <p className="text-[11px] font-bn-sans text-gold uppercase tracking-wider mb-1.5">{post.category_bn}</p>
       )}
+      <Link href={`/post/${post.slug}`} className="group block mb-2">
+        <h3 className="font-bn text-[1.35rem] leading-tight group-hover:text-gold transition-colors">{t.title}</h3>
+      </Link>
+      {t.excerpt && (
+        <p className="text-muted-foreground text-sm font-bn leading-relaxed mb-3 line-clamp-2">{t.excerpt}</p>
+      )}
+      <div className="flex items-center gap-4">
+        <Link href={`/post/${post.slug}`} className="flex items-center gap-0.5 text-xs font-bn-sans text-gold hover:underline">
+          বিস্তারিত দেখুন <ChevronRight className="w-3 h-3" />
+        </Link>
+        {post.published_at && (
+          <span className="text-xs text-muted-foreground font-en-sans">{toBengaliDate(post.published_at)}</span>
+        )}
+      </div>
+    </article>
+  );
+};
 
-      <main className="container max-w-6xl py-16 flex-1">
-        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between mb-12 gap-4">
-          <h2 className="font-bn text-3xl">সাম্প্রতিক কিস্তি</h2>
-          <span className="font-en italic text-sm text-muted-foreground">{posts.length} {posts.length === 1 ? "piece" : "pieces"} loaded</span>
+/** Middle column — text-only article list */
+const ListCard = ({ post }: { post: Post }) => {
+  const t = post.post_translations[0];
+  if (!t) return null;
+  return (
+    <div className="py-3 border-b border-border/70 last:border-0">
+      <Link href={`/post/${post.slug}`} className="group block">
+        {post.category_bn && (
+          <p className="text-[10px] font-bn-sans text-gold uppercase tracking-wider mb-1">{post.category_bn}</p>
+        )}
+        <h4 className="font-bn text-[0.95rem] leading-snug mb-1.5 group-hover:text-gold transition-colors">{t.title}</h4>
+        {t.excerpt && (
+          <p className="text-muted-foreground text-xs font-bn line-clamp-2 mb-1">{t.excerpt}</p>
+        )}
+        {post.published_at && (
+          <p className="text-[10px] text-muted-foreground font-en-sans">{toBengaliDate(post.published_at)}</p>
+        )}
+      </Link>
+    </div>
+  );
+};
+
+/** Right column — dark navy thumbnail card */
+const ThumbCard = ({ post }: { post: Post }) => {
+  const t = post.post_translations[0];
+  if (!t) return null;
+  const Icon = getCategoryIcon(post.category_bn);
+  return (
+    <Link href={`/post/${post.slug}`} className="group flex items-start gap-2.5 py-2.5 border-b border-white/10 last:border-0">
+      <div className="w-14 h-14 shrink-0 bg-white/10 flex items-center justify-center overflow-hidden rounded-sm">
+        {post.cover_url ? (
+          <Image src={post.cover_url} alt={t.title} width={56} height={56} className="w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-opacity" />
+        ) : (
+          <Icon className="w-6 h-6 text-white/30" />
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        {post.category_bn && (
+          <p className="text-[9px] text-gold uppercase tracking-wider mb-0.5 font-en-sans">{post.category_bn}</p>
+        )}
+        <h5 className="text-white text-[11px] font-bn leading-snug line-clamp-3 group-hover:text-gold transition-colors">{t.title}</h5>
+        {post.published_at && (
+          <p className="text-white/35 text-[9px] font-en-sans mt-0.5">{toBengaliDate(post.published_at)}</p>
+        )}
+      </div>
+    </Link>
+  );
+};
+
+/** Section header bar */
+const SectionHeader = ({ category, hasMore }: { category: Category; hasMore: boolean }) => (
+  <div className="flex items-center justify-between bg-primary px-4 py-2.5 mb-4">
+    <Link
+      href={category.slug ? `/category/${category.slug}` : `/?cat=${category.id}`}
+      className="flex items-center gap-1.5 group"
+    >
+      <h2 className="font-bn text-[1.05rem] text-gold group-hover:text-yellow-300 transition-colors">{category.name_bn}</h2>
+      <ChevronRight className="w-4 h-4 text-gold/70" />
+    </Link>
+    {hasMore && (
+      <Link
+        href={category.slug ? `/category/${category.slug}` : `/?cat=${category.id}`}
+        className="text-xs font-bn text-white/50 hover:text-white/90 transition-colors"
+      >
+        সব লেখা দেখুন
+      </Link>
+    )}
+  </div>
+);
+
+/** Full 3-column editorial section */
+const EditorialSection = ({ category, posts }: { category: Category; posts: Post[] }) => {
+  if (posts.length === 0) return null;
+  const featured = posts[0];
+  const listPosts = posts.slice(1, 4);
+  const thumbPosts = posts.slice(4, 8);
+
+  return (
+    <section className="mb-8">
+      <SectionHeader category={category} hasMore={posts.length >= 4} />
+      <div className="grid grid-cols-12 gap-0 border border-border/60">
+        {/* Left: featured */}
+        <div className="col-span-12 md:col-span-4 p-4 border-b md:border-b-0 md:border-r border-border/60">
+          <FeaturedCard post={featured} />
         </div>
 
-        {error && (
-          <p className="text-center text-red-500 py-6 font-bn">{error}</p>
-        )}
+        {/* Middle: list */}
+        <div className="col-span-12 md:col-span-4 p-4 border-b md:border-b-0 md:border-r border-border/60">
+          {listPosts.map((p) => <ListCard key={p.id} post={p} />)}
+          {listPosts.length === 0 && (
+            <p className="text-muted-foreground text-sm font-bn py-4">আরও লেখা নেই।</p>
+          )}
+        </div>
 
-        {loading ? (
-          <PostListSkeleton count={4} hasFeatured={true} />
-        ) : posts.length === 0 ? (
-          <p className="text-center text-muted-foreground py-20 font-bn">এখনো কোনো প্রকাশিত লেখা নেই। অ্যাডমিন প্যানেল থেকে লিখুন।</p>
-        ) : (
-          <>
-            {featured && (
-              <div className="mb-20 pb-20 border-b border-border/60">
-                <div className="font-en-sans uppercase text-[10px] tracking-[0.3em] text-accent mb-6">◆ Featured</div>
-                {renderCard(featured, true)}
-              </div>
-            )}
-            <div className="grid md:grid-cols-2 gap-x-12 gap-y-16 mb-16">
-              {rest.map((p) => renderCard(p))}
+        {/* Right: dark thumbnails */}
+        <div className="col-span-12 md:col-span-4 bg-primary p-3">
+          {thumbPosts.map((p) => <ThumbCard key={p.id} post={p} />)}
+          {thumbPosts.length === 0 && (
+            <div className="flex items-center justify-center h-full py-8">
+              <p className="text-white/30 text-xs font-bn">লেখা নেই</p>
             </div>
-            {hasMore && (
-              <div className="flex justify-center mt-12">
-                <button
-                  onClick={handleLoadMore}
-                  disabled={loadingMore}
-                  className="px-6 py-3 font-bn-sans text-sm tracking-widest transition-colors border border-border text-foreground hover:bg-foreground hover:text-background disabled:opacity-50"
-                >
-                  {loadingMore ? "লোড হচ্ছে..." : "আরও দেখুন"}
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </main>
-    </>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/** Hero (top) section — same structure, no header */
+const HeroSection = ({ posts }: { posts: Post[] }) => {
+  if (posts.length === 0) return null;
+  const featured = posts[0];
+  const listPosts = posts.slice(1, 4);
+  const thumbPosts = posts.slice(4, 8);
+
+  return (
+    <section className="mb-8 border border-border/60">
+      <div className="grid grid-cols-12 gap-0">
+        <div className="col-span-12 md:col-span-4 p-4 border-b md:border-b-0 md:border-r border-border/60">
+          <FeaturedCard post={featured} />
+        </div>
+        <div className="col-span-12 md:col-span-4 p-4 border-b md:border-b-0 md:border-r border-border/60">
+          {listPosts.map((p) => <ListCard key={p.id} post={p} />)}
+        </div>
+        <div className="col-span-12 md:col-span-4 bg-primary p-3">
+          {thumbPosts.map((p) => <ThumbCard key={p.id} post={p} />)}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// ─── Sidebar components ───────────────────────────────────────────────────────
+
+const MostReadWidget = ({ posts }: { posts: Post[] }) => (
+  <div className="mb-6">
+    <div className="bg-primary px-3 py-2 mb-3">
+      <h3 className="font-bn text-sm font-semibold text-gold">সর্বাধিক পঠিত</h3>
+    </div>
+    <ol className="space-y-3 px-1">
+      {posts.slice(0, 5).map((p, i) => {
+        const t = p.post_translations[0];
+        if (!t) return null;
+        return (
+          <li key={p.id} className="flex items-start gap-2.5">
+            <span
+              className="text-[1.6rem] font-bold leading-none shrink-0 w-7 text-right"
+              style={{ color: `hsl(225,45%,${75 - i * 10}%)` }}
+            >
+              {getBengaliNum(i + 1)}
+            </span>
+            <Link href={`/post/${p.slug}`} className="font-bn text-[12px] leading-snug hover:text-gold transition-colors line-clamp-3">
+              {t.title}
+            </Link>
+          </li>
+        );
+      })}
+    </ol>
+  </div>
+);
+
+const WritersWidget = ({ writers }: { writers: Writer[] }) => (
+  <div className="mb-6">
+    <div className="bg-primary px-3 py-2 mb-3">
+      <h3 className="font-bn text-sm font-semibold text-gold">বিশিষ্ট লেখক</h3>
+    </div>
+    <ul className="space-y-2.5 px-1">
+      {writers.map((w, i) => {
+        const name = w.bengali_name || w.name;
+        return (
+          <li key={w.id} className="flex items-center gap-2.5">
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bn font-bold shrink-0"
+              style={{ backgroundColor: WRITER_COLORS[i % WRITER_COLORS.length] }}
+            >
+              {getInitials(name)}
+            </div>
+            <div>
+              <p className="font-bn text-[12px] font-medium leading-tight">{name}</p>
+              {w.post_count > 0 && (
+                <p className="text-[10px] text-muted-foreground font-en-sans">
+                  {getBengaliNum(w.post_count)}টি লেখা
+                </p>
+              )}
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+);
+
+const TagsWidget = ({ tags }: { tags: string[] }) => (
+  <div>
+    <div className="bg-primary px-3 py-2 mb-3">
+      <h3 className="font-bn text-sm font-semibold text-gold">বিভিন্নিত ট্যাগ</h3>
+    </div>
+    <div className="flex flex-wrap gap-1.5 px-1">
+      {tags.map((tag) => (
+        <Link
+          key={tag}
+          href={`/search?q=${encodeURIComponent(tag)}`}
+          className="inline-flex items-center gap-0.5 text-[11px] font-bn-sans px-2 py-1 border border-border rounded-sm text-muted-foreground hover:border-gold hover:text-gold transition-colors"
+        >
+          <Hash className="w-2.5 h-2.5 opacity-50" />{tag}
+        </Link>
+      ))}
+    </div>
+  </div>
+);
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
+export default function HomePage() {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [writers, setWriters] = useState<Writer[]>([]);
+  const [mostRead, setMostRead] = useState<Post[]>([]);
+  const [allTags, setAllTags] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [postsRes, catsRes, writersRes, tagsRes, statsRes] = await Promise.all([
+          // All published posts
+          (supabase as any)
+            .from("posts")
+            .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, is_featured,
+              post_translations(lang, title, excerpt),
+              profiles(display_name, display_name_bn)`)
+            .eq("status", "published")
+            .order("is_featured", { ascending: false, nullsFirst: false })
+            .order("published_at", { ascending: false })
+            .limit(120),
+
+          // Top-level categories
+          supabase
+            .from("categories")
+            .select("id, name_bn, name_en, slug, position")
+            .is("parent_id", null)
+            .order("position"),
+
+          // Writers
+          supabase
+            .from("writers")
+            .select("id, name, bengali_name")
+            .order("name")
+            .limit(6),
+
+          // Tags
+          supabase.from("post_tags").select("tag"),
+
+          // Most read via post_stats
+          supabase
+            .from("post_stats")
+            .select("post_id, view_count")
+            .order("view_count", { ascending: false })
+            .limit(10),
+        ]);
+
+        const allPosts: Post[] = postsRes.data || [];
+        setPosts(allPosts);
+        setCategories((catsRes.data as Category[]) || []);
+
+        // Build most-read list
+        if (statsRes.data && statsRes.data.length > 0) {
+          const topIds = (statsRes.data as any[]).map((s: any) => s.post_id);
+          const topPosts = topIds
+            .map((id: string) => allPosts.find((p) => p.id === id))
+            .filter(Boolean) as Post[];
+          setMostRead(topPosts.slice(0, 5));
+        } else {
+          setMostRead(allPosts.slice(0, 5));
+        }
+
+        // Writers with post count
+        const writerData: Writer[] = ((writersRes.data as any[]) || []).map((w: any) => ({
+          id: w.id,
+          name: w.name,
+          bengali_name: w.bengali_name,
+          post_count: allPosts.filter(
+            (p) => (p as any).writer_id === w.id
+          ).length,
+        }));
+        setWriters(writerData);
+
+        // Unique tags
+        const rawTags = (tagsRes.data as any[] || []).map((t: any) => t.tag as string);
+        setAllTags(Array.from(new Set(rawTags)).slice(0, 24));
+      } catch (err) {
+        console.error("Homepage load error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  // Group posts by category_bn
+  const postsByCategory: Record<string, Post[]> = {};
+  for (const cat of categories) {
+    postsByCategory[cat.name_bn] = posts.filter((p) => p.category_bn === cat.name_bn);
+  }
+
+  // Hero posts: featured first, then recent
+  const heroPosts = posts.slice(0, 8);
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 flex-1">
+        <div className="flex gap-6">
+          <div className="flex-1 space-y-4 animate-pulse">
+            <div className="h-64 bg-secondary rounded-sm" />
+            <div className="h-4 bg-secondary rounded w-3/4" />
+            <div className="h-4 bg-secondary rounded w-1/2" />
+            <div className="h-48 bg-secondary rounded-sm mt-8" />
+            <div className="h-48 bg-secondary rounded-sm mt-4" />
+          </div>
+          <div className="w-64 shrink-0 space-y-4 animate-pulse">
+            <div className="h-48 bg-secondary rounded-sm" />
+            <div className="h-48 bg-secondary rounded-sm" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 flex-1">
+      <div className="flex gap-6 items-start">
+        {/* ── Main Content ───────────────────────────────── */}
+        <main className="flex-1 min-w-0">
+          {/* Hero section */}
+          {heroPosts.length > 0 && <HeroSection posts={heroPosts} />}
+
+          {/* Category sections */}
+          {categories.map((cat) => (
+            <EditorialSection
+              key={cat.id}
+              category={cat}
+              posts={postsByCategory[cat.name_bn] || []}
+            />
+          ))}
+
+          {categories.length === 0 && posts.length === 0 && (
+            <div className="py-24 text-center">
+              <p className="font-bn text-muted-foreground text-lg">এখনো কোনো প্রকাশিত লেখা নেই।</p>
+            </div>
+          )}
+        </main>
+
+        {/* ── Right Sidebar ──────────────────────────────── */}
+        <aside className="w-[240px] xl:w-[260px] shrink-0 hidden lg:block">
+          <div className="sticky top-[6.5rem]">
+            {mostRead.length > 0 && <MostReadWidget posts={mostRead} />}
+            {writers.length > 0 && <WritersWidget writers={writers} />}
+            {allTags.length > 0 && <TagsWidget tags={allTags} />}
+          </div>
+        </aside>
+      </div>
+    </div>
   );
 }

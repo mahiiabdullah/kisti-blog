@@ -3,20 +3,19 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Home, ChevronRight, Clock, BookOpen } from "lucide-react";
+import { Home, ChevronRight, BookOpen } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { Comments } from "@/components/Comments";
-import { PhotoCardGenerator } from "@/components/PhotoCardGenerator";
 import { PostPageSkeleton } from "@/components/Skeletons";
 import { ShareButtons } from "@/components/ShareButtons";
 import { ViewTracker } from "@/components/ViewTracker";
+import { ReadingProgressBar } from "@/components/ReadingProgressBar";
 import ReactMarkdown from "react-markdown";
+import Image from "next/image";
 
 type LangCode = "bn" | "en" | "ar";
 const langClass: Record<LangCode, string> = { bn: "font-bn", en: "font-en", ar: "font-ar" };
 const langLabel: Record<LangCode, string> = { bn: "বাংলা", en: "English", ar: "العربية" };
-
-const heroFallback = "/hero-kisti.jpg";
 
 interface Translation { lang: LangCode; title: string; excerpt: string | null; body: string | null; footnotes: any; citations?: { label: string; url?: string }[]; }
 interface CategoryInfo {
@@ -125,8 +124,8 @@ export default function PostPage() {
     if (!post) return;
     const t = post.post_translations.find((x) => x.lang === lang) ?? post.post_translations[0];
     if (!t) return;
-    const siteName = "কিস্তি (KiSti)";
-    const title = `${t.title} - ${siteName}`;
+    const siteName = "কিশতী";
+    const title = `${t.title} — ${siteName}`;
     document.title = title;
   }, [post, lang]);
 
@@ -168,6 +167,7 @@ export default function PostPage() {
 
   return (
     <>
+      <ReadingProgressBar />
       <div className="bg-background border-b border-border/60">
         <div className="container max-w-4xl py-6 md:py-8">
           <nav className="flex items-center gap-1.5 text-xs text-muted-foreground font-bn-sans mb-4 flex-wrap" aria-label="Breadcrumb">
@@ -270,12 +270,20 @@ export default function PostPage() {
         </div>
       </div>
 
-      <figure className="container max-w-4xl">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={post.cover_url || heroFallback} alt={t.title} className="w-full aspect-video object-cover rounded-sm" />
-      </figure>
+      {post.cover_url && (
+        <figure className="container max-w-4xl">
+          <Image
+            src={post.cover_url}
+            alt={t.title}
+            width={1200}
+            height={675}
+            className="w-full aspect-video object-cover rounded-sm"
+            priority
+          />
+        </figure>
+      )}
 
-      <article className="container max-w-3xl py-12 md:py-16 flex-1" onClick={handleLinkClick}>
+      <article className="container max-w-[660px] py-12 md:py-16 flex-1" onClick={handleLinkClick}>
         {t.body && (
           <div className={`prose-kisti ${langClass[lang]} max-w-none`} dir={dir}>
             {t.body.trim().startsWith("<") ? (
@@ -341,15 +349,6 @@ export default function PostPage() {
           </div>
           <ShareButtons url={currentUrl} title={t.title} />
         </div>
-
-        <PhotoCardGenerator
-          title={t.title}
-          author={author}
-          cover={post.cover_url || heroFallback}
-          lang={lang}
-          date={post.published_at}
-          categoryBn={postCategories[0]?.name_bn ?? post.category_bn}
-        />
 
         <Comments postId={post.id} />
       </article>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { Menu, X, Search, ChevronDown } from "lucide-react";
@@ -15,11 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 interface NavCategory {
   id: string;
@@ -27,7 +23,6 @@ interface NavCategory {
   name_en: string | null;
   slug?: string | null;
   parent_id: string | null;
-  is_main: boolean;
   position: number;
   children?: NavCategory[];
 }
@@ -38,89 +33,47 @@ interface NavItem {
   items?: { to: string; label: string }[];
 }
 
-// Fallback nav in case categories haven't loaded
-const fallbackNav: NavItem[] = [
-  { to: "/", label: "প্রচ্ছদ" },
-];
+const getBengaliDate = () => {
+  const now = new Date();
+  const days = ["রবিবার", "সোমবার", "মঙ্গলবার", "বুধবার", "বৃহস্পতিবার", "শুক্রবার", "শনিবার"];
+  const months = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+  const bn = (n: number) => n.toString().replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯"[+d]);
+  return `${days[now.getDay()]}, ${bn(now.getDate())} ${months[now.getMonth()]} ${bn(now.getFullYear())}`;
+};
 
-// Desktop dropdown menu component
-const DesktopNavMenu = ({ items, label }: { items: { to: string; label: string }[]; label: string }) => {
+// Desktop nav dropdown
+const DesktopDropdown = ({ label, items }: { label: string; items: { to: string; label: string }[] }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   return (
-    <div className="relative group">
-      <button className="flex items-center gap-1 px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground">
+    <div ref={ref} className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+      <button className="flex items-center gap-1 px-3 py-3 text-sm text-white/90 hover:text-gold transition-colors font-bn">
         {label}
-        <ChevronDown className="w-4 h-4 transition-transform group-hover:rotate-180" />
+        <ChevronDown className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
-      <div className="absolute left-0 mt-0 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-        <div className="bg-popover border border-border rounded-lg shadow-lg py-2">
+      {open && (
+        <div className="absolute top-full left-0 min-w-[180px] bg-primary border-t-2 border-gold shadow-lg z-50">
           {items.map((item) => (
             <Link
               key={item.to}
               href={item.to}
-              className="block w-full px-4 py-2 text-sm transition-colors text-left cursor-pointer font-bn-sans text-muted-foreground hover:text-foreground"
+              className="block px-4 py-2.5 text-sm text-white/80 hover:text-gold hover:bg-white/5 transition-colors font-bn border-b border-white/10 last:border-0"
             >
               {item.label}
             </Link>
           ))}
         </div>
-      </div>
+      )}
     </div>
-  );
-};
-
-// Mobile menu component
-const MobileNavMenu = ({ nav }: { nav: NavItem[] }) => {
-  const [expandedItems, setExpandedItems] = useState<string[]>([]);
-
-  const toggleExpand = (label: string) => {
-    setExpandedItems((prev) =>
-      prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
-    );
-  };
-
-  return (
-    <SheetContent side="left" className="w-full max-w-sm overflow-y-auto">
-      <nav className="flex flex-col gap-0 mt-8">
-        {nav.map((n) => (
-          <div key={n.label}>
-            {n.items ? (
-              <div>
-                <button
-                  onClick={() => toggleExpand(n.label)}
-                  className="flex items-center justify-between w-full px-4 py-3 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground"
-                >
-                  {n.label}
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform ${expandedItems.includes(n.label) ? "rotate-180" : ""
-                      }`}
-                  />
-                </button>
-                {expandedItems.includes(n.label) && (
-                  <div className="flex flex-col gap-0 mt-0 pl-4 border-l border-border/50">
-                    {n.items.map((item) => (
-                      <Link
-                        key={item.to}
-                        href={item.to}
-                        className="px-3 py-2 text-sm font-bn-sans transition-colors text-muted-foreground hover:text-foreground"
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <Link
-                href={n.to!}
-                className="block px-4 py-3 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground"
-              >
-                {n.label}
-              </Link>
-            )}
-          </div>
-        ))}
-      </nav>
-    </SheetContent>
   );
 };
 
@@ -130,9 +83,14 @@ export const SiteHeader = () => {
   const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [nav, setNav] = useState<NavItem[]>(fallbackNav);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [nav, setNav] = useState<NavItem[]>([]);
+  const [dateStr, setDateStr] = useState("");
 
-  // Load categories dynamically
+  useEffect(() => {
+    setDateStr(getBengaliDate());
+  }, []);
+
   useEffect(() => {
     (async () => {
       const { data } = await supabase
@@ -142,34 +100,28 @@ export const SiteHeader = () => {
 
       if (data && data.length > 0) {
         const all = data as unknown as NavCategory[];
-        const mains = all.filter(c => !c.parent_id).sort((a, b) => a.position - b.position);
-        const built: NavItem[] = [{ to: "/", label: "প্রচ্ছদ" }];
-
+        const mains = all.filter((c) => !c.parent_id).sort((a, b) => a.position - b.position);
+        const built: NavItem[] = [];
         for (const m of mains) {
-          const children = all.filter(c => c.parent_id === m.id).sort((a, b) => a.position - b.position);
+          const children = all.filter((c) => c.parent_id === m.id).sort((a, b) => a.position - b.position);
           if (children.length > 0) {
             built.push({
               label: m.name_bn,
-              items: children.map(c => ({
-                to: c.slug ? `/category/${c.slug}` : `/?cat=${c.id}`, // fallback during migration
+              items: children.map((c) => ({
+                to: c.slug ? `/category/${c.slug}` : `/?cat=${c.id}`,
                 label: c.name_bn,
               })),
             });
           } else {
             built.push({
-              to: m.slug ? `/category/${m.slug}` : `/?cat=${m.id}`, // fallback during migration
+              to: m.slug ? `/category/${m.slug}` : `/?cat=${m.id}`,
               label: m.name_bn,
             });
           }
         }
-        
-        // Add the public writers page
-        built.push({ to: "/writers", label: "লেখকবৃন্দ" });
-        
         setNav(built);
       } else {
-        // Fallback when no categories exist but we still want the writers link
-        setNav([{ to: "/", label: "প্রচ্ছদ" }, { to: "/writers", label: "লেখকবৃন্দ" }]);
+        setNav([]);
       }
     })();
   }, []);
@@ -179,132 +131,204 @@ export const SiteHeader = () => {
     if (searchQuery.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setIsMobileMenuOpen(false);
+      setIsMobileSearchOpen(false);
     }
   };
 
   return (
-    <header className="border-b border-border/40 bg-background/95 backdrop-blur-md sticky top-0 z-40">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-baseline gap-2 group flex-shrink-0">
-            <span className="font-bn text-2xl sm:text-3xl font-semibold tracking-tight text-foreground group-hover:text-accent transition-colors">
-              কিস্তি
-            </span>
-            <span className="hidden sm:inline font-en italic text-xs sm:text-sm text-muted-foreground tracking-wider">
-              ki<span className="text-accent">S</span>ti
-            </span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-0">
-            {nav.map((n) => (
-              <div key={n.label}>
-                {n.items ? (
-                  <DesktopNavMenu items={n.items} label={n.label} />
-                ) : (
-                  <Link
-                    href={n.to!}
-                    className={`px-3 py-2 text-sm font-medium transition-colors flex justify-center items-center ${
-                      pathname === n.to ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {n.label}
-                  </Link>
-                )}
+    <header className="sticky top-0 z-40 shadow-md">
+      {/* ── TOP UTILITY BAR ──────────────────────────── */}
+      <div className="bg-background border-b border-border">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center h-14 gap-4">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-3 group flex-shrink-0">
+              <div className="w-10 h-10 bg-primary flex items-center justify-center rounded-sm">
+                <span className="font-bn text-gold text-lg font-bold leading-none">কি</span>
               </div>
-            ))}
-          </nav>
+              <div className="flex flex-col leading-none">
+                <span className="font-bn text-2xl font-semibold text-foreground group-hover:text-primary transition-colors">
+                  কিশতী
+                </span>
+              </div>
+            </Link>
 
-          {/* Right side controls */}
-          <div className="flex items-center gap-2 sm:gap-3 ml-auto">
-            {/* Desktop Search */}
-            <form onSubmit={handleSearch} className="hidden sm:flex relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                type="search"
-                placeholder="Search..."
-                className="h-9 w-40 rounded-full border border-border bg-background/50 px-3 pl-10 text-sm focus:outline-none focus:border-accent focus:bg-background transition-colors"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </form>
+            {/* Spacer */}
+            <div className="flex-1" />
 
-            {/* Auth Section */}
+            {/* Utility links (desktop) */}
+            <nav className="hidden md:flex items-center gap-4 text-xs font-bn-sans text-muted-foreground">
+              <Link href="/about" className="hover:text-foreground transition-colors">আমাদের কথা</Link>
+              <span className="text-border">·</span>
+              <Link href="/writers" className="hover:text-foreground transition-colors">লেখকবৃন্দ</Link>
+              <span className="text-border">·</span>
+              <Link href="/contact" className="hover:text-foreground transition-colors">যোগাযোগ</Link>
+            </nav>
+
+            {/* Date (desktop) */}
+            {dateStr && (
+              <span className="hidden lg:block text-xs font-bn-sans text-muted-foreground border-l border-border pl-4">
+                {dateStr}
+              </span>
+            )}
+
+            {/* Auth */}
             {!user ? (
               <Link
                 href="/auth"
-                className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="hidden md:block px-4 py-1.5 bg-primary text-primary-foreground text-xs font-bn-sans hover:bg-primary/90 transition-colors rounded-sm"
               >
-                Sign in
+                প্রবেশ করুন
               </Link>
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger className="outline-none">
-                  <Avatar className="h-8 w-8 hover:ring-2 hover:ring-accent transition-all">
+                  <Avatar className="h-8 w-8 hover:ring-2 hover:ring-gold transition-all">
                     <AvatarImage src={user.user_metadata?.avatar_url} />
-                    <AvatarFallback className="font-en-sans text-xs bg-accent text-accent-foreground">
+                    <AvatarFallback className="text-xs bg-primary text-primary-foreground font-bn">
                       {user.email?.charAt(0).toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 font-en-sans">
+                <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
-                    <Link href="/profile" className="cursor-pointer">Profile</Link>
+                    <Link href="/profile" className="cursor-pointer font-bn">প্রোফাইল</Link>
                   </DropdownMenuItem>
                   {isAdmin && (
                     <DropdownMenuItem asChild>
-                      <Link href="/admin" className="cursor-pointer">
-                        Admin
-                      </Link>
+                      <Link href="/admin" className="cursor-pointer font-bn">অ্যাডমিন</Link>
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => supabase.auth.signOut()}
-                    className="cursor-pointer text-destructive focus:text-destructive"
+                    className="cursor-pointer text-destructive focus:text-destructive font-bn"
                   >
-                    Sign out
+                    প্রস্থান
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
 
-            {/* Theme Toggle */}
             <ThemeToggle />
 
-            {/* Mobile Menu Trigger */}
+            {/* Mobile search toggle */}
+            <button
+              className="md:hidden p-2 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => setIsMobileSearchOpen((v) => !v)}
+              aria-label="Toggle Search"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Mobile search bar */}
+          {isMobileSearchOpen && (
+            <form onSubmit={handleSearch} className="pb-3 md:hidden">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="search"
+                  placeholder="খুঁজুন..."
+                  autoFocus
+                  className="w-full h-9 rounded-sm border border-border bg-background px-3 pl-10 text-sm font-bn focus:outline-none focus:border-primary"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+
+      {/* ── DARK NAV BAR ─────────────────────────────── */}
+      <div className="bg-primary">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center">
+            {/* Mobile hamburger on left */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <button
-                  className="lg:hidden p-2 text-foreground transition-colors hover:text-muted-foreground"
-                  aria-label="Toggle Mobile Menu"
-                >
-                  {isMobileMenuOpen ? (
-                    <X className="w-5 h-5" />
-                  ) : (
-                    <Menu className="w-5 h-5" />
-                  )}
+                <button className="lg:hidden p-3 text-white hover:text-gold transition-colors" aria-label="Menu">
+                  {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </button>
               </SheetTrigger>
-              <MobileNavMenu nav={nav} />
+              <SheetContent side="left" className="w-full max-w-sm bg-primary text-white border-r-0">
+                <div className="mb-8 mt-2">
+                  <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="font-bn text-2xl text-gold">
+                    কিশতী
+                  </Link>
+                </div>
+                <nav className="flex flex-col">
+                  {nav.map((n) => (
+                    <div key={n.label}>
+                      {n.items ? (
+                        <details className="group">
+                          <summary className="flex items-center justify-between px-2 py-3 text-sm text-white/90 hover:text-gold cursor-pointer font-bn list-none">
+                            {n.label}
+                            <ChevronDown className="w-4 h-4 group-open:rotate-180 transition-transform" />
+                          </summary>
+                          <div className="pl-4 flex flex-col border-l border-white/20 ml-2">
+                            {n.items.map((item) => (
+                              <Link
+                                key={item.to}
+                                href={item.to}
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="py-2 text-sm text-white/70 hover:text-gold font-bn transition-colors"
+                              >
+                                {item.label}
+                              </Link>
+                            ))}
+                          </div>
+                        </details>
+                      ) : (
+                        <Link
+                          href={n.to!}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="block px-2 py-3 text-sm text-white/90 hover:text-gold font-bn transition-colors border-b border-white/10"
+                        >
+                          {n.label}
+                        </Link>
+                      )}
+                    </div>
+                  ))}
+                </nav>
+              </SheetContent>
             </Sheet>
+
+            {/* Desktop nav */}
+            <nav className="hidden lg:flex items-center flex-1">
+              {nav.map((n) =>
+                n.items ? (
+                  <DesktopDropdown key={n.label} label={n.label} items={n.items} />
+                ) : (
+                  <Link
+                    key={n.label}
+                    href={n.to!}
+                    className={`px-3 py-3 text-sm font-bn transition-colors ${
+                      pathname === n.to ? "text-gold" : "text-white/90 hover:text-gold"
+                    }`}
+                  >
+                    {n.label}
+                  </Link>
+                )
+              )}
+            </nav>
+
+            {/* Desktop search (right side of nav) */}
+            <form onSubmit={handleSearch} className="hidden lg:flex items-center ml-auto">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/40" />
+                <input
+                  type="search"
+                  placeholder="খুঁজুন..."
+                  className="h-8 w-44 bg-white/10 border border-white/20 text-white placeholder:text-white/40 px-3 pl-8 text-xs font-bn rounded-sm focus:outline-none focus:border-gold focus:bg-white/15 transition-colors"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </form>
           </div>
         </div>
-
-        {/* Mobile Search Bar */}
-        <form onSubmit={handleSearch} className="lg:hidden pb-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              type="search"
-              placeholder="Search..."
-              className="w-full h-9 rounded-full border border-border bg-background/50 px-3 pl-10 text-sm focus:outline-none focus:border-accent focus:bg-background transition-colors"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </form>
       </div>
     </header>
   );
