@@ -381,3 +381,97 @@
     pointer-events: none;
   }
 }
+
+/* ── Article post page rich-body styles ─────────────────────────────── */
+@layer components {
+  /* Section heading (h2) — navy with gold underline + numbered badge */
+  .rich-body h2 {
+    font-family: var(--font-bn, 'Tiro Bangla', serif);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: hsl(var(--primary));
+    margin: 2.5rem 0 0.875rem;
+    padding-bottom: 0.625rem;
+    border-bottom: 2px solid hsl(var(--gold));
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    line-height: 1.4;
+  }
+
+  /* Pull-quote block — written inside blockquote in TipTap */
+  .rich-body blockquote {
+    background: hsl(var(--primary));
+    border-left: 4px solid hsl(var(--gold));
+    padding: 1.5rem 1.75rem;
+    margin: 2rem 0;
+    position: relative;
+  }
+  .rich-body blockquote::before {
+    content: '\201C';
+    font-family: 'Tiro Bangla', Georgia, serif;
+    font-size: 5rem;
+    color: hsl(var(--gold) / 0.18);
+    position: absolute;
+    top: -0.625rem;
+    left: 1rem;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .rich-body blockquote p {
+    font-family: var(--font-bn, 'Tiro Bangla', serif);
+    font-size: 1.08rem;
+    font-style: italic;
+    color: #fff;
+    line-height: 1.9;
+    margin: 0 !important;
+    position: relative;
+    z-index: 1;
+  }
+  .rich-body blockquote cite {
+    display: block;
+    font-size: 0.78rem;
+    color: hsl(var(--gold));
+    margin-top: 0.75rem;
+    font-style: normal;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Concept / callout box */
+  .rich-body .callout {
+    background: hsl(var(--secondary));
+    border: 1px solid hsl(var(--border));
+    border-top: 3px solid hsl(var(--gold));
+    padding: 1.25rem 1.5rem;
+    margin: 1.75rem 0;
+  }
+  .rich-body .callout > *:first-child {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: hsl(var(--gold));
+    margin-bottom: 0.625rem;
+  }
+  .rich-body .callout p {
+    font-size: 0.92rem;
+    color: hsl(var(--muted-foreground));
+    margin: 0;
+  }
+
+  /* Drop-cap for first paragraph after excerpt */
+  .rich-body > p:first-of-type::first-letter {
+    font-family: var(--font-bn, 'Tiro Bangla', serif);
+    font-size: 3.2em;
+    font-weight: 700;
+    float: left;
+    line-height: 0.78;
+    margin-right: 0.08em;
+    margin-top: 0.12em;
+    color: hsl(var(--primary));
+  }
+}
+
