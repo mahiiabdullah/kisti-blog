@@ -13,6 +13,7 @@ import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
+import { Node, Mark, mergeAttributes } from "@tiptap/core";
 import { useCallback, useRef, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,9 +21,68 @@ import { toast } from "sonner";
 import {
   Bold, Italic, Underline as UnderlineIcon, Quote, Highlighter,
   List, ListOrdered, Link as LinkIcon, ImagePlus, AlignLeft, AlignCenter, AlignRight,
-  Undo2, Redo2, MoreHorizontal, X, Strikethrough, Minus, Code, Code2,
-  Table as TableIcon, Save
+  Undo2, Redo2, X, Strikethrough, Minus, Code, Code2,
+  Table as TableIcon, Save, Type, LayoutTemplate
 } from "lucide-react";
+
+// ── Font Size Mark (pure @tiptap/core, no external packages) ───────────
+const FontSizeMark = Mark.create({
+  name: "fontSize",
+  addOptions() { return { types: ["textStyle"] }; },
+  addAttributes() {
+    return {
+      size: {
+        default: null,
+        parseHTML: (el) => (el as HTMLElement).style.fontSize || null,
+        renderHTML: (attrs) => attrs.size ? { style: `font-size: ${attrs.size}` } : {},
+      },
+    };
+  },
+  parseHTML() { return [{ tag: "span[style*='font-size']" }]; },
+  renderHTML({ HTMLAttributes }) {
+    return ["span", mergeAttributes(HTMLAttributes), 0];
+  },
+  addCommands() {
+    return {
+      setFontSize: (size: string) => ({ chain }: any) =>
+        chain().focus().setMark("fontSize", { size }).run(),
+      unsetFontSize: () => ({ chain }: any) =>
+        chain().focus().unsetMark("fontSize").run(),
+    } as any;
+  },
+});
+
+// ── Callout / Concept-box Node ───────────────────────────────────────────
+const Callout = Node.create({
+  name: "callout",
+  group: "block",
+  content: "block+",
+  defining: true,
+  parseHTML() { return [{ tag: "div.callout" }]; },
+  renderHTML({ HTMLAttributes }) {
+    return ["div", mergeAttributes(HTMLAttributes, { class: "callout" }), 0];
+  },
+  addCommands() {
+    return {
+      insertCallout: () => ({ commands }: any) =>
+        commands.insertContent({ type: "callout", content: [{ type: "paragraph" }] }),
+      toggleCallout: () => ({ state, commands }: any) => {
+        const { from } = state.selection;
+        const node = state.doc.nodeAt(from);
+        if (node?.type.name === "callout") return commands.lift("callout");
+        return commands.wrapIn("callout");
+      },
+    } as any;
+  },
+});
+
+const FONT_SIZES = [
+  { label: "ছোট", value: "0.85rem" },
+  { label: "স্বাভাবিক", value: "" },
+  { label: "মাঝারি", value: "1.15rem" },
+  { label: "বড়", value: "1.35rem" },
+  { label: "শিরোনাম", value: "1.6rem" },
+];
 
 interface RichTextEditorProps {
   content: string;
@@ -47,6 +107,8 @@ export default function RichTextEditor({
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [fontSizeOpen, setFontSizeOpen] = useState(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -68,6 +130,8 @@ export default function RichTextEditor({
       Placeholder.configure({ placeholder }),
       TextAlign.configure({ types: ["heading", "paragraph", "image"] }),
       Highlight.configure({ multicolor: false }),
+      FontSizeMark,
+      Callout,
       Table.configure({ resizable: true }),
       TableRow,
       TableHeader,
@@ -232,6 +296,49 @@ export default function RichTextEditor({
 
         <div className="w-px h-5 bg-border mx-1" />
 
+        {/* Font size */}
+        <div className="relative">
+          <button
+            type="button"
+            title="Font Size"
+            onClick={() => setFontSizeOpen((v) => !v)}
+            className="flex items-center gap-1 p-1.5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors text-xs"
+          >
+            <Type className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">আকার</span>
+          </button>
+          {fontSizeOpen && (
+            <div className="absolute top-full left-0 mt-1 bg-background border border-border shadow-lg z-50 min-w-[110px]">
+              {FONT_SIZES.map((f) => (
+                <button
+                  key={f.label}
+                  type="button"
+                  onClick={() => {
+                    if (f.value) (editor.chain().focus() as any).setFontSize(f.value).run();
+                    else (editor.chain().focus() as any).unsetFontSize().run();
+                    setFontSizeOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-1.5 text-xs hover:bg-secondary transition-colors font-bn"
+                  style={f.value ? { fontSize: f.value } : {}}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Callout box */}
+        <ToolButton
+          onClick={() => (editor.chain().focus() as any).insertCallout().run()}
+          active={editor.isActive("callout")}
+          title="Callout / Concept Box"
+        >
+          <LayoutTemplate className="w-4 h-4" />
+        </ToolButton>
+
+        <div className="w-px h-5 bg-border mx-1" />
+
         {/* Media & Links */}
         <ToolButton onClick={setLink} active={editor.isActive("link")} title="Insert Link">
           <LinkIcon className="w-4 h-4" />
@@ -268,7 +375,7 @@ export default function RichTextEditor({
               title="Restore saved draft"
               className="text-[10px] text-accent hover:underline font-en-sans px-2 py-1 border border-accent/30 rounded-sm"
             >
-              Draft wiederherstellen
+              খসড়া পুনরুদ্ধার
             </button>
           </div>
         )}
