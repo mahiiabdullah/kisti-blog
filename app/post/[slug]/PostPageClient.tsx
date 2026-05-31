@@ -87,11 +87,11 @@ const AuthorAvatar = ({ name, size = 40 }: { name: string; size?: number }) => (
 
 const TocWidget = ({ headings, activeId }: { headings: { id: string; text: string; level: number }[]; activeId: string }) => {
   return (
-    <div className="mb-6 border border-border overflow-hidden">
-      <div className="bg-primary px-4 py-2.5 border-b-2 border-gold">
+    <div className="mb-6 border border-border overflow-hidden sticky top-[6.5rem] z-10 bg-[#fcf8f2] max-h-[calc(100vh-8rem)] overflow-y-auto scrollbar-thin shadow-md">
+      <div className="bg-primary px-4 py-2.5 border-b-2 border-gold sticky top-0 z-20">
         <h3 className="font-bn text-sm font-bold text-gold">বিষয়সূচি</h3>
       </div>
-      <div>
+      <div className="bg-[#fcf8f2]">
         {headings.length > 0 ? (
           headings.map((h) => (
             <a key={h.id} href={`#${h.id}`}
@@ -587,7 +587,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
         </main>
 
         {/* ── SIDEBAR ──────────────────────────────── */}
-        <aside className="w-[260px] xl:w-[280px] shrink-0 hidden lg:block sticky top-[6.5rem] self-start max-h-[calc(100vh-6.5rem)] overflow-y-auto scrollbar-thin pb-8">
+        <aside className="w-[260px] xl:w-[280px] shrink-0 hidden lg:block pb-8">
           <div className="flex flex-col gap-6">
             <TocWidget headings={headings} activeId={activeHeadingId} />
             <MostReadWidget posts={popularPosts} />
