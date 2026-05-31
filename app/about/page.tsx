@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { supabase } from "@/lib/supabase/client";
 
-export const revalidate = 300; // revalidate every 5 minutes
+export const dynamic = "force-dynamic"; // always fetch latest content from DB
+
 
 export async function generateMetadata(): Promise<Metadata> {
   const { data } = await (supabase as any)
