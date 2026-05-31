@@ -404,8 +404,9 @@
   }
 
   /* Section number badge — gold square with Bengali numeral */
-  .rich-body h2 .section-heading-num,
-  .prose-editor h2 .section-heading-num {
+  .rich-body h2[data-section-num]::before,
+  .prose-editor h2[data-section-num]::before {
+    content: attr(data-section-num);
     display: inline-flex;
     align-items: center;
     justify-content: center;

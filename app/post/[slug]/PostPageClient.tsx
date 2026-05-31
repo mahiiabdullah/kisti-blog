@@ -63,15 +63,10 @@ const injectHeadingIds = (container: HTMLElement): { id: string; text: string; l
   container.querySelectorAll("h2, h3").forEach((el) => {
     const level = el.tagName === "H2" ? 2 : 3;
     if (level === 2) h2Count++;
-    // Build slug from text content
     const text = el.textContent?.trim() ?? "";
-    // Remove section number prefix if already there (from .section-heading-num span)
-    const cleanText = el.querySelector(".section-heading-num")
-      ? text.replace(/^[০-৯\d]+\s*/, "")
-      : text;
     const id = el.id || `section-${h2Count}`;
     el.id = id;
-    items.push({ id, text: cleanText || text, level });
+    items.push({ id, text, level });
   });
   return items;
 };
@@ -449,14 +444,13 @@ export default function PostPageClient({ slug }: { slug: string }) {
 
             {/* Body */}
             {t.body && (
-              <div className={`prose-kisti ${langClass[lang]} max-w-none`} dir={dir}>
+              <div className={`prose-kisti ${langClass[lang]} max-w-none`} dir={dir} ref={articleBodyRef}>
                 {t.body.trim().startsWith("<") ? (
                   <div
                     dangerouslySetInnerHTML={{
                       __html: t.body.replace(/\[\^(\d+)\]/g, '<sup id="fnref-$1" class="ml-0.5 scroll-m-24"><a href="#fn-$1" class="text-accent hover:underline">[$1]</a></sup>')
                     }}
                     className="rich-body"
-                    ref={articleBodyRef}
                   />
                 ) : (
                   <ReactMarkdown

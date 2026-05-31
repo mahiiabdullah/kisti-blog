@@ -14,6 +14,7 @@ import { TableRow } from "@tiptap/extension-table-row";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { Node, Mark, mergeAttributes } from "@tiptap/core";
+import Heading from "@tiptap/extension-heading";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -76,6 +77,31 @@ const Callout = Node.create({
   },
 });
 
+// ── Custom Heading (supports id and data-section-num) ───────────
+const CustomHeading = Heading.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      id: {
+        default: null,
+        parseHTML: element => element.getAttribute('id'),
+        renderHTML: attributes => {
+          if (!attributes.id) return {}
+          return { id: attributes.id }
+        },
+      },
+      'data-section-num': {
+        default: null,
+        parseHTML: element => element.getAttribute('data-section-num'),
+        renderHTML: attributes => {
+          if (!attributes['data-section-num']) return {}
+          return { 'data-section-num': attributes['data-section-num'] }
+        },
+      },
+    }
+  },
+});
+
 const FONT_SIZES = [
   { label: "ছোট", value: "0.85rem" },
   { label: "স্বাভাবিক", value: "" },
@@ -116,12 +142,13 @@ export default function RichTextEditor({
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        heading: { levels: [2, 3, 4] },
+        heading: false, // Using CustomHeading instead
         code: {},
         codeBlock: {},
         strike: {},
         horizontalRule: {},
       }),
+      CustomHeading.configure({ levels: [2, 3, 4] }),
       Image.configure({
         HTMLAttributes: { class: "editor-image" },
         allowBase64: false,
@@ -215,7 +242,7 @@ export default function RichTextEditor({
     const nextNum = (matches ? matches.length : 0) + 1;
     const bnNum = toBn(nextNum);
     editor.chain().focus()
-      .insertContent(`<h2 id="section-${nextNum}"><span class="section-heading-num">${bnNum}</span> শিরোনাম লিখুন</h2><p></p>`)
+      .insertContent(`<h2 id="section-${nextNum}" data-section-num="${bnNum}">শিরোনাম লিখুন</h2><p></p>`)
       .run();
   }, [editor]);
 
