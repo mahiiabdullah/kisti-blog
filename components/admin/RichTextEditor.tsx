@@ -14,7 +14,7 @@ import { TableRow } from "@tiptap/extension-table-row";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { Node, Mark, mergeAttributes } from "@tiptap/core";
-import { useCallback, useRef, useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -22,7 +22,7 @@ import {
   Bold, Italic, Underline as UnderlineIcon, Quote, Highlighter,
   List, ListOrdered, Link as LinkIcon, ImagePlus, AlignLeft, AlignCenter, AlignRight,
   Undo2, Redo2, X, Strikethrough, Minus, Code, Code2,
-  Table as TableIcon, Save, Type, LayoutTemplate
+  Table as TableIcon, Save, Type, LayoutTemplate, BookMarked
 } from "lucide-react";
 
 // ── Font Size Mark (pure @tiptap/core, no external packages) ───────────
@@ -83,6 +83,10 @@ const FONT_SIZES = [
   { label: "বড়", value: "1.35rem" },
   { label: "শিরোনাম", value: "1.6rem" },
 ];
+
+// Bengali numerals for section numbering
+const toBn = (n: number) => n.toString().replace(/\d/g, (x) => "\u09e6\u09e7\u09e8\u09e9\u09ea\u09eb\u09ec\u09ed\u09ee\u09ef"[+x]);
+
 
 interface RichTextEditorProps {
   content: string;
@@ -203,6 +207,19 @@ export default function RichTextEditor({
     editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
   }, [editor]);
 
+  const insertSection = useCallback(() => {
+    if (!editor) return;
+    // Count existing h2 headings to determine next section number
+    const html = editor.getHTML();
+    const matches = html.match(/<h2/g);
+    const nextNum = (matches ? matches.length : 0) + 1;
+    const bnNum = toBn(nextNum);
+    editor.chain().focus()
+      .insertContent(`<h2 id="section-${nextNum}"><span class="section-heading-num">${bnNum}</span> শিরোনাম লিখুন</h2><p></p>`)
+      .run();
+  }, [editor]);
+
+
   const restoreDraft = useCallback(() => {
     if (!draftKey) return;
     const saved = localStorage.getItem(draftKey);
@@ -257,6 +274,13 @@ export default function RichTextEditor({
         </ToolButton>
         <ToolButton onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()} active={editor.isActive('heading', { level: 4 })} title="Heading 4">
           <span className="text-xs font-bold px-1">H4</span>
+        </ToolButton>
+        {/* Section heading (numbered chapter) */}
+        <ToolButton onClick={insertSection} active={false} title="সেকশন / অধ্যায় যোগ করুন">
+          <span className="flex items-center gap-0.5">
+            <BookMarked className="w-3.5 h-3.5" />
+            <span className="text-[10px] font-bold">§</span>
+          </span>
         </ToolButton>
 
         <div className="w-px h-5 bg-border mx-1" />

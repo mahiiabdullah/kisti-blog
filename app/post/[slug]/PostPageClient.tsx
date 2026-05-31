@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { Home, ChevronRight, BookOpen, Eye, Hash } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
@@ -56,15 +56,22 @@ const getInitials = (name: string) => {
   return name.substring(0, 2);
 };
 
-const extractHeadings = (html: string): { id: string; text: string }[] => {
-  if (typeof window === "undefined") return [];
-  const div = document.createElement("div");
-  div.innerHTML = html;
-  const items: { id: string; text: string }[] = [];
-  div.querySelectorAll("h2, h3").forEach((el, i) => {
-    const id = el.id || `section-${i + 1}`;
-    if (!el.id) el.id = id;
-    items.push({ id, text: el.textContent?.trim() ?? "" });
+// Inject IDs into live DOM h2/h3 elements and return heading list
+const injectHeadingIds = (container: HTMLElement): { id: string; text: string; level: number }[] => {
+  const items: { id: string; text: string; level: number }[] = [];
+  let h2Count = 0;
+  container.querySelectorAll("h2, h3").forEach((el) => {
+    const level = el.tagName === "H2" ? 2 : 3;
+    if (level === 2) h2Count++;
+    // Build slug from text content
+    const text = el.textContent?.trim() ?? "";
+    // Remove section number prefix if already there (from .section-heading-num span)
+    const cleanText = el.querySelector(".section-heading-num")
+      ? text.replace(/^[০-৯\d]+\s*/, "")
+      : text;
+    const id = el.id || `section-${h2Count}`;
+    el.id = id;
+    items.push({ id, text: cleanText || text, level });
   });
   return items;
 };
@@ -83,7 +90,7 @@ const AuthorAvatar = ({ name, size = 40 }: { name: string; size?: number }) => (
   </div>
 );
 
-const TocWidget = ({ headings }: { headings: { id: string; text: string }[] }) => {
+const TocWidget = ({ headings, activeId }: { headings: { id: string; text: string; level: number }[]; activeId: string }) => {
   if (headings.length === 0) return null;
   return (
     <div className="mb-6 border border-border overflow-hidden">
@@ -93,9 +100,17 @@ const TocWidget = ({ headings }: { headings: { id: string; text: string }[] }) =
       <div>
         {headings.map((h) => (
           <a key={h.id} href={`#${h.id}`}
-            className="flex items-start gap-3 px-4 py-2.5 border-b border-border last:border-0 hover:bg-secondary/40 transition-colors group">
-            <span className="mt-1 w-1.5 h-1.5 rounded-full bg-border group-hover:bg-gold transition-colors shrink-0" />
-            <span className="text-xs font-bn text-muted-foreground group-hover:text-foreground transition-colors leading-snug">
+            className={`flex items-start gap-3 px-4 py-2.5 border-b border-border last:border-0 hover:bg-secondary/40 transition-colors group ${
+              activeId === h.id ? "bg-secondary/60" : ""
+            }`}>
+            <span className={`mt-1.5 shrink-0 transition-colors ${
+              h.level === 3 ? "w-1 h-1 rounded-full ml-3" : "w-1.5 h-1.5 rounded-full"
+            } ${
+              activeId === h.id ? "bg-gold" : "bg-border group-hover:bg-gold"
+            }`} />
+            <span className={`text-xs font-bn leading-snug transition-colors ${
+              activeId === h.id ? "text-foreground font-semibold" : "text-muted-foreground group-hover:text-foreground"
+            } ${h.level === 3 ? "pl-1" : ""}`}>
               {h.text}
             </span>
           </a>
@@ -156,7 +171,9 @@ export default function PostPageClient({ slug }: { slug: string }) {
   const [loading, setLoading] = useState(true);
   const [postCategories, setPostCategories] = useState<CategoryInfo[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [headings, setHeadings] = useState<{ id: string; text: string }[]>([]);
+  const [headings, setHeadings] = useState<{ id: string; text: string; level: number }[]>([]);
+  const [activeHeadingId, setActiveHeadingId] = useState("");
+  const articleBodyRef = useRef<HTMLDivElement>(null);
   const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([]);
   const [popularPosts, setPopularPosts] = useState<RelatedPost[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
@@ -229,15 +246,37 @@ export default function PostPageClient({ slug }: { slug: string }) {
     })();
   }, [slug]);
 
-  // Extract headings after post loads
+  // Inject IDs into actual rendered article DOM after body renders
   useEffect(() => {
-    if (!post) return;
+    if (!post || !articleBodyRef.current) return;
     const t = post.post_translations.find((x) => x.lang === lang) ?? post.post_translations[0];
     if (!t?.body) return;
-    if (t.body.trim().startsWith("<")) {
-      setHeadings(extractHeadings(t.body));
-    }
+    // Small delay to ensure DOM is painted
+    const timer = setTimeout(() => {
+      if (articleBodyRef.current) {
+        const extracted = injectHeadingIds(articleBodyRef.current);
+        setHeadings(extracted);
+      }
+    }, 100);
+    return () => clearTimeout(timer);
   }, [post, lang]);
+
+  // Scroll-spy: highlight active TOC item
+  useEffect(() => {
+    if (headings.length === 0) return;
+    const handleScroll = () => {
+      const scrollY = window.scrollY + 120;
+      let active = headings[0]?.id ?? "";
+      for (const h of headings) {
+        const el = document.getElementById(h.id);
+        if (el && el.offsetTop <= scrollY) active = h.id;
+      }
+      setActiveHeadingId(active);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [headings]);
 
   if (loading) return <PostPageSkeleton />;
   if (error || !post) {
@@ -406,6 +445,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
                       __html: t.body.replace(/\[\^(\d+)\]/g, '<sup id="fnref-$1" class="ml-0.5 scroll-m-24"><a href="#fn-$1" class="text-accent hover:underline">[$1]</a></sup>')
                     }}
                     className="rich-body"
+                    ref={articleBodyRef}
                   />
                 ) : (
                   <ReactMarkdown
@@ -544,7 +584,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
         {/* ── SIDEBAR ──────────────────────────────── */}
         <aside className="w-[260px] xl:w-[280px] shrink-0 hidden lg:block">
           <div className="sticky top-[6.5rem]">
-            <TocWidget headings={headings} />
+            <TocWidget headings={headings} activeId={activeHeadingId} />
             <MostReadWidget posts={popularPosts} />
             <TagsWidget tags={allTags} />
           </div>
