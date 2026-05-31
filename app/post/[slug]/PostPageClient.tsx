@@ -254,7 +254,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
 
   // Inject IDs into actual rendered article DOM after body renders
   useEffect(() => {
-    if (!post || !articleBodyRef.current) return;
+    if (!post) return;
     const t = post.post_translations.find((x) => x.lang === lang) ?? post.post_translations[0];
     if (!t?.body) return;
     // Small delay to ensure DOM is painted
@@ -263,7 +263,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
         const extracted = injectHeadingIds(articleBodyRef.current);
         setHeadings(extracted);
       }
-    }, 100);
+    }, 150);
     return () => clearTimeout(timer);
   }, [post, lang]);
 
@@ -587,8 +587,8 @@ export default function PostPageClient({ slug }: { slug: string }) {
         </main>
 
         {/* ── SIDEBAR ──────────────────────────────── */}
-        <aside className="w-[260px] xl:w-[280px] shrink-0 hidden lg:block">
-          <div className="sticky top-[6.5rem]">
+        <aside className="w-[260px] xl:w-[280px] shrink-0 hidden lg:block sticky top-[6.5rem] self-start max-h-[calc(100vh-6.5rem)] overflow-y-auto scrollbar-thin pb-8">
+          <div className="flex flex-col gap-6">
             <TocWidget headings={headings} activeId={activeHeadingId} />
             <MostReadWidget posts={popularPosts} />
             <TagsWidget tags={allTags} />
