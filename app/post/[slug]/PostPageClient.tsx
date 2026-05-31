@@ -91,73 +91,84 @@ const AuthorAvatar = ({ name, size = 40 }: { name: string; size?: number }) => (
 );
 
 const TocWidget = ({ headings, activeId }: { headings: { id: string; text: string; level: number }[]; activeId: string }) => {
-  if (headings.length === 0) return null;
   return (
     <div className="mb-6 border border-border overflow-hidden">
       <div className="bg-primary px-4 py-2.5 border-b-2 border-gold">
         <h3 className="font-bn text-sm font-bold text-gold">বিষয়সূচি</h3>
       </div>
       <div>
-        {headings.map((h) => (
-          <a key={h.id} href={`#${h.id}`}
-            className={`flex items-start gap-3 px-4 py-2.5 border-b border-border last:border-0 hover:bg-secondary/40 transition-colors group ${
-              activeId === h.id ? "bg-secondary/60" : ""
-            }`}>
-            <span className={`mt-1.5 shrink-0 transition-colors ${
-              h.level === 3 ? "w-1 h-1 rounded-full ml-3" : "w-1.5 h-1.5 rounded-full"
-            } ${
-              activeId === h.id ? "bg-gold" : "bg-border group-hover:bg-gold"
-            }`} />
-            <span className={`text-xs font-bn leading-snug transition-colors ${
-              activeId === h.id ? "text-foreground font-semibold" : "text-muted-foreground group-hover:text-foreground"
-            } ${h.level === 3 ? "pl-1" : ""}`}>
-              {h.text}
-            </span>
-          </a>
-        ))}
+        {headings.length > 0 ? (
+          headings.map((h) => (
+            <a key={h.id} href={`#${h.id}`}
+              className={`flex items-start gap-3 px-4 py-2.5 border-b border-border last:border-0 hover:bg-secondary/40 transition-colors group ${
+                activeId === h.id ? "bg-secondary/60" : ""
+              }`}>
+              <span className={`mt-1.5 shrink-0 transition-colors ${
+                h.level === 3 ? "w-1 h-1 rounded-full ml-3" : "w-1.5 h-1.5 rounded-full"
+              } ${
+                activeId === h.id ? "bg-gold" : "bg-border group-hover:bg-gold"
+              }`} />
+              <span className={`text-xs font-bn leading-snug transition-colors ${
+                activeId === h.id ? "text-foreground font-semibold" : "text-muted-foreground group-hover:text-foreground"
+              } ${h.level === 3 ? "pl-1" : ""}`}>
+                {h.text}
+              </span>
+            </a>
+          ))
+        ) : (
+          <div className="px-4 py-3 text-xs text-muted-foreground font-bn">কোনো বিষয়সূচি নেই</div>
+        )}
       </div>
     </div>
   );
 };
 
 const MostReadWidget = ({ posts }: { posts: RelatedPost[] }) => {
-  if (posts.length === 0) return null;
   const bnNum = (n: number) => n.toString().replace(/\d/g, (x) => "০১২৩৪৫৬৭৮৯"[+x]).padStart(2, "০");
   return (
     <div className="mb-6 border border-border overflow-hidden">
       <div className="bg-primary px-4 py-2.5 border-b-2 border-gold">
         <h3 className="font-bn text-sm font-bold text-gold">সর্বাধিক পঠিত</h3>
       </div>
-      {posts.map((p, i) => {
-        const title = p.post_translations[0]?.title ?? "";
-        return (
-          <Link key={p.id} href={`/post/${p.slug}`}
-            className="flex items-start gap-3 px-4 py-3 border-b border-border last:border-0 hover:bg-secondary/40 transition-colors group">
-            <span className="font-en-sans text-2xl font-bold text-border group-hover:text-gold transition-colors shrink-0 leading-none pt-0.5">
-              {bnNum(i + 1)}
-            </span>
-            <span className="text-xs font-bn text-foreground leading-snug line-clamp-3">{title}</span>
-          </Link>
-        );
-      })}
+      <div>
+        {posts.length > 0 ? (
+          posts.map((p, i) => {
+            const title = p.post_translations[0]?.title ?? "";
+            return (
+              <Link key={p.id} href={`/post/${p.slug}`}
+                className="flex items-start gap-3 px-4 py-3 border-b border-border last:border-0 hover:bg-secondary/40 transition-colors group">
+                <span className="font-en-sans text-2xl font-bold text-border group-hover:text-gold transition-colors shrink-0 leading-none pt-0.5">
+                  {bnNum(i + 1)}
+                </span>
+                <span className="text-xs font-bn text-foreground leading-snug line-clamp-3">{title}</span>
+              </Link>
+            );
+          })
+        ) : (
+          <div className="px-4 py-3 text-xs text-muted-foreground font-bn">কোনো প্রবন্ধ পাওয়া যায়নি</div>
+        )}
+      </div>
     </div>
   );
 };
 
 const TagsWidget = ({ tags }: { tags: string[] }) => {
-  if (tags.length === 0) return null;
   return (
     <div className="border border-border overflow-hidden">
       <div className="bg-primary px-4 py-2.5 border-b-2 border-gold">
         <h3 className="font-bn text-sm font-bold text-gold">বিষয়ভিত্তিক ট্যাগ</h3>
       </div>
       <div className="p-3 flex flex-wrap gap-1.5">
-        {tags.map((tag) => (
-          <Link key={tag} href={`/search?q=${encodeURIComponent(tag)}`}
-            className="inline-flex items-center gap-0.5 text-[11px] font-bn px-2.5 py-1 border border-border bg-background text-muted-foreground hover:bg-primary hover:text-gold hover:border-primary transition-colors">
-            <Hash className="w-2.5 h-2.5 opacity-50" />{tag}
-          </Link>
-        ))}
+        {tags.length > 0 ? (
+          tags.map((tag) => (
+            <Link key={tag} href={`/search?q=${encodeURIComponent(tag)}`}
+              className="inline-flex items-center gap-0.5 text-[11px] font-bn px-2.5 py-1 border border-border bg-background text-muted-foreground hover:bg-primary hover:text-gold hover:border-primary transition-colors">
+              <Hash className="w-2.5 h-2.5 opacity-50" />{tag}
+            </Link>
+          ))
+        ) : (
+          <div className="text-xs text-muted-foreground font-bn">কোনো ট্যাগ নেই</div>
+        )}
       </div>
     </div>
   );
