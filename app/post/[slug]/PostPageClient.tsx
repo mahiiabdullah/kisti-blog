@@ -67,22 +67,44 @@ const injectHeadingIds = (container: HTMLElement): { id: string; text: string; l
     return slug || 'section';
   };
 
-  container.querySelectorAll("h1, h2, h3, h4, h5, h6").forEach((el) => {
-    const level = parseInt(el.tagName.charAt(1), 10);
+  const allElements = Array.from(container.querySelectorAll("h1, h2, h3, h4, h5, h6, p"));
+  
+  allElements.forEach((el) => {
+    let isHeading = false;
+    let level = 2;
     const text = el.textContent?.trim() ?? "";
-    let id = el.id;
-    if (!id) {
-      let baseId = slugify(text);
-      id = baseId;
-      let count = 1;
-      while (seenIds.has(id)) {
-        id = `${baseId}-${count}`;
-        count++;
+
+    if (!text) return; // skip empty
+
+    if (/^H[1-6]$/i.test(el.tagName)) {
+      isHeading = true;
+      level = parseInt(el.tagName.charAt(1), 10);
+    } else if (el.tagName === "P") {
+      const nextEl = el.nextElementSibling;
+      // If it's a short paragraph, has bold text, and is followed by a horizontal rule, treat as heading
+      if (nextEl && nextEl.tagName === "HR" && text.length < 120) {
+        if (el.querySelector("strong, b")) {
+          isHeading = true;
+          level = 2;
+        }
       }
-      el.id = id;
     }
-    seenIds.add(id);
-    items.push({ id, text, level });
+
+    if (isHeading) {
+      let id = el.id;
+      if (!id) {
+        let baseId = slugify(text);
+        id = baseId;
+        let count = 1;
+        while (seenIds.has(id)) {
+          id = `${baseId}-${count}`;
+          count++;
+        }
+        el.id = id;
+      }
+      seenIds.add(id);
+      items.push({ id, text, level });
+    }
   });
   return items;
 };
