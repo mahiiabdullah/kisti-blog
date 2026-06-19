@@ -80,14 +80,20 @@ const injectHeadingIds = (container: HTMLElement): { id: string; text: string; l
       isHeading = true;
       level = parseInt(el.tagName.charAt(1), 10);
     } else if (el.tagName === "P") {
-      let nextEl = el.nextElementSibling;
-      // Skip any empty paragraphs that might be between the text and the HR
-      while (nextEl && nextEl.tagName === "P" && !nextEl.textContent?.trim()) {
-        nextEl = nextEl.nextElementSibling;
+      let sibling = el.nextElementSibling;
+      // Skip any empty elements (like <br>, empty <p>, empty <div>) between text and HR
+      while (sibling) {
+        if (sibling.tagName === "HR") break;
+        if (sibling.textContent?.trim() !== "") {
+          // We hit a sibling that contains text, so HR is not immediately following
+          sibling = null;
+          break;
+        }
+        sibling = sibling.nextElementSibling;
       }
 
-      // If it's a short paragraph and is followed by a horizontal rule, treat as heading
-      if (nextEl && nextEl.tagName === "HR" && text.length < 120) {
+      // If we found an HR closely following a short paragraph, treat as heading
+      if (sibling && sibling.tagName === "HR" && text.length < 120) {
         isHeading = true;
         level = 2;
       }
@@ -313,10 +319,25 @@ export default function PostPageClient({ slug }: { slug: string }) {
     const t = post.post_translations.find((x) => x.lang === lang) ?? post.post_translations[0];
     if (!t?.body) return;
     
-    // Using MutationObserver to ensure we extract headings even if DOM is populated late
-    if (articleBodyRef.current) {
-      const extracted = injectHeadingIds(articleBodyRef.current);
-      setHeadings(extracted);
+    // Polling to ensure we extract headings even if DOM is populated late
+    let attempts = 0;
+    const extract = () => {
+      attempts++;
+      if (articleBodyRef.current) {
+        const extracted = injectHeadingIds(articleBodyRef.current);
+        if (extracted.length > 0 || attempts > 10) {
+          setHeadings(extracted);
+          return true;
+        }
+      }
+      return false;
+    };
+
+    if (!extract()) {
+      const interval = setInterval(() => {
+        if (extract()) clearInterval(interval);
+      }, 500);
+      return () => clearInterval(interval);
     }
   }, [post, lang]);
 
