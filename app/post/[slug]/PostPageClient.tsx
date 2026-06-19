@@ -127,7 +127,11 @@ const AuthorAvatar = ({ name, size = 40 }: { name: string; size?: number }) => (
 );
 
 const TocWidget = ({ headings, activeId }: { headings: { id: string; text: string; level: number }[]; activeId: string }) => {
-  if (headings.length < 2) return null;
+  if (headings.length < 2) return (
+    <div className="bg-red-100 text-red-800 p-4 rounded text-sm mb-4 font-bold border border-red-300">
+      TOC Debug: Found {headings.length} headings in DOM.
+    </div>
+  );
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
@@ -308,14 +312,12 @@ export default function PostPageClient({ slug }: { slug: string }) {
     if (!post) return;
     const t = post.post_translations.find((x) => x.lang === lang) ?? post.post_translations[0];
     if (!t?.body) return;
-    // Small delay to ensure DOM is painted
-    const timer = setTimeout(() => {
-      if (articleBodyRef.current) {
-        const extracted = injectHeadingIds(articleBodyRef.current);
-        setHeadings(extracted);
-      }
-    }, 150);
-    return () => clearTimeout(timer);
+    
+    // Using MutationObserver to ensure we extract headings even if DOM is populated late
+    if (articleBodyRef.current) {
+      const extracted = injectHeadingIds(articleBodyRef.current);
+      setHeadings(extracted);
+    }
   }, [post, lang]);
 
   // Scroll-spy: highlight active TOC item
