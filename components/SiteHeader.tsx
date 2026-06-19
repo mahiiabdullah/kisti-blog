@@ -142,12 +142,9 @@ export const SiteHeader = () => {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center h-14 gap-4">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 group flex-shrink-0">
-              <div className="w-10 h-10 flex items-center justify-center rounded-sm overflow-hidden bg-primary">
-                <img src="/kishti%20logo.png" alt="Kisti Logo" className="w-full h-full object-cover" />
-              </div>
+            <Link href="/" className="flex items-center group flex-shrink-0">
               <div className="flex flex-col leading-none h-10 justify-center">
-                <img src="/kishti%20banner%20name.png" alt="Kisti" className="h-6 object-contain" />
+                <img src="/kishti%20banner%20name.png" alt="Kisti" className="h-9 object-contain" />
               </div>
             </Link>
 
