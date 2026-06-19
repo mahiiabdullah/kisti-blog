@@ -165,7 +165,7 @@ const ThumbCard = ({ post }: { post: Post }) => {
         {post.category_bn && (
           <p className="text-[9px] text-gold uppercase tracking-wider mb-0.5 font-en-sans">{post.category_bn}</p>
         )}
-        <h5 className="text-white text-[11px] font-bn leading-snug line-clamp-3 group-hover:text-gold transition-colors">{t.title}</h5>
+        <h5 className="text-white text-[1.05rem] font-bn leading-snug line-clamp-3 group-hover:text-gold transition-colors">{t.title}</h5>
         {post.published_at && (
           <p className="text-white/35 text-[9px] font-en-sans mt-0.5">{toBengaliDate(post.published_at)}</p>
         )}
@@ -268,7 +268,7 @@ const HeroSection = ({ posts }: { posts: Post[] }) => {
         <div className="col-span-12 md:col-span-4 p-4 border-b md:border-b-0 md:border-r border-border/60">
           {listPosts.map((p) => <ListCard key={p.id} post={p} />)}
         </div>
-        <div className="col-span-12 md:col-span-4 bg-primary p-3">
+        <div className="col-span-12 md:col-span-4 bg-primary p-4">
           {thumbPosts.map((p) => <ThumbCard key={p.id} post={p} />)}
         </div>
       </div>
@@ -471,9 +471,9 @@ export default function HomePage() {
       {heroPosts.length > 0 && <HeroSection posts={heroPosts} />}
 
       {/* ── Category sections + Sidebar ───────────────── */}
-      <div className="flex gap-6 items-start">
+      <div className="grid grid-cols-12 gap-0 items-start">
         {/* Main: category editorial sections */}
-        <main className="flex-1 min-w-0">
+        <main className="col-span-12 lg:col-span-8 lg:pr-6 min-w-0">
           {categories.map((cat) => (
             <EditorialSection
               key={cat.id}
@@ -490,7 +490,7 @@ export default function HomePage() {
         </main>
 
         {/* ── Right Sidebar ──────────────────────────────── */}
-        <aside className="w-[260px] xl:w-[280px] shrink-0 hidden lg:block pb-8">
+        <aside className="col-span-12 lg:col-span-4 shrink-0 hidden lg:block pb-8">
           <div className="sticky top-[6.5rem]">
             {mostRead.length > 0 && <MostReadWidget posts={mostRead} />}
             {writers.length > 0 && <WritersWidget writers={writers} />}
