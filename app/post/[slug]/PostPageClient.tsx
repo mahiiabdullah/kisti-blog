@@ -133,11 +133,7 @@ const AuthorAvatar = ({ name, size = 40 }: { name: string; size?: number }) => (
 );
 
 const TocWidget = ({ headings, activeId }: { headings: { id: string; text: string; level: number }[]; activeId: string }) => {
-  if (headings.length < 2) return (
-    <div className="bg-red-100 text-red-800 p-4 rounded text-sm mb-4 font-bold border border-red-300">
-      TOC Debug: Found {headings.length} headings in DOM.
-    </div>
-  );
+  if (headings.length < 2) return null;
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
