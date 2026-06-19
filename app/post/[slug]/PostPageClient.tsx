@@ -80,13 +80,16 @@ const injectHeadingIds = (container: HTMLElement): { id: string; text: string; l
       isHeading = true;
       level = parseInt(el.tagName.charAt(1), 10);
     } else if (el.tagName === "P") {
-      const nextEl = el.nextElementSibling;
-      // If it's a short paragraph, has bold text, and is followed by a horizontal rule, treat as heading
+      let nextEl = el.nextElementSibling;
+      // Skip any empty paragraphs that might be between the text and the HR
+      while (nextEl && nextEl.tagName === "P" && !nextEl.textContent?.trim()) {
+        nextEl = nextEl.nextElementSibling;
+      }
+
+      // If it's a short paragraph and is followed by a horizontal rule, treat as heading
       if (nextEl && nextEl.tagName === "HR" && text.length < 120) {
-        if (el.querySelector("strong, b")) {
-          isHeading = true;
-          level = 2;
-        }
+        isHeading = true;
+        level = 2;
       }
     }
 
