@@ -10,6 +10,7 @@ import { ShareButtons } from "@/components/ShareButtons";
 import { ViewTracker } from "@/components/ViewTracker";
 import { ReadingProgressBar } from "@/components/ReadingProgressBar";
 import ReactMarkdown from "react-markdown";
+import rehypeSlug from "rehype-slug";
 import Image from "next/image";
 
 type LangCode = "bn" | "en" | "ar";
@@ -59,13 +60,28 @@ const getInitials = (name: string) => {
 // Inject IDs into live DOM h2/h3 elements and return heading list
 const injectHeadingIds = (container: HTMLElement): { id: string; text: string; level: number }[] => {
   const items: { id: string; text: string; level: number }[] = [];
-  let h2Count = 0;
+  const seenIds = new Set<string>();
+
+  const slugify = (text: string) => {
+    const slug = text.trim().replace(/\s+/g, '-').replace(/[^\w\u0980-\u09FF-]+/g, '').toLowerCase();
+    return slug || 'section';
+  };
+
   container.querySelectorAll("h2, h3").forEach((el) => {
     const level = el.tagName === "H2" ? 2 : 3;
-    if (level === 2) h2Count++;
     const text = el.textContent?.trim() ?? "";
-    const id = el.id || `section-${h2Count}`;
-    el.id = id;
+    let id = el.id;
+    if (!id) {
+      let baseId = slugify(text);
+      id = baseId;
+      let count = 1;
+      while (seenIds.has(id)) {
+        id = `${baseId}-${count}`;
+        count++;
+      }
+      el.id = id;
+    }
+    seenIds.add(id);
     items.push({ id, text, level });
   });
   return items;
@@ -86,33 +102,43 @@ const AuthorAvatar = ({ name, size = 40 }: { name: string; size?: number }) => (
 );
 
 const TocWidget = ({ headings, activeId }: { headings: { id: string; text: string; level: number }[]; activeId: string }) => {
+  if (headings.length < 2) return null;
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const el = document.getElementById(id);
+    if (el) {
+      const y = el.getBoundingClientRect().top + window.scrollY - 100;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
+
   return (
-    <div className="mb-6 border border-border overflow-hidden sticky top-[6.5rem] z-10 bg-[#fcf8f2] max-h-[calc(100vh-8rem)] overflow-y-auto scrollbar-thin shadow-md">
-      <div className="bg-primary px-4 py-2.5 border-b-2 border-gold sticky top-0 z-20">
-        <h3 className="font-bn text-sm font-bold text-gold">বিষয়সূচি</h3>
+    <div className="border border-border overflow-hidden sticky top-[6.5rem] z-10 bg-card max-h-[calc(100vh-8rem)] flex flex-col shadow-sm">
+      <div className="bg-primary px-4 py-2.5 border-b-2 border-gold shrink-0">
+        <h3 className="font-bn text-[1.05rem] font-semibold text-gold">বিষয়সূচী</h3>
       </div>
-      <div className="bg-[#fcf8f2]">
-        {headings.length > 0 ? (
-          headings.map((h) => (
-            <a key={h.id} href={`#${h.id}`}
+      <div className="bg-card overflow-y-auto scrollbar-thin flex-1">
+        {headings.map((h) => {
+          const isActive = activeId === h.id;
+          return (
+            <a key={h.id} href={`#${h.id}`} onClick={(e) => handleClick(e, h.id)}
               className={`flex items-start gap-3 px-4 py-2.5 border-b border-border last:border-0 hover:bg-secondary/40 transition-colors group ${
-                activeId === h.id ? "bg-secondary/60" : ""
+                isActive ? "bg-secondary/60" : ""
               }`}>
-              <span className={`mt-1.5 shrink-0 transition-colors ${
-                h.level === 3 ? "w-1 h-1 rounded-full ml-3" : "w-1.5 h-1.5 rounded-full"
+              <span className={`mt-1.5 shrink-0 transition-colors rounded-full ${
+                h.level === 3 ? "w-1 h-1 ml-3" : "w-1.5 h-1.5"
               } ${
-                activeId === h.id ? "bg-gold" : "bg-border group-hover:bg-gold"
+                isActive ? "bg-gold" : "bg-border group-hover:bg-gold"
               }`} />
-              <span className={`text-xs font-bn leading-snug transition-colors ${
-                activeId === h.id ? "text-foreground font-semibold" : "text-muted-foreground group-hover:text-foreground"
+              <span className={`text-[0.95rem] font-bn leading-snug transition-colors ${
+                isActive ? "text-gold font-bold" : "text-muted-foreground group-hover:text-foreground"
               } ${h.level === 3 ? "pl-1" : ""}`}>
                 {h.text}
               </span>
             </a>
-          ))
-        ) : (
-          <div className="px-4 py-3 text-xs text-muted-foreground font-bn">কোনো বিষয়সূচি নেই</div>
-        )}
+          );
+        })}
       </div>
     </div>
   );
@@ -270,18 +296,22 @@ export default function PostPageClient({ slug }: { slug: string }) {
   // Scroll-spy: highlight active TOC item
   useEffect(() => {
     if (headings.length === 0) return;
-    const handleScroll = () => {
-      const scrollY = window.scrollY + 120;
-      let active = headings[0]?.id ?? "";
-      for (const h of headings) {
-        const el = document.getElementById(h.id);
-        if (el && el.offsetTop <= scrollY) active = h.id;
-      }
-      setActiveHeadingId(active);
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
+    const headingElements = headings.map(h => document.getElementById(h.id)).filter(Boolean) as HTMLElement[];
+    if (headingElements.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const intersecting = entries.filter(e => e.isIntersecting);
+        if (intersecting.length > 0) {
+          intersecting.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+          setActiveHeadingId(intersecting[0].target.id);
+        }
+      },
+      { rootMargin: "-80px 0px -40% 0px" }
+    );
+
+    headingElements.forEach(el => observer.observe(el));
+    return () => observer.disconnect();
   }, [headings]);
 
   if (loading) return <PostPageSkeleton />;
@@ -413,7 +443,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
       </section>
 
       {/* ── PAGE BODY ───────────────────────────────── */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 flex gap-8 items-start">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 flex gap-8">
 
         {/* ── MAIN ──────────────────────────────────── */}
         <main className="flex-1 min-w-0">
@@ -454,6 +484,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
                   />
                 ) : (
                   <ReactMarkdown
+                    rehypePlugins={[rehypeSlug]}
                     components={{
                       a: ({ node, ...props }) => {
                         if (props.href?.startsWith("#fn-")) {
@@ -588,10 +619,10 @@ export default function PostPageClient({ slug }: { slug: string }) {
 
         {/* ── SIDEBAR ──────────────────────────────── */}
         <aside className="w-[260px] xl:w-[280px] shrink-0 hidden lg:block pb-8">
-          <div className="flex flex-col gap-6">
-            <TocWidget headings={headings} activeId={activeHeadingId} />
+          <div className="flex flex-col gap-6 h-full relative">
             <MostReadWidget posts={popularPosts} />
             <TagsWidget tags={allTags} />
+            <TocWidget headings={headings} activeId={activeHeadingId} />
           </div>
         </aside>
       </div>
