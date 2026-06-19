@@ -562,7 +562,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
                         </div>
                       ) : (
                         <div className="w-full h-24 mb-3 bg-primary flex items-center justify-center">
-                          <img src="/kishti%20logo.png" alt="Kisti Logo" className="w-12 h-12 object-contain opacity-20" />
+                          <img src="/kishti%20logo.png" alt="Kisti Logo" className="w-full h-full object-cover opacity-80" />
                         </div>
                       )}
                       {rp.category_bn && (
