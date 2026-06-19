@@ -174,20 +174,20 @@ const ThumbCard = ({ post }: { post: Post }) => {
   );
 };
 
-/** Section header bar */
+/** Section header bar — slim compact strip */
 const SectionHeader = ({ category, hasMore }: { category: Category; hasMore: boolean }) => (
-  <div className="flex items-center justify-between bg-primary px-4 py-2.5 mb-4">
+  <div className="flex items-center justify-between bg-primary px-4 py-1.5 mb-4 border-b-2 border-gold">
     <Link
       href={category.slug ? `/category/${category.slug}` : `/?cat=${category.id}`}
-      className="flex items-center gap-1.5 group"
+      className="flex items-center gap-1 group"
     >
-      <h2 className="font-bn text-[1.05rem] text-gold group-hover:text-yellow-300 transition-colors">{category.name_bn}</h2>
-      <ChevronRight className="w-4 h-4 text-gold/70" />
+      <h2 className="font-bn text-sm font-semibold text-gold group-hover:text-yellow-300 transition-colors">{category.name_bn}</h2>
+      <ChevronRight className="w-3.5 h-3.5 text-gold/70" />
     </Link>
     {hasMore && (
       <Link
         href={category.slug ? `/category/${category.slug}` : `/?cat=${category.id}`}
-        className="text-xs font-bn text-white/50 hover:text-white/90 transition-colors"
+        className="text-[11px] font-bn text-white/50 hover:text-white/90 transition-colors"
       >
         সব লেখা দেখুন
       </Link>
@@ -195,37 +195,56 @@ const SectionHeader = ({ category, hasMore }: { category: Category; hasMore: boo
   </div>
 );
 
-/** Full 3-column editorial section */
+/** List item with small thumbnail on right — for category sections */
+const SectionListItem = ({ post }: { post: Post }) => {
+  const t = post.post_translations[0];
+  if (!t) return null;
+  const Icon = getCategoryIcon(post.category_bn);
+  return (
+    <Link href={`/post/${post.slug}`} className="group flex items-start gap-3 py-3 border-b border-border/50 last:border-0">
+      <div className="flex-1 min-w-0">
+        {post.category_bn && (
+          <p className="text-[10px] font-bn-sans text-gold uppercase tracking-wider mb-1">{post.category_bn}</p>
+        )}
+        <h4 className="font-bn text-[0.92rem] leading-snug mb-1 group-hover:text-gold transition-colors">{t.title}</h4>
+        {t.excerpt && (
+          <p className="text-muted-foreground text-xs font-bn line-clamp-2 mb-1">{t.excerpt}</p>
+        )}
+        {post.published_at && (
+          <p className="text-[10px] text-muted-foreground font-en-sans">{toBengaliDate(post.published_at)}</p>
+        )}
+      </div>
+      <div className="w-[72px] h-[72px] shrink-0 bg-primary/5 border border-border/40 overflow-hidden rounded-sm flex items-center justify-center">
+        {post.cover_url ? (
+          <Image src={post.cover_url} alt={t.title} width={72} height={72} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        ) : (
+          <Icon className="w-7 h-7 text-primary/20" />
+        )}
+      </div>
+    </Link>
+  );
+};
+
+/** 2-column editorial section: featured card + list items with thumbnails */
 const EditorialSection = ({ category, posts }: { category: Category; posts: Post[] }) => {
   if (posts.length === 0) return null;
   const featured = posts[0];
-  const listPosts = posts.slice(1, 4);
-  const thumbPosts = posts.slice(4, 8);
+  const listPosts = posts.slice(1, 5);
 
   return (
     <section className="mb-8">
       <SectionHeader category={category} hasMore={posts.length >= 4} />
       <div className="grid grid-cols-12 gap-0 border border-border/60">
-        {/* Left: featured */}
-        <div className="col-span-12 md:col-span-4 p-4 border-b md:border-b-0 md:border-r border-border/60">
+        {/* Left: featured card */}
+        <div className="col-span-12 md:col-span-5 p-4 border-b md:border-b-0 md:border-r border-border/60">
           <FeaturedCard post={featured} />
         </div>
 
-        {/* Middle: list */}
-        <div className="col-span-12 md:col-span-4 p-4 border-b md:border-b-0 md:border-r border-border/60">
-          {listPosts.map((p) => <ListCard key={p.id} post={p} />)}
+        {/* Right: stacked list items with thumbnails */}
+        <div className="col-span-12 md:col-span-7 px-4 py-2">
+          {listPosts.map((p) => <SectionListItem key={p.id} post={p} />)}
           {listPosts.length === 0 && (
             <p className="text-muted-foreground text-sm font-bn py-4">আরও লেখা নেই।</p>
-          )}
-        </div>
-
-        {/* Right: dark thumbnails */}
-        <div className="col-span-12 md:col-span-4 bg-primary p-3">
-          {thumbPosts.map((p) => <ThumbCard key={p.id} post={p} />)}
-          {thumbPosts.length === 0 && (
-            <div className="flex items-center justify-center h-full py-8">
-              <p className="text-white/30 text-xs font-bn">লেখা নেই</p>
-            </div>
           )}
         </div>
       </div>
@@ -264,19 +283,19 @@ const MostReadWidget = ({ posts }: { posts: Post[] }) => (
     <div className="bg-primary px-3 py-2 mb-3">
       <h3 className="font-bn text-sm font-semibold text-gold">সর্বাধিক পঠিত</h3>
     </div>
-    <ol className="space-y-3 px-1">
+    <ol className="space-y-0 px-1">
       {posts.slice(0, 5).map((p, i) => {
         const t = p.post_translations[0];
         if (!t) return null;
         return (
-          <li key={p.id} className="flex items-start gap-2.5">
+          <li key={p.id} className="flex items-start gap-2.5 py-2 border-b border-border/40 last:border-0">
             <span
-              className="text-[1.6rem] font-bold leading-none shrink-0 w-7 text-right"
+              className="text-[1.4rem] font-bold leading-none shrink-0 w-6 text-right"
               style={{ color: `hsl(225,45%,${75 - i * 10}%)` }}
             >
               {getBengaliNum(i + 1)}
             </span>
-            <Link href={`/post/${p.slug}`} className="font-bn text-[12px] leading-snug hover:text-gold transition-colors line-clamp-3">
+            <Link href={`/post/${p.slug}`} className="font-bn text-[11px] leading-snug hover:text-gold transition-colors line-clamp-2">
               {t.title}
             </Link>
           </li>
