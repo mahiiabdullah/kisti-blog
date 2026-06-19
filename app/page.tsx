@@ -279,23 +279,23 @@ const HeroSection = ({ posts }: { posts: Post[] }) => {
 // ─── Sidebar components ───────────────────────────────────────────────────────
 
 const MostReadWidget = ({ posts }: { posts: Post[] }) => (
-  <div className="mb-5">
-    <div className="bg-primary px-3 py-1.5 mb-2">
-      <h3 className="font-bn text-[13px] font-semibold text-gold">সর্বাধিক পঠিত</h3>
+  <div className="mb-6">
+    <div className="bg-primary px-4 py-2.5 mb-4">
+      <h3 className="font-bn text-[1.05rem] font-semibold text-gold">সর্বাধিক পঠিত</h3>
     </div>
-    <ol className="space-y-0 px-1">
+    <ol className="space-y-2 px-1">
       {posts.slice(0, 5).map((p, i) => {
         const t = p.post_translations[0];
         if (!t) return null;
         return (
-          <li key={p.id} className="flex items-start gap-2 py-1.5 border-b border-border/30 last:border-0">
+          <li key={p.id} className="flex items-start gap-3 py-2.5 border-b border-border/30 last:border-0">
             <span
-              className="text-[1.2rem] font-bold leading-none shrink-0 w-5 text-right"
+              className="text-[1.8rem] font-bold leading-none shrink-0 w-8 text-right"
               style={{ color: `hsl(225,45%,${75 - i * 10}%)` }}
             >
               {getBengaliNum(i + 1)}
             </span>
-            <Link href={`/post/${p.slug}`} className="font-bn text-[11px] leading-snug hover:text-gold transition-colors line-clamp-2">
+            <Link href={`/post/${p.slug}`} className="font-bn text-[1.05rem] leading-snug hover:text-gold transition-colors line-clamp-3">
               {t.title}
             </Link>
           </li>
@@ -306,22 +306,22 @@ const MostReadWidget = ({ posts }: { posts: Post[] }) => (
 );
 
 const WritersWidget = ({ writers }: { writers: Writer[] }) => (
-  <div className="mb-5">
-    <div className="bg-primary px-3 py-1.5 mb-2">
-      <h3 className="font-bn text-[13px] font-semibold text-gold">বিশিষ্ট লেখক</h3>
+  <div className="mb-6">
+    <div className="bg-primary px-4 py-2.5 mb-4">
+      <h3 className="font-bn text-[1.05rem] font-semibold text-gold">বিশিষ্ট লেখক</h3>
     </div>
-    <ul className="space-y-0 px-1">
+    <ul className="space-y-2 px-1">
       {writers.map((w, i) => {
         const name = w.bengali_name || w.name;
         return (
-          <li key={w.id} className="flex items-center gap-2 py-1.5 border-b border-border/30 last:border-0">
+          <li key={w.id} className="flex items-center gap-3 py-2.5 border-b border-border/30 last:border-0">
             <div
-              className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bn font-bold shrink-0"
+              className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bn font-bold shrink-0"
               style={{ backgroundColor: WRITER_COLORS[i % WRITER_COLORS.length] }}
             >
               {getInitials(name)}
             </div>
-            <p className="font-bn text-[11px] font-medium leading-tight">{name}</p>
+            <p className="font-bn text-[1.1rem] font-medium leading-tight">{name}</p>
           </li>
         );
       })}
@@ -330,18 +330,18 @@ const WritersWidget = ({ writers }: { writers: Writer[] }) => (
 );
 
 const TagsWidget = ({ tags }: { tags: string[] }) => (
-  <div>
-    <div className="bg-primary px-3 py-1.5 mb-2">
-      <h3 className="font-bn text-[13px] font-semibold text-gold">বিভিন্ন ট্যাগ</h3>
+  <div className="mb-6">
+    <div className="bg-primary px-4 py-2.5 mb-4">
+      <h3 className="font-bn text-[1.05rem] font-semibold text-gold">বিভিন্ন ট্যাগ</h3>
     </div>
-    <div className="flex flex-wrap gap-1 px-1">
+    <div className="flex flex-wrap gap-2 px-1">
       {tags.map((tag) => (
         <Link
           key={tag}
           href={`/search?q=${encodeURIComponent(tag)}`}
-          className="inline-flex items-center gap-0.5 text-[10px] font-bn-sans px-1.5 py-0.5 border border-border rounded-sm text-muted-foreground hover:border-gold hover:text-gold transition-colors"
+          className="inline-flex items-center gap-1.5 text-[0.95rem] font-bn-sans px-2.5 py-1.5 border border-border rounded-sm text-muted-foreground hover:border-gold hover:text-gold transition-colors"
         >
-          <Hash className="w-2 h-2 opacity-50" />{tag}
+          <Hash className="w-3.5 h-3.5 opacity-50" />{tag}
         </Link>
       ))}
     </div>
@@ -490,7 +490,7 @@ export default function HomePage() {
         </main>
 
         {/* ── Right Sidebar ──────────────────────────────── */}
-        <aside className="w-[220px] xl:w-[240px] shrink-0 hidden lg:block">
+        <aside className="w-[260px] xl:w-[280px] shrink-0 hidden lg:block pb-8">
           <div className="sticky top-[6.5rem]">
             {mostRead.length > 0 && <MostReadWidget posts={mostRead} />}
             {writers.length > 0 && <WritersWidget writers={writers} />}
