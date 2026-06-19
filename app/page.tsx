@@ -99,7 +99,7 @@ const FeaturedCard = ({ post }: { post: Post }) => {
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-primary">
-              <Icon className="w-20 h-20 text-white/10" />
+              <img src="/kishti%20logo.png" alt="Kisti Logo" className="w-20 h-20 object-contain opacity-20" />
             </div>
           )}
         </div>
@@ -158,7 +158,7 @@ const ThumbCard = ({ post }: { post: Post }) => {
         {post.cover_url ? (
           <Image src={post.cover_url} alt={t.title} width={56} height={56} className="w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-opacity" />
         ) : (
-          <Icon className="w-6 h-6 text-white/30" />
+          <img src="/kishti%20logo.png" alt="Kisti Logo" className="w-6 h-6 object-contain opacity-40" />
         )}
       </div>
       <div className="flex-1 min-w-0">
