@@ -165,7 +165,7 @@ const ThumbCard = ({ post }: { post: Post }) => {
         {post.category_bn && (
           <p className="text-[9px] text-gold uppercase tracking-wider mb-0.5 font-en-sans">{post.category_bn}</p>
         )}
-        <h5 className="text-white text-[1.05rem] font-bn leading-snug line-clamp-3 group-hover:text-gold transition-colors">{t.title}</h5>
+        <h5 className="text-white text-[0.95rem] font-bn leading-snug line-clamp-3 group-hover:text-gold transition-colors">{t.title}</h5>
         {post.published_at && (
           <p className="text-white/35 text-[9px] font-en-sans mt-0.5">{toBengaliDate(post.published_at)}</p>
         )}
@@ -295,7 +295,7 @@ const MostReadWidget = ({ posts }: { posts: Post[] }) => (
             >
               {getBengaliNum(i + 1)}
             </span>
-            <Link href={`/post/${p.slug}`} className="font-bn text-[1.05rem] leading-snug hover:text-gold transition-colors line-clamp-3">
+            <Link href={`/post/${p.slug}`} className="font-bn text-[0.95rem] leading-snug hover:text-gold transition-colors line-clamp-3">
               {t.title}
             </Link>
           </li>
@@ -321,7 +321,7 @@ const WritersWidget = ({ writers }: { writers: Writer[] }) => (
             >
               {getInitials(name)}
             </div>
-            <p className="font-bn text-[1.1rem] font-medium leading-tight">{name}</p>
+            <p className="font-bn text-[0.95rem] font-medium leading-tight">{name}</p>
           </li>
         );
       })}
