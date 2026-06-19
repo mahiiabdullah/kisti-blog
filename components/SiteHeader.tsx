@@ -143,13 +143,11 @@ export const SiteHeader = () => {
           <div className="flex items-center h-14 gap-4">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3 group flex-shrink-0">
-              <div className="w-10 h-10 bg-primary flex items-center justify-center rounded-sm">
-                <span className="font-bn text-gold text-lg font-bold leading-none">কি</span>
+              <div className="w-10 h-10 flex items-center justify-center rounded-sm overflow-hidden bg-primary">
+                <img src="/kishti%20logo.png" alt="Kisti Logo" className="w-full h-full object-cover" />
               </div>
-              <div className="flex flex-col leading-none">
-                <span className="font-bn text-2xl font-semibold text-foreground group-hover:text-primary transition-colors">
-                  কিশতী
-                </span>
+              <div className="flex flex-col leading-none h-10 justify-center">
+                <img src="/kishti%20banner%20name.png" alt="Kisti" className="h-6 object-contain" />
               </div>
             </Link>
 

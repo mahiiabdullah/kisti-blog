@@ -34,10 +34,11 @@ export const SiteFooter = () => {
 
           {/* Column 1 — Brand */}
           <div>
-            <Link href="/" className="inline-block mb-3 group">
-              <span className="font-bn text-2xl text-gold group-hover:text-yellow-300 transition-colors">
-                কিশতী
-              </span>
+            <Link href="/" className="inline-block mb-3 group flex items-center gap-3">
+              <div className="w-8 h-8 flex items-center justify-center rounded-sm overflow-hidden bg-primary bg-white">
+                <img src="/kishti%20logo.png" alt="Kisti Logo" className="w-full h-full object-cover" />
+              </div>
+              <img src="/kishti%20banner%20name.png" alt="Kisti" className="h-6 object-contain invert brightness-0 opacity-90 group-hover:opacity-100 transition-opacity" />
             </Link>
             <p className="text-white/50 text-xs font-en-sans tracking-[0.2em] mb-3">
               রাষ্ট্র · ইতিহাস · আইন · চিন্তা
