@@ -67,8 +67,8 @@ const injectHeadingIds = (container: HTMLElement): { id: string; text: string; l
     return slug || 'section';
   };
 
-  container.querySelectorAll("h2, h3").forEach((el) => {
-    const level = el.tagName === "H2" ? 2 : 3;
+  container.querySelectorAll("h1, h2, h3, h4, h5, h6").forEach((el) => {
+    const level = parseInt(el.tagName.charAt(1), 10);
     const text = el.textContent?.trim() ?? "";
     let id = el.id;
     if (!id) {
