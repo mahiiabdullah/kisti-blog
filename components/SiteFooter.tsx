@@ -35,7 +35,7 @@ export const SiteFooter = () => {
           {/* Column 1 — Brand */}
           <div>
             <Link href="/" className="inline-block mb-3 group">
-              <img src="/kishti%20banner%20name.png" alt="Kisti" className="h-8 object-contain invert brightness-0 opacity-90 group-hover:opacity-100 transition-opacity" />
+              <img src="/kishti%20banner%20name.png" alt="Kisti" className="h-10 object-contain invert mix-blend-screen opacity-90 group-hover:opacity-100 transition-opacity" />
             </Link>
             <p className="text-white/50 text-xs font-en-sans tracking-[0.2em] mb-3">
               রাষ্ট্র · ইতিহাস · আইন · চিন্তা
