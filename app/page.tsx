@@ -36,6 +36,7 @@ interface Writer {
   id: string;
   name: string;
   bengali_name: string | null;
+  slug: string | null;
   post_count: number;
 }
 
@@ -319,14 +320,16 @@ const WritersWidget = ({ writers }: { writers: Writer[] }) => (
       {writers.map((w, i) => {
         const name = w.bengali_name || w.name;
         return (
-          <li key={w.id} className="flex items-center gap-3 py-2.5 border-b border-border/30 last:border-0">
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bn font-bold shrink-0"
-              style={{ backgroundColor: WRITER_COLORS[i % WRITER_COLORS.length] }}
-            >
-              {getInitials(name)}
-            </div>
-            <p className="font-bn text-[0.95rem] font-medium leading-tight">{name}</p>
+          <li key={w.id} className="border-b border-border/30 last:border-0">
+            <Link href={`/writers/${w.slug}`} className="flex items-center gap-3 py-2.5 group">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bn font-bold shrink-0 group-hover:scale-105 transition-transform"
+                style={{ backgroundColor: WRITER_COLORS[i % WRITER_COLORS.length] }}
+              >
+                {getInitials(name)}
+              </div>
+              <p className="font-bn text-[0.95rem] font-medium leading-tight group-hover:text-gold transition-colors">{name}</p>
+            </Link>
           </li>
         );
       })}
@@ -389,7 +392,7 @@ export default function HomePage() {
           // Writers
           supabase
             .from("writers")
-            .select("id, name, bengali_name")
+            .select("id, name, bengali_name, slug")
             .order("name")
             .limit(6),
 
@@ -424,6 +427,7 @@ export default function HomePage() {
           id: w.id,
           name: w.name,
           bengali_name: w.bengali_name,
+          slug: w.slug,
           post_count: allPosts.filter(
             (p) => (p as any).writer_id === w.id
           ).length,
