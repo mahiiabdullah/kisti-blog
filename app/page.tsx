@@ -176,7 +176,7 @@ const ThumbCard = ({ post }: { post: Post }) => {
 
 /** Section header bar — slim compact strip */
 const SectionHeader = ({ category, hasMore }: { category: Category; hasMore: boolean }) => (
-  <div className="flex items-center justify-between bg-primary px-4 py-1.5 mb-4 border-b-2 border-gold">
+  <div className="flex items-center justify-between bg-primary dark:bg-[hsl(220,18%,22%)] px-4 py-1.5 mb-4 border-b-2 border-gold">
     <Link
       href={category.slug ? `/category/${category.slug}` : `/?cat=${category.id}`}
       className="flex items-center gap-1 group"
@@ -268,7 +268,7 @@ const HeroSection = ({ posts }: { posts: Post[] }) => {
         <div className="col-span-12 md:col-span-4 p-4 border-b md:border-b-0 md:border-r border-border/60">
           {listPosts.map((p) => <ListCard key={p.id} post={p} />)}
         </div>
-        <div className="col-span-12 md:col-span-4 bg-primary p-4">
+        <div className="col-span-12 md:col-span-4 bg-primary dark:bg-[hsl(220,18%,22%)] p-4">
           {thumbPosts.map((p) => <ThumbCard key={p.id} post={p} />)}
         </div>
       </div>
@@ -280,7 +280,7 @@ const HeroSection = ({ posts }: { posts: Post[] }) => {
 
 const MostReadWidget = ({ posts }: { posts: Post[] }) => (
   <div className="mb-6">
-    <div className="bg-primary px-4 py-1.5 mb-4 border-b-2 border-transparent">
+    <div className="bg-primary dark:bg-[hsl(220,18%,22%)] px-4 py-1.5 mb-4 border-b-2 border-transparent">
       <h3 className="font-bn text-[1.05rem] font-semibold text-gold">সর্বাধিক পঠিত</h3>
     </div>
     <ol className="space-y-2 px-1">
@@ -307,7 +307,7 @@ const MostReadWidget = ({ posts }: { posts: Post[] }) => (
 
 const WritersWidget = ({ writers }: { writers: Writer[] }) => (
   <div className="mb-6">
-    <div className="bg-primary px-4 py-1.5 mb-4 border-b-2 border-transparent">
+    <div className="bg-primary dark:bg-[hsl(220,18%,22%)] px-4 py-1.5 mb-4 border-b-2 border-transparent">
       <h3 className="font-bn text-[1.05rem] font-semibold text-gold">বিশিষ্ট লেখক</h3>
     </div>
     <ul className="space-y-2 px-1">
@@ -331,7 +331,7 @@ const WritersWidget = ({ writers }: { writers: Writer[] }) => (
 
 const TagsWidget = ({ tags }: { tags: string[] }) => (
   <div className="mb-6">
-    <div className="bg-primary px-4 py-1.5 mb-4 border-b-2 border-transparent">
+    <div className="bg-primary dark:bg-[hsl(220,18%,22%)] px-4 py-1.5 mb-4 border-b-2 border-transparent">
       <h3 className="font-bn text-[1.05rem] font-semibold text-gold">বিভিন্ন ট্যাগ</h3>
     </div>
     <div className="flex flex-wrap gap-2 px-1">

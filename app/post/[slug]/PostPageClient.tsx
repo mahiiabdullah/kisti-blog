@@ -146,7 +146,7 @@ const TocWidget = ({ headings, activeId }: { headings: { id: string; text: strin
 
   return (
     <div className="border border-border overflow-hidden sticky top-[6.5rem] z-10 bg-card max-h-[calc(100vh-8rem)] flex flex-col shadow-sm">
-      <div className="bg-primary px-4 py-2.5 border-b-2 border-gold shrink-0">
+      <div className="bg-primary dark:bg-[hsl(220,18%,22%)] px-4 py-2.5 border-b-2 border-gold shrink-0">
         <h3 className="font-bn text-[1.05rem] font-semibold text-gold">বিষয়সূচী</h3>
       </div>
       <div className="bg-card overflow-y-auto scrollbar-thin flex-1">
@@ -179,7 +179,7 @@ const MostReadWidget = ({ posts }: { posts: RelatedPost[] }) => {
   const bnNum = (n: number) => n.toString().replace(/\d/g, (x) => "০১২৩৪৫৬৭৮৯"[+x]).padStart(2, "০");
   return (
     <div className="mb-6 border border-border overflow-hidden">
-      <div className="bg-primary px-4 py-2.5 border-b-2 border-gold">
+      <div className="bg-primary dark:bg-[hsl(220,18%,22%)] px-4 py-2.5 border-b-2 border-gold">
         <h3 className="font-bn text-sm font-bold text-gold">সর্বাধিক পঠিত</h3>
       </div>
       <div>
@@ -207,7 +207,7 @@ const MostReadWidget = ({ posts }: { posts: RelatedPost[] }) => {
 const TagsWidget = ({ tags }: { tags: string[] }) => {
   return (
     <div className="border border-border overflow-hidden">
-      <div className="bg-primary px-4 py-2.5 border-b-2 border-gold">
+      <div className="bg-primary dark:bg-[hsl(220,18%,22%)] px-4 py-2.5 border-b-2 border-gold">
         <h3 className="font-bn text-sm font-bold text-gold">বিষয়ভিত্তিক ট্যাগ</h3>
       </div>
       <div className="p-3 flex flex-wrap gap-1.5">
@@ -395,7 +395,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
       <ViewTracker postId={post.id} />
 
       {/* ── ARTICLE HERO BANNER ──────────────────────── */}
-      <section className="bg-primary relative overflow-hidden">
+      <section className="bg-primary dark:bg-[hsl(220,18%,22%)] relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none" style={{
           backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(201,168,76,0.04) 40px, rgba(201,168,76,0.04) 41px)"
         }} />
@@ -622,7 +622,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
           {/* Related articles */}
           {relatedPosts.length > 0 && (
             <div className="mb-8">
-              <div className="bg-primary px-4 py-3 border-t-[3px] border-gold">
+              <div className="bg-primary dark:bg-[hsl(220,18%,22%)] px-4 py-3 border-t-[3px] border-gold">
                 <h2 className="font-bn text-base font-bold text-gold">সম্পর্কিত প্রবন্ধ</h2>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 border border-border border-t-0 bg-card">
@@ -631,12 +631,12 @@ export default function PostPageClient({ slug }: { slug: string }) {
                   return (
                     <div key={rp.id} className={`p-5 ${i < relatedPosts.length - 1 ? "border-b sm:border-b-0 sm:border-r border-border" : ""}`}>
                       {rp.cover_url ? (
-                        <div className="w-full h-24 overflow-hidden mb-3 bg-primary">
+                        <div className="w-full h-24 overflow-hidden mb-3 bg-primary dark:bg-[hsl(220,18%,22%)]">
                           <Image src={rp.cover_url} alt={rTitle} width={300} height={96}
                             className="w-full h-full object-cover opacity-75 hover:opacity-90 transition-opacity" />
                         </div>
                       ) : (
-                        <div className="w-full h-24 mb-3 bg-primary flex items-center justify-center">
+                        <div className="w-full h-24 mb-3 bg-primary dark:bg-[hsl(220,18%,22%)] flex items-center justify-center">
                           <img src="/kishti%20logo.png" alt="Kisti Logo" className="w-full h-full object-cover opacity-80" />
                         </div>
                       )}

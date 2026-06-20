@@ -27,7 +27,7 @@ export const SiteFooter = () => {
   }, []);
 
   return (
-    <footer className="bg-primary text-white mt-16">
+    <footer className="bg-primary dark:bg-[hsl(220,18%,18%)] text-white dark:text-[hsl(40,30%,88%)] mt-16">
       {/* Main footer grid */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-6">

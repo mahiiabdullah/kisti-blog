@@ -536,3 +536,26 @@
   color: inherit !important;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* bg-navy: Navy in light mode, dark charcoal slate in dark mode              */
+/* Use this instead of bg-primary for section headers / container backgrounds  */
+/* ─────────────────────────────────────────────────────────────────────────── */
+.bg-navy {
+  background-color: hsl(225, 48%, 22%); /* deep navy — light mode */
+}
+.dark .bg-navy {
+  background-color: hsl(220, 18%, 22%); /* dark slate-blue — dark mode */
+}
+
+/* Ensure any bg-primary used as a dark container stays readable in dark mode */
+.dark .bg-primary {
+  background-color: hsl(220, 18%, 22%) !important;
+}
+
+/* Text on navy/dark-primary backgrounds in dark mode */
+.dark .bg-primary .text-white,
+.dark .bg-navy .text-white {
+  color: hsl(40, 30%, 92%) !important; /* warm off-white — very readable */
+}
+
+
