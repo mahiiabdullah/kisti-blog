@@ -7,109 +7,118 @@
 
 @layer base {
   :root {
-    /* Warm parchment/cream background — matches the editorial newspaper feel */
-    --background: 40 32% 94%;
-    --foreground: 225 25% 12%;
+    /* New Core Palette (as H S L format for Tailwind) */
+    --terra-deep: 216 75.3% 19%;     /* #0C2955 Ink navy */
+    --terra-mid: 0 0% 17.3%;         /* #2C2C2C Ink charcoal */
+    --terra-warm: 44.2 55.4% 54.3%;  /* #C9A84C Manuscript gold */
+    --wheat: 44.2 55.4% 54.3%;       /* #C9A84C Manuscript gold */
+    --cream-bg: 42.4 29.3% 89.6%;    /* #EDE8DC Warm linen */
+    --cream-card: 41.2 34.8% 92.5%;  /* #F4EFE4 Parchment */
+    --cream-border: 40.7 24.3% 78.4%;/* #D6CDBA Warm border */
+    --ink: 214.8 50.8% 12%;          /* #0F1C2E Deep ink text */
+    --ink-muted: 218 16.9% 34.9%;    /* #4A5568 Muted slate */
+    --white: 40 35.3% 94.5%;         /* #F7F3EB Cream white */
 
-    --card: 40 30% 97%;
-    --card-foreground: 225 25% 12%;
+    /* Semantic mappings */
+    --background: var(--cream-bg);
+    --foreground: var(--ink);
 
-    --popover: 40 30% 97%;
-    --popover-foreground: 225 25% 12%;
+    --card: var(--cream-card);
+    --card-foreground: var(--ink);
 
-    /* Deep indigo-navy — same as the section headers in the screenshot */
-    --primary: 225 48% 22%;
-    --primary-foreground: 40 32% 95%;
+    --popover: var(--cream-card);
+    --popover-foreground: var(--ink);
 
-    /* Gold/amber — category labels, section titles */
-    --accent: 14 60% 48%;
-    --accent-foreground: 40 32% 95%;
+    --primary: var(--terra-deep);
+    --primary-foreground: var(--white);
 
-    --secondary: 38 22% 90%;
-    --secondary-foreground: 225 25% 14%;
+    --accent: var(--terra-warm);
+    --accent-foreground: var(--white);
 
-    --muted: 38 18% 91%;
-    --muted-foreground: 225 12% 40%;
+    --secondary: var(--cream-border);
+    --secondary-foreground: var(--ink);
+
+    --muted: var(--cream-card);
+    --muted-foreground: var(--ink-muted);
 
     --destructive: 0 65% 45%;
-    --destructive-foreground: 40 32% 95%;
+    --destructive-foreground: var(--white);
 
-    --border: 225 15% 82%;
-    --input: 225 15% 82%;
-    --ring: 225 48% 22%;
+    --border: var(--cream-border);
+    --input: var(--cream-border);
+    --ring: var(--terra-warm);
 
     --radius: 0.15rem;
 
-    /* Brand tokens */
-    --ink: 225 30% 10%;
-    --paper: 40 32% 94%;
-    --paper-deep: 38 25% 90%;
-    --gold: 40 75% 46%;
-    --indigo: 225 48% 22%;
-    --terracotta: 14 60% 48%;
+    /* Legacy Brand tokens mapped to new */
+    --paper: var(--cream-bg);
+    --paper-deep: var(--cream-border);
+    --gold: var(--terra-warm);
+    --indigo: var(--terra-deep);
+    --terracotta: var(--terra-warm);
 
-    --gradient-paper: linear-gradient(180deg, hsl(40 40% 97%) 0%, hsl(38 32% 92%) 100%);
-    --gradient-ink: linear-gradient(135deg, hsl(225 45% 22%), hsl(225 35% 14%));
+    --gradient-paper: linear-gradient(180deg, hsl(var(--cream-bg)) 0%, hsl(var(--cream-border)) 100%);
+    --gradient-ink: linear-gradient(135deg, hsl(var(--terra-deep)), hsl(var(--ink)));
     --shadow-soft: 0 1px 2px hsl(25 25% 14% / 0.04), 0 8px 24px -12px hsl(25 25% 14% / 0.12);
     --shadow-deep: 0 4px 20px -6px hsl(25 25% 14% / 0.18);
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: var(--cream-bg);
+    --sidebar-foreground: var(--ink);
+    --sidebar-primary: var(--terra-deep);
+    --sidebar-primary-foreground: var(--white);
+    --sidebar-accent: var(--cream-card);
+    --sidebar-accent-foreground: var(--ink);
+    --sidebar-border: var(--cream-border);
+    --sidebar-ring: var(--terra-warm);
   }
 
   .dark {
-    --background: 25 18% 9%;
-    --foreground: 40 30% 92%;
+    --background: var(--terra-mid);
+    --foreground: var(--white);
 
-    --card: 25 18% 11%;
-    --card-foreground: 40 30% 92%;
+    --card: 0 0% 12%; /* slightly darker than terra-mid */
+    --card-foreground: var(--white);
 
-    --popover: 25 18% 11%;
-    --popover-foreground: 40 30% 92%;
+    --popover: 0 0% 12%;
+    --popover-foreground: var(--white);
 
-    --primary: 40 35% 88%;
-    --primary-foreground: 25 25% 14%;
+    --primary: var(--white);
+    --primary-foreground: var(--terra-mid);
 
-    --accent: 14 65% 58%;
-    --accent-foreground: 25 25% 10%;
+    --accent: var(--terra-warm);
+    --accent-foreground: var(--terra-deep);
 
-    --secondary: 25 14% 16%;
-    --secondary-foreground: 40 30% 92%;
+    --secondary: 0 0% 25%;
+    --secondary-foreground: var(--white);
 
-    --muted: 25 12% 16%;
-    --muted-foreground: 40 12% 64%;
+    --muted: 0 0% 25%;
+    --muted-foreground: var(--cream-border);
 
     --destructive: 0 60% 45%;
-    --destructive-foreground: 40 30% 92%;
+    --destructive-foreground: var(--white);
 
-    --border: 25 12% 20%;
-    --input: 25 12% 20%;
-    --ring: 40 35% 88%;
+    --border: 0 0% 30%;
+    --input: 0 0% 30%;
+    --ring: var(--terra-warm);
 
-    --ink: 40 30% 92%;
-    --paper: 25 18% 9%;
-    --paper-deep: 25 16% 12%;
-    --gold: 38 70% 62%;
+    --ink: var(--white);
+    --paper: var(--terra-mid);
+    --paper-deep: 0 0% 14%;
+    --gold: var(--terra-warm);
     --indigo: 225 35% 70%;
-    --terracotta: 14 65% 58%;
+    --terracotta: var(--terra-warm);
 
-    --gradient-paper: linear-gradient(180deg, hsl(25 18% 10%) 0%, hsl(25 16% 7%) 100%);
+    --gradient-paper: linear-gradient(180deg, hsl(0 0% 18%) 0%, hsl(0 0% 12%) 100%);
     --gradient-ink: linear-gradient(135deg, hsl(40 30% 92%), hsl(40 20% 78%));
 
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: var(--terra-mid);
+    --sidebar-foreground: var(--white);
+    --sidebar-primary: var(--terra-warm);
+    --sidebar-primary-foreground: var(--terra-mid);
+    --sidebar-accent: 0 0% 25%;
+    --sidebar-accent-foreground: var(--white);
+    --sidebar-border: 0 0% 30%;
+    --sidebar-ring: var(--terra-warm);
   }
 }
 
@@ -541,15 +550,15 @@
 /* Use this instead of bg-primary for section headers / container backgrounds  */
 /* ─────────────────────────────────────────────────────────────────────────── */
 .bg-navy {
-  background-color: hsl(225, 48%, 22%); /* deep navy — light mode */
+  background-color: hsl(var(--terra-deep)); /* deep navy — light mode */
 }
 .dark .bg-navy {
-  background-color: hsl(220, 18%, 22%); /* dark slate-blue — dark mode */
+  background-color: hsl(var(--terra-mid)); /* dark slate-blue — dark mode */
 }
 
 /* Ensure any bg-primary used as a dark container stays readable in dark mode */
 .dark .bg-primary {
-  background-color: hsl(220, 18%, 22%) !important;
+  background-color: hsl(var(--terra-mid)) !important;
 }
 
 /* Text on navy/dark-primary backgrounds in dark mode */

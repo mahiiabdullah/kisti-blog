@@ -125,7 +125,7 @@ const AuthorAvatar = ({ name, size = 40 }: { name: string; size?: number }) => (
     className="rounded-full flex items-center justify-center font-bold text-white shrink-0"
     style={{
       width: size, height: size, fontSize: size * 0.28,
-      background: "linear-gradient(135deg, hsl(40,75%,46%) 0%, hsl(38,55%,32%) 100%)",
+      background: "linear-gradient(135deg, #C9A84C 0%, #8B6914 100%)",
     }}
   >
     {getInitials(name)}
@@ -395,7 +395,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
       <ViewTracker postId={post.id} />
 
       {/* ── ARTICLE HERO BANNER ──────────────────────── */}
-      <section className="bg-primary dark:bg-[hsl(220,18%,22%)] relative overflow-hidden">
+      <section className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #0E2447 0%, #112D5A 100%)" }}>
         <div className="absolute inset-0 pointer-events-none" style={{
           backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(201,168,76,0.04) 40px, rgba(201,168,76,0.04) 41px)"
         }} />
@@ -631,12 +631,12 @@ export default function PostPageClient({ slug }: { slug: string }) {
                   return (
                     <div key={rp.id} className={`p-5 ${i < relatedPosts.length - 1 ? "border-b sm:border-b-0 sm:border-r border-border" : ""}`}>
                       {rp.cover_url ? (
-                        <div className="w-full h-24 overflow-hidden mb-3 bg-primary dark:bg-[hsl(220,18%,22%)]">
+                        <div className="w-full h-24 overflow-hidden mb-3 bg-[#1A3D6E] dark:bg-[hsl(220,18%,22%)]">
                           <Image src={rp.cover_url} alt={rTitle} width={300} height={96}
                             className="w-full h-full object-cover opacity-75 hover:opacity-90 transition-opacity" />
                         </div>
                       ) : (
-                        <div className="w-full h-24 mb-3 bg-primary dark:bg-[hsl(220,18%,22%)] flex items-center justify-center">
+                        <div className="w-full h-24 mb-3 bg-[#1A3D6E] dark:bg-[hsl(220,18%,22%)] flex items-center justify-center">
                           <img src="/kishti%20logo.png" alt="Kisti Logo" className="w-full h-full object-cover opacity-80" />
                         </div>
                       )}
