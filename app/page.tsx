@@ -290,8 +290,8 @@ const MostReadWidget = ({ posts }: { posts: Post[] }) => (
         return (
           <li key={p.id} className="flex items-start gap-3 py-2.5 border-b border-border/30 last:border-0">
             <span
-              className="text-[1.8rem] font-bold leading-none shrink-0 w-8 text-right"
-              style={{ color: `hsl(225,45%,${75 - i * 10}%)` }}
+              className="text-[1.8rem] font-bold leading-none shrink-0 w-8 text-right text-gold opacity-90"
+              style={{ opacity: `${1 - i * 0.15}` }}
             >
               {getBengaliNum(i + 1)}
             </span>

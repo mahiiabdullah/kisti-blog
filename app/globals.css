@@ -399,6 +399,11 @@
     line-height: 1.4;
     scroll-margin-top: 6rem;
   }
+
+  /* Dark mode: ensure h2 is readable */
+  .dark .rich-body h2 {
+    color: hsl(var(--foreground));
+  }
   .rich-body h3 {
     scroll-margin-top: 6rem;
   }
@@ -495,5 +500,39 @@
     margin-top: 0.12em;
     color: hsl(var(--primary));
   }
+
+  /* Dark mode: drop-cap uses gold instead of navy */
+  .dark .rich-body > p:first-of-type::first-letter {
+    color: hsl(var(--gold));
+  }
+}
+
+/* ── Dark mode: strip hardcoded inline colors from TipTap HTML ───────── */
+/* TipTap editor saves HTML with inline style="color: #xxx; font-size: Xpt" */
+/* These overrides ensure text is always readable in dark mode */
+@media (prefers-color-scheme: dark) {
+  .rich-body [style*="color"] {
+    color: inherit !important;
+  }
+}
+
+/* Class-based dark mode override (for toggle-based dark mode) */
+.dark .rich-body [style*="color"] {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Keep gold/accent links and special elements from being overridden */
+.dark .rich-body a[style*="color"] {
+  color: hsl(var(--accent)) !important;
+}
+
+/* Make spans with inline font-size still readable */
+.dark .rich-body span[style] {
+  color: inherit !important;
+}
+
+/* Category page and other pages with post cards */
+.dark .prose-editor [style*="color"] {
+  color: inherit !important;
 }
 
