@@ -80,11 +80,14 @@ const getInitials = (name: string) => {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
+const getAuthorName = (post: any) => {
+  return post.writers?.bengali_name || post.writers?.name || "—";
+};
+
 /** Left column — large featured article */
 const FeaturedCard = ({ post }: { post: Post }) => {
   const t = post.post_translations[0];
   if (!t) return null;
-  const Icon = getCategoryIcon(post.category_bn);
 
   return (
     <article>
@@ -113,13 +116,9 @@ const FeaturedCard = ({ post }: { post: Post }) => {
       {t.excerpt && (
         <p className="text-muted-foreground text-sm font-bn leading-relaxed mb-3 line-clamp-2">{t.excerpt}</p>
       )}
-      <div className="flex items-center gap-4">
-        <Link href={`/post/${post.slug}`} className="flex items-center gap-0.5 text-xs font-bn-sans text-gold hover:underline">
-          বিস্তারিত দেখুন <ChevronRight className="w-3 h-3" />
-        </Link>
-        {post.published_at && (
-          <span className="text-xs text-muted-foreground font-en-sans">{toBengaliDate(post.published_at)}</span>
-        )}
+      <div className="flex items-center gap-4 mt-auto">
+        <span className="text-xs text-muted-foreground font-bn">{getAuthorName(post)}</span>
+        <span className="text-xs text-muted-foreground font-en-sans border-l border-border pl-4">{post.published_at && toBengaliDate(post.published_at)}</span>
       </div>
     </article>
   );
@@ -136,6 +135,7 @@ const ListCard = ({ post }: { post: Post }) => {
           <p className="text-[10px] font-bn-sans text-gold uppercase tracking-wider mb-1">{post.category_bn}</p>
         )}
         <h4 className="font-bn text-[0.95rem] leading-snug mb-1.5 group-hover:text-gold transition-colors">{t.title}</h4>
+        <p className="text-[11px] text-muted-foreground font-bn mb-1.5">{getAuthorName(post)}</p>
         {t.excerpt && (
           <p className="text-muted-foreground text-xs font-bn line-clamp-2 mb-1">{t.excerpt}</p>
         )}
@@ -151,7 +151,6 @@ const ListCard = ({ post }: { post: Post }) => {
 const ThumbCard = ({ post }: { post: Post }) => {
   const t = post.post_translations[0];
   if (!t) return null;
-  const Icon = getCategoryIcon(post.category_bn);
   return (
     <Link href={`/post/${post.slug}`} className="group flex items-start gap-2.5 py-2.5 border-b border-white/10 last:border-0">
       <div className="w-14 h-14 shrink-0 bg-white/10 flex items-center justify-center overflow-hidden rounded-sm">
@@ -166,9 +165,12 @@ const ThumbCard = ({ post }: { post: Post }) => {
           <p className="text-[9px] text-gold uppercase tracking-wider mb-0.5 font-en-sans">{post.category_bn}</p>
         )}
         <h5 className="text-white text-[0.95rem] font-bn leading-snug line-clamp-3 group-hover:text-gold transition-colors">{t.title}</h5>
-        {post.published_at && (
-          <p className="text-white/35 text-[9px] font-en-sans mt-0.5">{toBengaliDate(post.published_at)}</p>
-        )}
+        <div className="flex flex-col gap-0.5 mt-0.5">
+          <span className="text-[11px] text-white/50 font-bn">{getAuthorName(post)}</span>
+          {post.published_at && (
+            <p className="text-white/35 text-[9px] font-en-sans">{toBengaliDate(post.published_at)}</p>
+          )}
+        </div>
       </div>
     </Link>
   );
@@ -210,15 +212,18 @@ const SectionListItem = ({ post }: { post: Post }) => {
         {t.excerpt && (
           <p className="text-muted-foreground text-xs font-bn line-clamp-2 mb-1">{t.excerpt}</p>
         )}
-        {post.published_at && (
-          <p className="text-[10px] text-muted-foreground font-en-sans">{toBengaliDate(post.published_at)}</p>
-        )}
+        <div className="flex items-center gap-3 mt-1">
+          <span className="text-[11px] text-muted-foreground font-bn">{getAuthorName(post)}</span>
+          {post.published_at && (
+            <p className="text-[10px] text-muted-foreground font-en-sans border-l border-border pl-3">{toBengaliDate(post.published_at)}</p>
+          )}
+        </div>
       </div>
-      <div className="w-[72px] h-[72px] shrink-0 bg-primary/5 border border-border/40 overflow-hidden rounded-sm flex items-center justify-center">
+      <div className="w-[72px] h-[72px] shrink-0 bg-secondary/20 border border-border/40 overflow-hidden rounded-sm flex items-center justify-center relative">
         {post.cover_url ? (
           <Image src={post.cover_url} alt={t.title} width={72} height={72} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         ) : (
-          <Icon className="w-7 h-7 text-primary/20" />
+          <img src="/kishti%20logo.png" alt="Kisti Logo" className="w-full h-full object-cover opacity-80" />
         )}
       </div>
     </Link>
@@ -365,9 +370,10 @@ export default function HomePage() {
           // All published posts
           (supabase as any)
             .from("posts")
-            .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, is_featured,
+            .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, is_featured, is_translation,
               post_translations(lang, title, excerpt),
-              profiles(display_name, display_name_bn)`)
+              writers!writer_id(name, bengali_name),
+              translator:writers!translator_id(name, bengali_name)`)
             .eq("status", "published")
             .order("is_featured", { ascending: false, nullsFirst: false })
             .order("published_at", { ascending: false })
