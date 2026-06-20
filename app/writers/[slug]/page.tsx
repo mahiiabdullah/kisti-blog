@@ -138,8 +138,12 @@ export default async function WriterProfilePage({ params }: WriterPageProps) {
             {originals.map((post: any) => (
               <Link href={`/post/${post.slug}`} key={post.id} className="group flex flex-col gap-3">
                 <div className="aspect-[16/9] w-full relative bg-secondary overflow-hidden border border-border">
-                  {post.cover_url && (
+                  {post.cover_url ? (
                     <Image src={post.cover_url} alt="" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <img src="/kishti%20banner%20name.png" alt="Kisti" className="w-1/2 opacity-20 object-contain drop-shadow-sm transition-transform duration-700 group-hover:scale-105" />
+                    </div>
                   )}
                   <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2 py-1 text-[10px] uppercase tracking-widest font-en-sans border border-border">
                     {post.category_bn}
@@ -166,8 +170,12 @@ export default async function WriterProfilePage({ params }: WriterPageProps) {
             {translations.map((post: any) => (
               <Link href={`/post/${post.slug}`} key={post.id} className="group flex flex-col gap-3">
                 <div className="aspect-[16/9] w-full relative bg-secondary overflow-hidden border border-border">
-                  {post.cover_url && (
+                  {post.cover_url ? (
                     <Image src={post.cover_url} alt="" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <img src="/kishti%20banner%20name.png" alt="Kisti" className="w-1/2 opacity-20 object-contain drop-shadow-sm transition-transform duration-700 group-hover:scale-105" />
+                    </div>
                   )}
                   <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2 py-1 text-[10px] uppercase tracking-widest font-en-sans border border-border">
                     {post.category_bn}
