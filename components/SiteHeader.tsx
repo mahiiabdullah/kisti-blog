@@ -100,7 +100,9 @@ export const SiteHeader = () => {
 
       if (data && data.length > 0) {
         const all = data as unknown as NavCategory[];
-        const mains = all.filter((c) => !c.parent_id).sort((a, b) => a.position - b.position);
+        const mains = all
+          .filter((c) => !c.parent_id && c.name_bn !== "লেখকবৃন্দ")
+          .sort((a, b) => a.position - b.position);
         const built: NavItem[] = [];
         for (const m of mains) {
           const children = all.filter((c) => c.parent_id === m.id).sort((a, b) => a.position - b.position);
@@ -237,7 +239,7 @@ export const SiteHeader = () => {
       </div>
 
       {/* ── DARK NAV BAR ─────────────────────────────── */}
-      <div className="bg-primary">
+      <div className="bg-navy">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center">
             {/* Mobile hamburger on left */}
@@ -247,7 +249,7 @@ export const SiteHeader = () => {
                   {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-full max-w-sm bg-primary text-white border-r-0">
+              <SheetContent side="left" className="w-full max-w-sm bg-navy text-white border-r-0">
                 <div className="mb-8 mt-2">
                   <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="font-bn text-2xl text-gold">
                     কিশতী
@@ -291,7 +293,7 @@ export const SiteHeader = () => {
             </Sheet>
 
             {/* Desktop nav */}
-            <nav className="hidden lg:flex items-center flex-1">
+            <nav className="hidden lg:flex items-center justify-center flex-1">
               {nav.map((n) =>
                 n.items ? (
                   <DesktopDropdown key={n.label} label={n.label} items={n.items} />
