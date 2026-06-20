@@ -556,15 +556,13 @@
   background-color: hsl(var(--terra-mid)); /* dark slate-blue — dark mode */
 }
 
-/* Ensure any bg-primary used as a dark container stays readable in dark mode */
-.dark .bg-primary {
-  background-color: hsl(var(--terra-mid)) !important;
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* bg-hero-banner: Custom gradients for hero sections                          */
+/* ─────────────────────────────────────────────────────────────────────────── */
+.bg-hero-banner {
+  background: linear-gradient(135deg, #0E2447 0%, #112D5A 100%);
 }
-
-/* Text on navy/dark-primary backgrounds in dark mode */
-.dark .bg-primary .text-white,
-.dark .bg-navy .text-white {
-  color: hsl(40, 30%, 92%) !important; /* warm off-white — very readable */
+.dark .bg-hero-banner {
+  background: linear-gradient(135deg, hsl(var(--terra-mid)) 0%, hsl(0,0%,12%) 100%);
 }
-
 

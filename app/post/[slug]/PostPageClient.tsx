@@ -395,7 +395,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
       <ViewTracker postId={post.id} />
 
       {/* ── ARTICLE HERO BANNER ──────────────────────── */}
-      <section className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #0E2447 0%, #112D5A 100%)" }}>
+      <section className="bg-hero-banner relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none" style={{
           backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(201,168,76,0.04) 40px, rgba(201,168,76,0.04) 41px)"
         }} />
