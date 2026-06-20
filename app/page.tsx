@@ -37,6 +37,7 @@ interface Writer {
   name: string;
   bengali_name: string | null;
   slug: string | null;
+  profile_image: string | null;
   post_count: number;
 }
 
@@ -322,12 +323,11 @@ const WritersWidget = ({ writers }: { writers: Writer[] }) => (
         return (
           <li key={w.id} className="border-b border-border/30 last:border-0">
             <Link href={`/writers/${w.slug}`} className="flex items-center gap-3 py-2.5 group">
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bn font-bold shrink-0 group-hover:scale-105 transition-transform"
-                style={{ backgroundColor: WRITER_COLORS[i % WRITER_COLORS.length] }}
-              >
-                {getInitials(name)}
-              </div>
+              {w.profile_image && (
+                <div className="w-10 h-10 rounded-full shrink-0 group-hover:scale-105 transition-transform overflow-hidden relative border border-border/50">
+                  <Image src={w.profile_image} alt={name} fill className="object-cover grayscale hover:grayscale-0 transition-all duration-300" />
+                </div>
+              )}
               <p className="font-bn text-[0.95rem] font-medium leading-tight group-hover:text-gold transition-colors">{name}</p>
             </Link>
           </li>
@@ -392,7 +392,7 @@ export default function HomePage() {
           // Writers
           supabase
             .from("writers")
-            .select("id, name, bengali_name, slug")
+            .select("id, name, bengali_name, slug, profile_image")
             .order("name")
             .limit(6),
 
@@ -428,6 +428,7 @@ export default function HomePage() {
           name: w.name,
           bengali_name: w.bengali_name,
           slug: w.slug,
+          profile_image: w.profile_image,
           post_count: allPosts.filter(
             (p) => (p as any).writer_id === w.id
           ).length,
