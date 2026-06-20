@@ -141,8 +141,8 @@ export default async function WriterProfilePage({ params }: WriterPageProps) {
                   {post.cover_url ? (
                     <Image src={post.cover_url} alt="" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <img src="/kishti%20banner%20name.png" alt="Kisti" className="w-1/2 opacity-20 object-contain drop-shadow-sm transition-transform duration-700 group-hover:scale-105" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-secondary/20">
+                      <img src="/kishti%20logo.png" alt="Kisti Logo" className="w-full h-full object-cover opacity-80" />
                     </div>
                   )}
                   <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2 py-1 text-[10px] uppercase tracking-widest font-en-sans border border-border">
@@ -173,8 +173,8 @@ export default async function WriterProfilePage({ params }: WriterPageProps) {
                   {post.cover_url ? (
                     <Image src={post.cover_url} alt="" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <img src="/kishti%20banner%20name.png" alt="Kisti" className="w-1/2 opacity-20 object-contain drop-shadow-sm transition-transform duration-700 group-hover:scale-105" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-secondary/20">
+                      <img src="/kishti%20logo.png" alt="Kisti Logo" className="w-full h-full object-cover opacity-80" />
                     </div>
                   )}
                   <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2 py-1 text-[10px] uppercase tracking-widest font-en-sans border border-border">
