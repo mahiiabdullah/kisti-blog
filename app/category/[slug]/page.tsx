@@ -68,10 +68,11 @@ export default async function CategoryPage({ params }: PageProps) {
   if (postIds.length > 0 || catData.name_bn) {
     let query = supabase
       .from("posts")
-      .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id,
+      .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id, is_translation,
                post_translations(lang, title, excerpt),
                post_tags(tag),
-               profiles(display_name, display_name_bn)`)
+               writers!writer_id(name, bengali_name),
+               translator:writers!translator_id(name, bengali_name)`)
       .eq("status", "published")
       .order("published_at", { ascending: false });
 
@@ -116,7 +117,9 @@ export default async function CategoryPage({ params }: PageProps) {
               const t = p.post_translations[0];
               if (!t) return null;
               const lang = t.lang || "bn";
-              const author = p.profiles?.display_name_bn || p.profiles?.display_name || "—";
+              const author = p.is_translation
+                ? p.translator?.bengali_name || p.translator?.name || "—"
+                : p.writers?.bengali_name || p.writers?.name || "—";
               return (
                 <Link href={`/post/${p.slug}`} key={p.id} className="group block">
                   <article className="grid md:grid-cols-12 gap-6 items-center">
