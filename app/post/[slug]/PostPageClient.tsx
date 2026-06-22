@@ -381,10 +381,10 @@ export default function PostPageClient({ slug }: { slug: string }) {
   const primaryCat = postCategories[0] ?? null;
 
   const handleLinkClick = (e: React.MouseEvent<HTMLElement>) => {
-    const target = e.target as HTMLElement;
-    if (target.tagName === "A" && target.getAttribute("href")?.startsWith("#fn")) {
+    const a = (e.target as HTMLElement).closest("a");
+    if (a && a.getAttribute("href")?.startsWith("#fn")) {
       e.preventDefault();
-      const id = target.getAttribute("href")?.substring(1);
+      const id = a.getAttribute("href")?.substring(1);
       if (id) document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     }
   };
@@ -522,7 +522,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
                 {t.body.trim().startsWith("<") ? (
                   <div
                     dangerouslySetInnerHTML={{
-                      __html: t.body.replace(/\[\^(\d+)\]/g, '<sup id="fnref-$1" class="ml-0.5 scroll-m-24"><a href="#fn-$1" class="text-accent hover:underline">[$1]</a></sup>')
+                      __html: t.body.replace(/(?:<a[^>]*>)?\s*\[\^?\s*(\d+)\s*\]\s*(?:<\/a>)?/g, '<sup id="fnref-$1" class="ml-0.5 scroll-m-24"><a href="#fn-$1" class="text-accent hover:underline">[$1]</a></sup>')
                     }}
                     className="rich-body"
                   />
@@ -539,7 +539,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
                       }
                     }}
                   >
-                    {t.body.replace(/\[\^(\d+)\]/g, '[\\[^$1\\]](#fn-$1)')}
+                    {t.body.replace(/(?:<a[^>]*>)?\s*\[\^?\s*(\d+)\s*\]\s*(?:<\/a>)?/g, '[\\[^$1\\]](#fn-$1)')}
                   </ReactMarkdown>
                 )}
               </div>
