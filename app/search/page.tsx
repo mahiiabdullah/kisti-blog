@@ -78,7 +78,7 @@ function SearchPageInner() {
   return (
     <main className="flex-1">
       {/* Search hero */}
-      <div className="bg-primary border-b-2 border-gold">
+      <div className="bg-hero-banner border-b-2 border-gold">
         <div className="mx-auto max-w-3xl px-4 py-10 md:py-14">
           <h1 className="font-bn text-3xl md:text-4xl font-bold text-white mb-6">অনুসন্ধান</h1>
           <div className="relative">
@@ -141,7 +141,7 @@ function SearchPageInner() {
                 <Link href={`/post/${p.slug}`} key={r.post_id} className="group block">
                   <article className="bg-card border border-border hover:border-gold/50 transition-colors overflow-hidden">
                     {/* Thumbnail */}
-                    <div className="aspect-video bg-primary overflow-hidden relative">
+                    <div className="aspect-video bg-secondary/20 overflow-hidden relative">
                       {p.cover_url ? (
                         <Image
                           src={p.cover_url}
