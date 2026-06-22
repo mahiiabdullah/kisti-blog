@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { Home, ChevronRight, BookOpen, Eye, Hash } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
@@ -380,6 +380,25 @@ export default function PostPageClient({ slug }: { slug: string }) {
   const currentUrl = typeof window !== "undefined" ? window.location.href : "";
   const primaryCat = postCategories[0] ?? null;
 
+  const processedHtml = useMemo(() => {
+    if (!t.body) return "";
+    if (!t.body.trim().startsWith("<")) return t.body;
+
+    return t.body.replace(/(<a[^>]*>[\s\S]*?<\/a>)|(\[\^?\s*(\d+)\s*\])/gi, (match, aTag, bracketMatch, id) => {
+      if (aTag) {
+        const innerText = aTag.replace(/<[^>]+>/g, "").trim();
+        const matchId = innerText.match(/^\[\^?\s*(\d+)\s*\]$/);
+        if (matchId) {
+          return `<sup id="fnref-${matchId[1]}" class="ml-0.5 scroll-m-24"><a href="#fn-${matchId[1]}" class="text-accent hover:underline">[${matchId[1]}]</a></sup>`;
+        }
+        return aTag;
+      } else if (bracketMatch) {
+        return `<sup id="fnref-${id}" class="ml-0.5 scroll-m-24"><a href="#fn-${id}" class="text-accent hover:underline">[${id}]</a></sup>`;
+      }
+      return match;
+    });
+  }, [t.body]);
+
   const handleLinkClick = (e: React.MouseEvent<HTMLElement>) => {
     const a = (e.target as HTMLElement).closest("a");
     if (a && a.getAttribute("href")?.startsWith("#fn")) {
@@ -522,7 +541,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
                 {t.body.trim().startsWith("<") ? (
                   <div
                     dangerouslySetInnerHTML={{
-                      __html: t.body.replace(/(?:<a[^>]*>)?\s*\[\^?\s*(\d+)\s*\]\s*(?:<\/a>)?/g, '<sup id="fnref-$1" class="ml-0.5 scroll-m-24"><a href="#fn-$1" class="text-accent hover:underline">[$1]</a></sup>')
+                      __html: processedHtml
                     }}
                     className="rich-body"
                   />
