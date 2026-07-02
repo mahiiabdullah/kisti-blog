@@ -33,8 +33,7 @@ interface NavItem {
   items?: { to: string; label: string }[];
 }
 
-const getHijriYear = () => {
-  // Approximate Hijri year: Julian Day Number calculation
+const getFullHijriDate = () => {
   const now = new Date();
   const jd = Math.floor(now.getTime() / 86400000) + 2440588;
   const l = jd - 1948440 + 10632;
@@ -44,17 +43,35 @@ const getHijriYear = () => {
     + Math.floor(ll / 5670) * Math.floor((43 * ll) / 15238);
   const ll2 = ll - Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50)
     - Math.floor(j / 16) * Math.floor((15238 * j) / 43) + 29;
-  const hijriYear = 30 * n + Math.floor(ll2 / 30) - 30;
-  return hijriYear;
+  const year = 30 * n + Math.floor(ll2 / 30) - 30;
+  const month = Math.ceil(ll2 / 29.5);
+  const day = ll2 - Math.floor((month - 1) * 29.5);
+  const hijriMonthsBn = ["মুহাররম", "সফর", "রবিউল আউয়াল", "রবিউস সানি", "জমাদিউল আউয়াল", "জমাদিউস সানি", "রজব", "শাবান", "রমজান", "শাওয়াল", "জিলকদ", "জিলহজ"];
+  const hijriMonthsEn = ["Muharram", "Safar", "Rabi al-Awwal", "Rabi al-Thani", "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban", "Ramadan", "Shawwal", "Dhul Qi'dah", "Dhul Hijjah"];
+  const monthIdx = Math.min(Math.max((month || 1) - 1, 0), 11);
+  const bn = (num: number) => num.toString().replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯"[+d]);
+  return {
+    hijriBn: `${bn(day)} ${hijriMonthsBn[monthIdx]}, ${bn(year)} হি.`,
+    hijriEn: `${day} ${hijriMonthsEn[monthIdx]}, ${year} AH`,
+  };
 };
 
-const getBengaliDate = () => {
+interface DateInfo { engLine: string; bnLine: string; hijriBn: string; hijriEn: string; }
+
+const getAllDates = (): DateInfo => {
   const now = new Date();
-  const days = ["রবিবার", "সোমবার", "মঙ্গলবার", "বুধবার", "বৃহস্পতিবার", "শুক্রবার", "শনিবার"];
-  const months = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
-  const bn = (n: number) => n.toString().replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯"[+d]);
-  const hijriYear = getHijriYear();
-  return `${days[now.getDay()]}, ${bn(now.getDate())} ${months[now.getMonth()]} ${bn(now.getFullYear())} / ${bn(hijriYear)} হি.`;
+  const engDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const engMonths = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const bnDays = ["রবিবার", "সোমবার", "মঙ্গলবার", "বুধবার", "বৃহস্পতিবার", "শুক্রবার", "শনিবার"];
+  const bnMonths = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+  const bn = (num: number) => num.toString().replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯"[+d]);
+  const { hijriBn, hijriEn } = getFullHijriDate();
+  return {
+    engLine: `${engDays[now.getDay()]}, ${now.getDate()} ${engMonths[now.getMonth()]} ${now.getFullYear()}`,
+    bnLine: `${bnDays[now.getDay()]}, ${bn(now.getDate())} ${bnMonths[now.getMonth()]} ${bn(now.getFullYear())}`,
+    hijriBn,
+    hijriEn,
+  };
 };
 
 // Desktop nav dropdown
@@ -101,10 +118,10 @@ export const SiteHeader = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [nav, setNav] = useState<NavItem[]>([]);
-  const [dateStr, setDateStr] = useState("");
+  const [dates, setDates] = useState<DateInfo | null>(null);
 
   useEffect(() => {
-    setDateStr(getBengaliDate());
+    setDates(getAllDates());
   }, []);
 
   useEffect(() => {
@@ -178,11 +195,14 @@ export const SiteHeader = () => {
               <Link href="/contact" className="hover:text-foreground transition-colors">যোগাযোগ</Link>
             </nav>
 
-            {/* Date (desktop) */}
-            {dateStr && (
-              <span className="hidden lg:block text-xs font-bn-sans text-muted-foreground border-l border-border pl-4">
-                {dateStr}
-              </span>
+            {/* Date block (desktop) */}
+            {dates && (
+              <div className="hidden lg:flex flex-col items-end text-right border-l border-border pl-4 gap-0">
+                <span className="text-[11px] font-en-sans text-muted-foreground leading-tight">{dates.engLine}</span>
+                <span className="text-[11px] font-en-sans text-muted-foreground/70 leading-tight">{dates.hijriEn}</span>
+                <span className="text-[11px] font-bn-sans text-muted-foreground leading-tight">{dates.bnLine}</span>
+                <span className="text-[11px] font-bn-sans text-muted-foreground/70 leading-tight">{dates.hijriBn}</span>
+              </div>
             )}
 
             {/* Auth */}
