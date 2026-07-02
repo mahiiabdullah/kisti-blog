@@ -286,8 +286,12 @@ export default function AdminPostEditor() {
       <div className="flex flex-col sm:flex-row items-start sm:items-baseline justify-between mb-10 gap-4">
         <h1 className="font-bn text-4xl">{isNew ? "নতুন পোস্ট" : "সম্পাদনা"}</h1>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" onClick={() => setShowPreview((v) => !v)} className="lg:hidden rounded-none text-xs sm:text-sm">
-            {showPreview ? <><EyeOff className="w-4 h-4 mr-1" />Edit</> : <><Eye className="w-4 h-4 mr-1" />Preview</>}
+          <Button
+            variant="outline"
+            onClick={() => setShowPreview((v) => !v)}
+            className="rounded-none text-xs sm:text-sm gap-1.5"
+          >
+            {showPreview ? <><EyeOff className="w-4 h-4" />Hide Preview</> : <><Eye className="w-4 h-4" />Preview</>}
           </Button>
           <Button variant="outline" onClick={() => save(false)} disabled={saving} className="rounded-none text-xs sm:text-sm">Save draft</Button>
           <Button onClick={() => save(true)} disabled={saving} className="bg-foreground text-background hover:bg-foreground/90 rounded-none text-xs sm:text-sm">
@@ -296,217 +300,247 @@ export default function AdminPostEditor() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start h-[calc(100vh-14rem)]">
-        <div className={`min-w-0 flex flex-col h-full overflow-y-auto pr-2 ${showPreview ? "hidden lg:flex" : "flex"}`}>
-          {/* Metadata */}
-          <section className="border border-border p-4 sm:p-6 mb-8 space-y-4 shrink-0">
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div><Label className="text-xs uppercase tracking-wider font-en-sans">Slug</Label><Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="auto from title" /></div>
-              <div><Label className="text-xs uppercase tracking-wider font-en-sans text-muted-foreground">Reading minutes (Auto)</Label><Input type="number" min={1} value={readingMinutes} readOnly className="bg-secondary/20 text-muted-foreground" /></div>
-            </div>
+      {/* Editor — full width always */}
+      <div className="h-[calc(100vh-14rem)] overflow-y-auto pr-2">
+        {/* Metadata */}
+        <section className="border border-border p-4 sm:p-6 mb-8 space-y-4 shrink-0">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div><Label className="text-xs uppercase tracking-wider font-en-sans">Slug</Label><Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="auto from title" /></div>
+            <div><Label className="text-xs uppercase tracking-wider font-en-sans text-muted-foreground">Reading minutes (Auto)</Label><Input type="number" min={1} value={readingMinutes} readOnly className="bg-secondary/20 text-muted-foreground" /></div>
+          </div>
 
-            {/* Writer & Translation */}
-            <div className="grid sm:grid-cols-2 gap-4 border border-border p-4 bg-secondary/10">
-              <div>
-                <Label className="text-xs uppercase tracking-wider font-en-sans">লেখক (Writer)</Label>
-                <select 
-                  value={writerId} 
-                  onChange={(e) => setWriterId(e.target.value)}
-                  className="w-full mt-1 px-3 py-2 border border-border bg-background text-sm font-bn"
-                >
-                  <option value="">[ Select Writer ]</option>
-                  {allWriters.map(w => (
-                    <option key={w.id} value={w.id}>{w.bengali_name} ({w.name})</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-2 justify-end">
-                <label className="flex items-center gap-2 text-sm font-bn cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    checked={isTranslation} 
-                    onChange={(e) => setIsTranslation(e.target.checked)} 
-                    className="rounded-none border-border"
-                  />
-                  This is a translated writing
-                </label>
-                
-                {isTranslation && (
-                  <div className="animate-in fade-in slide-in-from-top-2">
-                    <Label className="text-xs uppercase tracking-wider font-en-sans">অনুবাদক (Translator)</Label>
-                    <select 
-                      value={translatorId} 
-                      onChange={(e) => setTranslatorId(e.target.value)}
-                      className="w-full mt-1 px-3 py-2 border border-border bg-background text-sm font-bn"
-                    >
-                      <option value="">[ Select Translator ]</option>
-                      {allWriters.map(w => (
-                        <option key={w.id} value={w.id}>{w.bengali_name} ({w.name})</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Category dropdown */}
+          {/* Writer & Translation */}
+          <div className="grid sm:grid-cols-2 gap-4 border border-border p-4 bg-secondary/10">
             <div>
-              <Label className="text-xs uppercase tracking-wider font-en-sans">Categories</Label>
-              <div className="relative mt-1">
-                <button
-                  type="button"
-                  onClick={() => setCatDropdownOpen(!catDropdownOpen)}
-                  className="w-full flex items-center justify-between px-3 py-2 border border-border bg-background text-left text-sm"
-                >
-                  <span className="truncate font-bn">
-                    {selectedCatIds.length === 0
-                      ? <span className="text-muted-foreground font-en-sans">Select categories…</span>
-                      : getFlatCats().filter(c => selectedCatIds.includes(c.id)).map(c => c.name_bn).join(", ")}
-                  </span>
-                  <ChevronDown className={`w-4 h-4 ml-2 shrink-0 transition-transform ${catDropdownOpen ? "rotate-180" : ""}`} />
-                </button>
-                {catDropdownOpen && (
-                  <div className="absolute z-50 w-full mt-1 border border-border bg-background shadow-lg max-h-60 overflow-y-auto flex flex-col">
-                    <div className="p-2 sticky top-0 bg-background border-b border-border">
-                      <Input 
-                        placeholder="Search categories..." 
-                        value={catSearchQuery}
-                        onChange={(e) => setCatSearchQuery(e.target.value)}
-                        className="h-8 text-xs font-bn"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                    {allCategories.map(main => {
-                      const matchMain = main.name_bn.includes(catSearchQuery) || (main.name_en && main.name_en.toLowerCase().includes(catSearchQuery.toLowerCase()));
-                      const filteredChildren = main.children?.filter(sub => sub.name_bn.includes(catSearchQuery) || (sub.name_en && sub.name_en.toLowerCase().includes(catSearchQuery.toLowerCase()))) || [];
-                      
-                      if (!matchMain && filteredChildren.length === 0 && catSearchQuery) return null;
+              <Label className="text-xs uppercase tracking-wider font-en-sans">লেখক (Writer)</Label>
+              <select 
+                value={writerId} 
+                onChange={(e) => setWriterId(e.target.value)}
+                className="w-full mt-1 px-3 py-2 border border-border bg-background text-sm font-bn"
+              >
+                <option value="">[ Select Writer ]</option>
+                {allWriters.map(w => (
+                  <option key={w.id} value={w.id}>{w.bengali_name} ({w.name})</option>
+                ))}
+              </select>
+            </div>
 
-                      return (
-                        <div key={main.id}>
-                          {(!catSearchQuery || matchMain) && (
-                            <button
-                              type="button"
-                              onClick={() => toggleCategory(main.id)}
-                              className={`w-full px-4 py-2 text-sm text-left flex items-center gap-2 hover:bg-secondary/50 font-bn font-semibold ${selectedCatIds.includes(main.id) ? "bg-accent/10 text-accent" : ""}`}
-                            >
-                              <span className={`w-3.5 h-3.5 border rounded-sm flex items-center justify-center text-[10px] ${selectedCatIds.includes(main.id) ? "bg-accent border-accent text-white" : "border-border"}`}>
-                                {selectedCatIds.includes(main.id) ? "✓" : ""}
-                              </span>
-                              {main.name_bn}
-                            </button>
-                          )}
-                          {filteredChildren.map(sub => (
-                            <button
-                              key={sub.id}
-                              type="button"
-                              onClick={() => toggleCategory(sub.id)}
-                              className={`w-full pl-10 pr-4 py-2 text-sm text-left flex items-center gap-2 hover:bg-secondary/50 font-bn ${selectedCatIds.includes(sub.id) ? "bg-accent/10 text-accent" : "text-muted-foreground"}`}
-                            >
-                              <span className={`w-3.5 h-3.5 border rounded-sm flex items-center justify-center text-[10px] ${selectedCatIds.includes(sub.id) ? "bg-accent border-accent text-white" : "border-border"}`}>
-                                {selectedCatIds.includes(sub.id) ? "✓" : ""}
-                              </span>
-                              {sub.name_bn}
-                            </button>
-                          ))}
-                        </div>
-                      );
-                    })}
-                    {allCategories.length === 0 && (
-                      <div className="px-4 py-3 text-sm text-muted-foreground font-en-sans">No categories. Run SQL migration first.</div>
-                    )}
-                  </div>
-                )}
-              </div>
-              {/* Selected category pills */}
-              {selectedCatIds.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {getFlatCats().filter(c => selectedCatIds.includes(c.id)).map(c => (
-                    <span key={c.id} className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-accent/10 text-accent border border-accent/20 rounded-sm font-bn">
-                      {c.name_bn}
-                      <button type="button" onClick={() => toggleCategory(c.id)} className="hover:text-destructive"><X className="w-3 h-3" /></button>
-                    </span>
-                  ))}
+            <div className="flex flex-col gap-2 justify-end">
+              <label className="flex items-center gap-2 text-sm font-bn cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={isTranslation} 
+                  onChange={(e) => setIsTranslation(e.target.checked)} 
+                  className="rounded-none border-border"
+                />
+                This is a translated writing
+              </label>
+              
+              {isTranslation && (
+                <div className="animate-in fade-in slide-in-from-top-2">
+                  <Label className="text-xs uppercase tracking-wider font-en-sans">অনুবাদক (Translator)</Label>
+                  <select 
+                    value={translatorId} 
+                    onChange={(e) => setTranslatorId(e.target.value)}
+                    className="w-full mt-1 px-3 py-2 border border-border bg-background text-sm font-bn"
+                  >
+                    <option value="">[ Select Translator ]</option>
+                    {allWriters.map(w => (
+                      <option key={w.id} value={w.id}>{w.bengali_name} ({w.name})</option>
+                    ))}
+                  </select>
                 </div>
               )}
             </div>
-
-            {/* Cover image */}
-            <div>
-              <Label className="text-xs uppercase tracking-wider font-en-sans">Cover image</Label>
-              <div className="flex items-center gap-3 mt-1 flex-wrap">
-                {coverUrl && <img src={coverUrl} alt="" className="w-24 h-16 object-cover" />}
-                <label className="flex items-center gap-2 px-3 py-2 border border-border text-sm cursor-pointer hover:bg-secondary"><Upload className="w-4 h-4" /> Upload<input type="file" accept="image/*" className="hidden" onChange={onCoverUpload} /></label>
-                {coverUrl && <button onClick={() => setCoverUrl("")} className="text-xs text-destructive">remove</button>}
-              </div>
-            </div>
-
-            {/* Tags */}
-            <div>
-              <Label className="text-xs uppercase tracking-wider font-en-sans">Tags</Label>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {tags.map((tg) => (<span key={tg} className="inline-flex items-center gap-1 text-xs px-3 py-1 border border-border rounded-full">{tg}<button onClick={() => setTags(tags.filter((x) => x !== tg))} className="text-destructive">×</button></span>))}
-                <div className="flex gap-1"><Input value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())} placeholder="add tag" className="h-8 w-32" /><Button type="button" variant="outline" size="sm" onClick={addTag} className="rounded-none">Add</Button></div>
-              </div>
-            </div>
-
-            {/* Featured toggle */}
-            <div className="flex items-center gap-3 pt-2 border-t border-border">
-              <label className="flex items-center gap-2 text-sm font-bn cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={isFeatured}
-                  onChange={(e) => setIsFeatured(e.target.checked)}
-                  className="w-4 h-4 accent-[hsl(var(--accent))] cursor-pointer"
-                />
-                <span className="font-bn-sans text-sm">প্রধান লেখা হিসেবে প্রদর্শন করুন</span>
-                {isFeatured && <span className="text-[10px] font-en-sans uppercase tracking-wider bg-accent/15 text-accent px-2 py-0.5 rounded-sm">Featured</span>}
-              </label>
-            </div>
-          </section>
-
-          {/* Language tabs */}
-          <div className="flex gap-2 mb-4 border-b border-border overflow-x-auto">
-            {LANGS.map((l) => (<button key={l} onClick={() => setActiveLang(l)} className={`px-4 py-2 text-sm border-b-2 -mb-px transition-colors whitespace-nowrap ${activeLang === l ? "border-accent text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{LANG_LABEL[l]} {translations[l].title && <span className="text-accent ml-1">●</span>}</button>))}
           </div>
 
-          {/* Translation content */}
-          <section className="space-y-4 mb-8" dir={dir}>
-            <div><Label className="text-xs uppercase tracking-wider font-en-sans" dir="ltr">Title</Label><Input value={t.title} onChange={(e) => updateT(activeLang, { title: e.target.value })} className={`text-2xl h-14 ${activeLang === "bn" ? "font-bn" : activeLang === "ar" ? "font-ar" : "font-en"}`} /></div>
-            <div><Label className="text-xs uppercase tracking-wider font-en-sans" dir="ltr">Excerpt</Label><Textarea value={t.excerpt} onChange={(e) => updateT(activeLang, { excerpt: e.target.value })} rows={2} /></div>
-            <div>
-              <Label className="text-xs uppercase tracking-wider font-en-sans" dir="ltr">Body</Label>
-              <RichTextEditor
-                content={t.body}
-                onChange={(html) => updateT(activeLang, { body: html })}
-                placeholder="Write your article here…"
-                dir={dir}
-                className={activeLang === "bn" ? "font-bn" : activeLang === "ar" ? "font-ar" : "font-en"}
+          {/* Category dropdown */}
+          <div>
+            <Label className="text-xs uppercase tracking-wider font-en-sans">Categories</Label>
+            <div className="relative mt-1">
+              <button
+                type="button"
+                onClick={() => setCatDropdownOpen(!catDropdownOpen)}
+                className="w-full flex items-center justify-between px-3 py-2 border border-border bg-background text-left text-sm"
+              >
+                <span className="truncate font-bn">
+                  {selectedCatIds.length === 0
+                    ? <span className="text-muted-foreground font-en-sans">Select categories…</span>
+                    : getFlatCats().filter(c => selectedCatIds.includes(c.id)).map(c => c.name_bn).join(", ")}
+                </span>
+                <ChevronDown className={`w-4 h-4 ml-2 shrink-0 transition-transform ${catDropdownOpen ? "rotate-180" : ""}`} />
+              </button>
+              {catDropdownOpen && (
+                <div className="absolute z-50 w-full mt-1 border border-border bg-background shadow-lg max-h-60 overflow-y-auto flex flex-col">
+                  <div className="p-2 sticky top-0 bg-background border-b border-border">
+                    <Input 
+                      placeholder="Search categories..." 
+                      value={catSearchQuery}
+                      onChange={(e) => setCatSearchQuery(e.target.value)}
+                      className="h-8 text-xs font-bn"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                  {allCategories.map(main => {
+                    const matchMain = main.name_bn.includes(catSearchQuery) || (main.name_en && main.name_en.toLowerCase().includes(catSearchQuery.toLowerCase()));
+                    const filteredChildren = main.children?.filter(sub => sub.name_bn.includes(catSearchQuery) || (sub.name_en && sub.name_en.toLowerCase().includes(catSearchQuery.toLowerCase()))) || [];
+                    
+                    if (!matchMain && filteredChildren.length === 0 && catSearchQuery) return null;
+
+                    return (
+                      <div key={main.id}>
+                        {(!catSearchQuery || matchMain) && (
+                          <button
+                            type="button"
+                            onClick={() => toggleCategory(main.id)}
+                            className={`w-full px-4 py-2 text-sm text-left flex items-center gap-2 hover:bg-secondary/50 font-bn font-semibold ${selectedCatIds.includes(main.id) ? "bg-accent/10 text-accent" : ""}`}
+                          >
+                            <span className={`w-3.5 h-3.5 border rounded-sm flex items-center justify-center text-[10px] ${selectedCatIds.includes(main.id) ? "bg-accent border-accent text-white" : "border-border"}`}>
+                              {selectedCatIds.includes(main.id) ? "✓" : ""}
+                            </span>
+                            {main.name_bn}
+                          </button>
+                        )}
+                        {filteredChildren.map(sub => (
+                          <button
+                            key={sub.id}
+                            type="button"
+                            onClick={() => toggleCategory(sub.id)}
+                            className={`w-full pl-10 pr-4 py-2 text-sm text-left flex items-center gap-2 hover:bg-secondary/50 font-bn ${selectedCatIds.includes(sub.id) ? "bg-accent/10 text-accent" : "text-muted-foreground"}`}
+                          >
+                            <span className={`w-3.5 h-3.5 border rounded-sm flex items-center justify-center text-[10px] ${selectedCatIds.includes(sub.id) ? "bg-accent border-accent text-white" : "border-border"}`}>
+                              {selectedCatIds.includes(sub.id) ? "✓" : ""}
+                            </span>
+                            {sub.name_bn}
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })}
+                  {allCategories.length === 0 && (
+                    <div className="px-4 py-3 text-sm text-muted-foreground font-en-sans">No categories. Run SQL migration first.</div>
+                  )}
+                </div>
+              )}
+            </div>
+            {/* Selected category pills */}
+            {selectedCatIds.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {getFlatCats().filter(c => selectedCatIds.includes(c.id)).map(c => (
+                  <span key={c.id} className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-accent/10 text-accent border border-accent/20 rounded-sm font-bn">
+                    {c.name_bn}
+                    <button type="button" onClick={() => toggleCategory(c.id)} className="hover:text-destructive"><X className="w-3 h-3" /></button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Cover image */}
+          <div>
+            <Label className="text-xs uppercase tracking-wider font-en-sans">Cover image</Label>
+            <div className="flex items-center gap-3 mt-1 flex-wrap">
+              {coverUrl && <img src={coverUrl} alt="" className="w-24 h-16 object-cover" />}
+              <label className="flex items-center gap-2 px-3 py-2 border border-border text-sm cursor-pointer hover:bg-secondary"><Upload className="w-4 h-4" /> Upload<input type="file" accept="image/*" className="hidden" onChange={onCoverUpload} /></label>
+              {coverUrl && <button onClick={() => setCoverUrl("")} className="text-xs text-destructive">remove</button>}
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div>
+            <Label className="text-xs uppercase tracking-wider font-en-sans">Tags</Label>
+            <div className="flex flex-wrap gap-2 mt-1">
+              {tags.map((tg) => (<span key={tg} className="inline-flex items-center gap-1 text-xs px-3 py-1 border border-border rounded-full">{tg}<button onClick={() => setTags(tags.filter((x) => x !== tg))} className="text-destructive">×</button></span>))}
+              <div className="flex gap-1"><Input value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())} placeholder="add tag" className="h-8 w-32" /><Button type="button" variant="outline" size="sm" onClick={addTag} className="rounded-none">Add</Button></div>
+            </div>
+          </div>
+
+          {/* Featured toggle */}
+          <div className="flex items-center gap-3 pt-2 border-t border-border">
+            <label className="flex items-center gap-2 text-sm font-bn cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={isFeatured}
+                onChange={(e) => setIsFeatured(e.target.checked)}
+                className="w-4 h-4 accent-[hsl(var(--accent))] cursor-pointer"
               />
-            </div>
-            {/* Footnotes */}
-            <div className="border border-border p-4">
-              <div className="flex items-center justify-between mb-3"><Label className="text-xs uppercase tracking-wider font-en-sans" dir="ltr">Footnotes</Label><Button type="button" size="sm" variant="outline" onClick={() => addFootnote(activeLang)} className="rounded-none"><Plus className="w-3 h-3 mr-1" />Add</Button></div>
-              <div className="space-y-2">{t.footnotes.map((fn, i) => (<div key={i} className="flex gap-2 items-start"><span className="text-accent text-sm pt-2">[{fn.id}]</span><Textarea value={fn.text} rows={2} onChange={(e) => updateT(activeLang, { footnotes: t.footnotes.map((x, j) => j === i ? { ...x, text: e.target.value } : x) })} /><Button type="button" variant="ghost" size="icon" onClick={() => updateT(activeLang, { footnotes: t.footnotes.filter((_, j) => j !== i) })}><Trash2 className="w-4 h-4 text-destructive" /></Button></div>))}</div>
-            </div>
-            {/* Citations */}
-            <div className="border border-border p-4">
-              <div className="flex items-center justify-between mb-3"><Label className="text-xs uppercase tracking-wider font-en-sans" dir="ltr">Citations</Label><Button type="button" size="sm" variant="outline" onClick={() => addCitation(activeLang)} className="rounded-none"><Plus className="w-3 h-3 mr-1" />Add</Button></div>
-              <div className="space-y-2">{t.citations.map((c, i) => (<div key={i} className="flex gap-2 items-center flex-wrap sm:flex-nowrap"><Input placeholder="Label" value={c.label} onChange={(e) => updateT(activeLang, { citations: t.citations.map((x, j) => j === i ? { ...x, label: e.target.value } : x) })} /><Input placeholder="URL" value={c.url ?? ""} onChange={(e) => updateT(activeLang, { citations: t.citations.map((x, j) => j === i ? { ...x, url: e.target.value } : x) })} /><Button type="button" variant="ghost" size="icon" onClick={() => updateT(activeLang, { citations: t.citations.filter((_, j) => j !== i) })}><Trash2 className="w-4 h-4 text-destructive" /></Button></div>))}</div>
-            </div>
-          </section>
+              <span className="font-bn-sans text-sm">প্রধান লেখা হিসেবে প্রদর্শন করুন</span>
+              {isFeatured && <span className="text-[10px] font-en-sans uppercase tracking-wider bg-accent/15 text-accent px-2 py-0.5 rounded-sm">Featured</span>}
+            </label>
+          </div>
+        </section>
+
+        {/* Language tabs */}
+        <div className="flex gap-2 mb-4 border-b border-border overflow-x-auto">
+          {LANGS.map((l) => (<button key={l} onClick={() => setActiveLang(l)} className={`px-4 py-2 text-sm border-b-2 -mb-px transition-colors whitespace-nowrap ${activeLang === l ? "border-accent text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{LANG_LABEL[l]} {translations[l].title && <span className="text-accent ml-1">●</span>}</button>))}
         </div>
 
-        <aside className={`min-w-0 h-full ${!showPreview ? "hidden lg:block" : "block"}`}>
-          <div className="h-full flex flex-col">
-            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3 font-en-sans flex items-center gap-2 shrink-0"><Eye className="w-3 h-3" /> Live preview</div>
-            <div className="border border-border bg-background overflow-y-auto flex-1">
-              <PostPreview translations={translations} coverUrl={coverUrl} categoryBn={categoryBn || getFlatCats().find(c => c.id === selectedCatIds[0])?.name_bn || ""} categoryEn={categoryEn || getFlatCats().find(c => c.id === selectedCatIds[0])?.name_en || ""} readingMinutes={readingMinutes} tags={tags} />
-            </div>
+        {/* Translation content */}
+        <section className="space-y-4 mb-8" dir={dir}>
+          <div><Label className="text-xs uppercase tracking-wider font-en-sans" dir="ltr">Title</Label><Input value={t.title} onChange={(e) => updateT(activeLang, { title: e.target.value })} className={`text-2xl h-14 ${activeLang === "bn" ? "font-bn" : activeLang === "ar" ? "font-ar" : "font-en"}`} /></div>
+          <div><Label className="text-xs uppercase tracking-wider font-en-sans" dir="ltr">Excerpt</Label><Textarea value={t.excerpt} onChange={(e) => updateT(activeLang, { excerpt: e.target.value })} rows={2} /></div>
+          <div>
+            <Label className="text-xs uppercase tracking-wider font-en-sans" dir="ltr">Body</Label>
+            <RichTextEditor
+              content={t.body}
+              onChange={(html) => updateT(activeLang, { body: html })}
+              placeholder="Write your article here…"
+              dir={dir}
+              className={activeLang === "bn" ? "font-bn" : activeLang === "ar" ? "font-ar" : "font-en"}
+            />
           </div>
-        </aside>
+          {/* Footnotes */}
+          <div className="border border-border p-4">
+            <div className="flex items-center justify-between mb-3"><Label className="text-xs uppercase tracking-wider font-en-sans" dir="ltr">Footnotes</Label><Button type="button" size="sm" variant="outline" onClick={() => addFootnote(activeLang)} className="rounded-none"><Plus className="w-3 h-3 mr-1" />Add</Button></div>
+            <div className="space-y-2">{t.footnotes.map((fn, i) => (<div key={i} className="flex gap-2 items-start"><span className="text-accent text-sm pt-2">[{fn.id}]</span><Textarea value={fn.text} rows={2} onChange={(e) => updateT(activeLang, { footnotes: t.footnotes.map((x, j) => j === i ? { ...x, text: e.target.value } : x) })} /><Button type="button" variant="ghost" size="icon" onClick={() => updateT(activeLang, { footnotes: t.footnotes.filter((_, j) => j !== i) })}><Trash2 className="w-4 h-4 text-destructive" /></Button></div>))}</div>
+          </div>
+          {/* Citations */}
+          <div className="border border-border p-4">
+            <div className="flex items-center justify-between mb-3"><Label className="text-xs uppercase tracking-wider font-en-sans" dir="ltr">Citations</Label><Button type="button" size="sm" variant="outline" onClick={() => addCitation(activeLang)} className="rounded-none"><Plus className="w-3 h-3 mr-1" />Add</Button></div>
+            <div className="space-y-2">{t.citations.map((c, i) => (<div key={i} className="flex gap-2 items-center flex-wrap sm:flex-nowrap"><Input placeholder="Label" value={c.label} onChange={(e) => updateT(activeLang, { citations: t.citations.map((x, j) => j === i ? { ...x, label: e.target.value } : x) })} /><Input placeholder="URL" value={c.url ?? ""} onChange={(e) => updateT(activeLang, { citations: t.citations.map((x, j) => j === i ? { ...x, url: e.target.value } : x) })} /><Button type="button" variant="ghost" size="icon" onClick={() => updateT(activeLang, { citations: t.citations.filter((_, j) => j !== i) })}><Trash2 className="w-4 h-4 text-destructive" /></Button></div>))}</div>
+          </div>
+        </section>
       </div>
+
+      {/* ── Sliding Preview Panel ───────────────────────── */}
+      {/* Backdrop */}
+      <div
+        onClick={() => setShowPreview(false)}
+        className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
+          showPreview ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+      />
+      {/* Drawer */}
+      <aside
+        className={`fixed top-0 right-0 z-50 h-full w-full max-w-2xl bg-background border-l border-border shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${
+          showPreview ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        {/* Drawer header */}
+        <div className="flex items-center justify-between px-5 py-3 border-b border-border shrink-0">
+          <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-en-sans flex items-center gap-2">
+            <Eye className="w-3 h-3" /> Live Preview
+          </span>
+          <button
+            onClick={() => setShowPreview(false)}
+            className="p-1.5 rounded-sm hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+            aria-label="Close preview"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        {/* Drawer content */}
+        <div className="flex-1 overflow-y-auto">
+          <PostPreview
+            translations={translations}
+            coverUrl={coverUrl}
+            categoryBn={categoryBn || getFlatCats().find(c => c.id === selectedCatIds[0])?.name_bn || ""}
+            categoryEn={categoryEn || getFlatCats().find(c => c.id === selectedCatIds[0])?.name_en || ""}
+            readingMinutes={readingMinutes}
+            tags={tags}
+          />
+        </div>
+      </aside>
     </div>
   );
 }
