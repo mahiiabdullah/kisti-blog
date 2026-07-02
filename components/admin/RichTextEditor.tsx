@@ -21,7 +21,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import {
   Bold, Italic, Underline as UnderlineIcon, Quote, Highlighter,
-  List, ListOrdered, Link as LinkIcon, ImagePlus, AlignLeft, AlignCenter, AlignRight,
+  List, ListOrdered, Link as LinkIcon, ImagePlus, AlignLeft, AlignCenter, AlignRight, AlignJustify,
   Undo2, Redo2, X, Strikethrough, Minus, Code, Code2,
   Table as TableIcon, Save, Type, LayoutTemplate, BookMarked
 } from "lucide-react";
@@ -344,6 +344,9 @@ export default function RichTextEditor({
         <ToolButton onClick={() => editor.chain().focus().setTextAlign("right").run()} active={editor.isActive({ textAlign: "right" })} title="Align Right">
           <AlignRight className="w-4 h-4" />
         </ToolButton>
+        <ToolButton onClick={() => editor.chain().focus().setTextAlign("justify").run()} active={editor.isActive({ textAlign: "justify" })} title="Justify">
+          <AlignJustify className="w-4 h-4" />
+        </ToolButton>
 
         <div className="w-px h-5 bg-border mx-1" />
 
@@ -448,7 +451,7 @@ export default function RichTextEditor({
       {/* Editor content */}
       <EditorContent editor={editor} />
 
-      {/* Bubble Menu */}
+      {/* Bubble Menu — shown when text is selected */}
       {editor && (
         <BubbleMenu editor={editor} className="flex items-center gap-0.5 bg-background border border-border shadow-md rounded-md p-1">
           <ToolButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold">
@@ -460,12 +463,31 @@ export default function RichTextEditor({
           <ToolButton onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")} title="Underline">
             <UnderlineIcon className="w-4 h-4" />
           </ToolButton>
-          <ToolButton onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive("strike")} title="Strike">
-            <Strikethrough className="w-4 h-4" />
+          <div className="w-px h-4 bg-border mx-1" />
+          <ToolButton onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} title="Quote">
+            <Quote className="w-4 h-4" />
+          </ToolButton>
+          <ToolButton onClick={insertSection} active={false} title="সেকশন / অধ্যায়">
+            <span className="flex items-center gap-0.5">
+              <BookMarked className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-bold">§</span>
+            </span>
+          </ToolButton>
+          <ToolButton onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive('heading', { level: 2 })} title="Heading 2">
+            <span className="text-xs font-bold px-1">H2</span>
           </ToolButton>
           <div className="w-px h-4 bg-border mx-1" />
-          <ToolButton onClick={() => editor.chain().focus().toggleHighlight().run()} active={editor.isActive("highlight")} title="Highlight">
-            <Highlighter className="w-4 h-4" />
+          <ToolButton
+            title="Footnote — সংখ্যা টাইপ করুন"
+            onClick={() => {
+              const num = window.prompt("Footnote number:");
+              if (!num || isNaN(Number(num))) return;
+              editor.chain().focus().insertContent(
+                `<sup id="fnref-${num}" class="ml-0.5 scroll-m-24"><a href="#fn-${num}" class="text-accent hover:underline">[${num}]</a></sup>`
+              ).run();
+            }}
+          >
+            <span className="text-[11px] font-bold px-0.5">[n]</span>
           </ToolButton>
           <ToolButton onClick={setLink} active={editor.isActive("link")} title="Link">
             <LinkIcon className="w-4 h-4" />

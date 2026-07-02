@@ -33,12 +33,28 @@ interface NavItem {
   items?: { to: string; label: string }[];
 }
 
+const getHijriYear = () => {
+  // Approximate Hijri year: Julian Day Number calculation
+  const now = new Date();
+  const jd = Math.floor(now.getTime() / 86400000) + 2440588;
+  const l = jd - 1948440 + 10632;
+  const n = Math.floor((l - 1) / 10631);
+  const ll = l - 10631 * n + 354;
+  const j = Math.floor((10985 - ll) / 5316) * Math.floor((50 * ll) / 17719)
+    + Math.floor(ll / 5670) * Math.floor((43 * ll) / 15238);
+  const ll2 = ll - Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50)
+    - Math.floor(j / 16) * Math.floor((15238 * j) / 43) + 29;
+  const hijriYear = 30 * n + Math.floor(ll2 / 30) - 30;
+  return hijriYear;
+};
+
 const getBengaliDate = () => {
   const now = new Date();
   const days = ["রবিবার", "সোমবার", "মঙ্গলবার", "বুধবার", "বৃহস্পতিবার", "শুক্রবার", "শনিবার"];
   const months = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
   const bn = (n: number) => n.toString().replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯"[+d]);
-  return `${days[now.getDay()]}, ${bn(now.getDate())} ${months[now.getMonth()]} ${bn(now.getFullYear())}`;
+  const hijriYear = getHijriYear();
+  return `${days[now.getDay()]}, ${bn(now.getDate())} ${months[now.getMonth()]} ${bn(now.getFullYear())} / ${bn(hijriYear)} হি.`;
 };
 
 // Desktop nav dropdown
