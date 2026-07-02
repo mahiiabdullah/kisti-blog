@@ -56,21 +56,60 @@ const getFullHijriDate = () => {
   };
 };
 
-interface DateInfo { engLine: string; bnLine: string; hijriBn: string; hijriEn: string; }
+interface DateInfo { bnLine: string; hijriBn: string; bangabdaLine: string; }
+
+const getBangabdaDate = (now: Date): string => {
+  const month = now.getMonth(); // 0-indexed
+  const day = now.getDate();
+  const year = now.getFullYear();
+
+  // Bangladesh revised Bengali calendar: Gregorian month (0-based), start day, Bengali month index
+  // Bengali months: 0=বৈশাখ, 1=জ্যৈষ্ঠ, 2=আষাড়, 3=শ্রাবণ, 4=ভাদ্র, 5=আশ্বিন
+  //                 6=কার্তিক, 7=অগ্রহায়ণ, 8=পৌষ, 9=মাঘ, 10=ফাল্গুন, 11=চৈত্র
+  const boundaries = [
+    { gDay: 13, bnM: 9 },  // Jan 13 → মাঘ
+    { gDay: 12, bnM: 10 }, // Feb 12 → ফাল্গুন
+    { gDay: 13, bnM: 11 }, // Mar 13 → চৈত্র
+    { gDay: 14, bnM: 0 },  // Apr 14 → বৈশাখ
+    { gDay: 15, bnM: 1 },  // May 15 → জ্যৈষ্ঠ
+    { gDay: 15, bnM: 2 },  // Jun 15 → আষাড়
+    { gDay: 16, bnM: 3 },  // Jul 16 → শ্রাবণ
+    { gDay: 16, bnM: 4 },  // Aug 16 → ভাদ্র
+    { gDay: 16, bnM: 5 },  // Sep 16 → আশ্বিন
+    { gDay: 16, bnM: 6 },  // Oct 16 → কার্তিক
+    { gDay: 15, bnM: 7 },  // Nov 15 → অগ্রহায়ণ
+    { gDay: 15, bnM: 8 },  // Dec 15 → পৌষ
+  ];
+  const bnMonths = ["বৈশাখ", "জ্যৈষ্ঠ", "আষাড়", "শ্রাবণ", "ভাদ্র", "আশ্বিন", "কার্তিক", "অগ্রহায়ণ", "পৌষ", "মাঘ", "ফাল্গুন", "চৈত্র"];
+
+  let bnMonthIdx: number;
+  let bnDay: number;
+
+  if (day >= boundaries[month].gDay) {
+    bnMonthIdx = boundaries[month].bnM;
+    bnDay = day - boundaries[month].gDay + 1;
+  } else {
+    const prevM = (month - 1 + 12) % 12;
+    bnMonthIdx = boundaries[prevM].bnM;
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+    bnDay = daysInPrevMonth - boundaries[prevM].gDay + 1 + day;
+  }
+
+  const bnYear = (month > 3 || (month === 3 && day >= 14)) ? year - 593 : year - 594;
+  const bn = (n: number) => n.toString().replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯"[+d]);
+  return `${bn(bnDay)} ${bnMonths[bnMonthIdx]}, ${bn(bnYear)} বঙ্গাব্দ`;
+};
 
 const getAllDates = (): DateInfo => {
   const now = new Date();
-  const engDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const engMonths = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const bnDays = ["রবিবার", "সোমবার", "মঙ্গলবার", "বুধবার", "বৃহস্পতিবার", "শুক্রবার", "শনিবার"];
   const bnMonths = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
   const bn = (num: number) => num.toString().replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯"[+d]);
-  const { hijriBn, hijriEn } = getFullHijriDate();
+  const { hijriBn } = getFullHijriDate();
   return {
-    engLine: `${engDays[now.getDay()]}, ${now.getDate()} ${engMonths[now.getMonth()]} ${now.getFullYear()}`,
     bnLine: `${bnDays[now.getDay()]}, ${bn(now.getDate())} ${bnMonths[now.getMonth()]} ${bn(now.getFullYear())}`,
     hijriBn,
-    hijriEn,
+    bangabdaLine: getBangabdaDate(now),
   };
 };
 
@@ -197,11 +236,10 @@ export const SiteHeader = () => {
 
             {/* Date block (desktop) */}
             {dates && (
-              <div className="hidden lg:flex flex-col items-end text-right border-l border-border pl-4 gap-0">
-                <span className="text-[11px] font-en-sans text-muted-foreground leading-tight">{dates.engLine}</span>
-                <span className="text-[11px] font-en-sans text-muted-foreground/70 leading-tight">{dates.hijriEn}</span>
+              <div className="hidden lg:flex flex-col items-end text-right border-l border-border pl-4 gap-0.5">
                 <span className="text-[11px] font-bn-sans text-muted-foreground leading-tight">{dates.bnLine}</span>
-                <span className="text-[11px] font-bn-sans text-muted-foreground/70 leading-tight">{dates.hijriBn}</span>
+                <span className="text-[11px] font-bn-sans text-muted-foreground/75 leading-tight">{dates.hijriBn}</span>
+                <span className="text-[11px] font-bn-sans text-muted-foreground/60 leading-tight">{dates.bangabdaLine}</span>
               </div>
             )}
 
