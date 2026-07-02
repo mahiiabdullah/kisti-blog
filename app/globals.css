@@ -458,7 +458,7 @@
     font-family: var(--font-bn, 'Tiro Bangla', serif);
     font-size: 1.08rem;
     font-style: italic;
-    color: #fff;
+    color: hsl(var(--primary-foreground));
     line-height: 1.9;
     margin: 0 !important;
     position: relative;
