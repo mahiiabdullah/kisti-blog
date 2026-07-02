@@ -50,7 +50,7 @@ export default function MiniRichEditor({
   useEffect(() => {
     if (!editor) return;
     if (editor.getHTML() !== content) {
-      editor.commands.setContent(content, false);
+      editor.commands.setContent(content);
     }
   }, [content, editor]);
 
