@@ -17,6 +17,7 @@ import { calculateReadingTime } from "@/lib/utils/readingTime";
 
 // Lazy load the rich text editor to avoid SSR issues
 const RichTextEditor = dynamic(() => import("@/components/admin/RichTextEditor"), { ssr: false, loading: () => <div className="border border-border p-4 text-muted-foreground">Loading editor…</div> });
+const MiniRichEditor = dynamic(() => import("@/components/admin/MiniRichEditor"), { ssr: false });
 
 type Lang = "bn" | "en" | "ar";
 const LANGS: Lang[] = ["bn", "en", "ar"];
@@ -492,12 +493,42 @@ export default function AdminPostEditor() {
           {/* Footnotes */}
           <div className="border border-border p-4">
             <div className="flex items-center justify-between mb-3"><Label className="text-xs uppercase tracking-wider font-en-sans" dir="ltr">Footnotes</Label><Button type="button" size="sm" variant="outline" onClick={() => addFootnote(activeLang)} className="rounded-none"><Plus className="w-3 h-3 mr-1" />Add</Button></div>
-            <div className="space-y-2">{t.footnotes.map((fn, i) => (<div key={i} className="flex gap-2 items-start"><span className="text-accent text-sm pt-2">[{fn.id}]</span><Textarea value={fn.text} rows={2} onChange={(e) => updateT(activeLang, { footnotes: t.footnotes.map((x, j) => j === i ? { ...x, text: e.target.value } : x) })} /><Button type="button" variant="ghost" size="icon" onClick={() => updateT(activeLang, { footnotes: t.footnotes.filter((_, j) => j !== i) })}><Trash2 className="w-4 h-4 text-destructive" /></Button></div>))}</div>
+            <div className="space-y-3">
+              {t.footnotes.map((fn, i) => (
+                <div key={i} className="flex gap-2 items-start">
+                  <span className="text-accent text-sm pt-2 shrink-0">[{fn.id}]</span>
+                  <div className="flex-1">
+                    <MiniRichEditor
+                      content={fn.text}
+                      onChange={(html) => updateT(activeLang, { footnotes: t.footnotes.map((x, j) => j === i ? { ...x, text: html } : x) })}
+                      placeholder="Footnote text…"
+                      rows={2}
+                    />
+                  </div>
+                  <Button type="button" variant="ghost" size="icon" onClick={() => updateT(activeLang, { footnotes: t.footnotes.filter((_, j) => j !== i) })}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                </div>
+              ))}
+            </div>
           </div>
           {/* Citations */}
           <div className="border border-border p-4">
             <div className="flex items-center justify-between mb-3"><Label className="text-xs uppercase tracking-wider font-en-sans" dir="ltr">Citations</Label><Button type="button" size="sm" variant="outline" onClick={() => addCitation(activeLang)} className="rounded-none"><Plus className="w-3 h-3 mr-1" />Add</Button></div>
-            <div className="space-y-2">{t.citations.map((c, i) => (<div key={i} className="flex gap-2 items-center flex-wrap sm:flex-nowrap"><Input placeholder="Label" value={c.label} onChange={(e) => updateT(activeLang, { citations: t.citations.map((x, j) => j === i ? { ...x, label: e.target.value } : x) })} /><Input placeholder="URL" value={c.url ?? ""} onChange={(e) => updateT(activeLang, { citations: t.citations.map((x, j) => j === i ? { ...x, url: e.target.value } : x) })} /><Button type="button" variant="ghost" size="icon" onClick={() => updateT(activeLang, { citations: t.citations.filter((_, j) => j !== i) })}><Trash2 className="w-4 h-4 text-destructive" /></Button></div>))}</div>
+            <div className="space-y-3">
+              {t.citations.map((c, i) => (
+                <div key={i} className="flex gap-2 items-start flex-wrap sm:flex-nowrap">
+                  <div className="flex-1 min-w-[180px]">
+                    <MiniRichEditor
+                      content={c.label}
+                      onChange={(html) => updateT(activeLang, { citations: t.citations.map((x, j) => j === i ? { ...x, label: html } : x) })}
+                      placeholder="Citation label…"
+                      rows={1}
+                    />
+                  </div>
+                  <Input placeholder="URL" value={c.url ?? ""} onChange={(e) => updateT(activeLang, { citations: t.citations.map((x, j) => j === i ? { ...x, url: e.target.value } : x) })} className="flex-1 min-w-[140px]" />
+                  <Button type="button" variant="ghost" size="icon" onClick={() => updateT(activeLang, { citations: t.citations.filter((_, j) => j !== i) })}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       </div>
