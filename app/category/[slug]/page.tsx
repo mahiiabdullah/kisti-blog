@@ -88,12 +88,12 @@ export default async function CategoryPage({ params }: PageProps) {
 
   return (
     <>
-      <section className="bg-secondary/20 border-b border-border/60 py-16">
+      <section className="bg-secondary/20 border-b border-border/60 py-8 md:py-10">
         <div className="container max-w-4xl text-center">
           <div className="font-en-sans uppercase text-[10px] tracking-[0.3em] text-accent mb-4">Category</div>
           <h1 className="font-bn text-5xl md:text-6xl text-foreground mb-4">{catData.name_bn}</h1>
           {catData.name_en && (
-            <div className="font-en-sans text-sm text-muted-foreground uppercase tracking-widest mb-6">{catData.name_en}</div>
+            <div className="font-en-sans text-sm text-muted-foreground uppercase tracking-widest mb-4">{catData.name_en}</div>
           )}
           {catData.description && (
              <p className="font-bn text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">{catData.description}</p>
@@ -102,8 +102,7 @@ export default async function CategoryPage({ params }: PageProps) {
       </section>
 
       <main className="container max-w-4xl py-16 flex-1">
-        <div className="flex justify-between items-baseline mb-12">
-           <h2 className="font-bn text-2xl">এই ক্যাটাগরির লেখাসমূহ</h2>
+        <div className="flex justify-end items-baseline mb-12">
            <span className="font-en italic text-sm text-muted-foreground">{posts.length} {posts.length === 1 ? "piece" : "pieces"}</span>
         </div>
 
