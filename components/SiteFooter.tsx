@@ -71,7 +71,8 @@ export const SiteFooter = () => {
                 { href: "/writers", label: "লেখকবৃন্দ" },
                 { href: "/contact", label: "যোগাযোগ" },
                 { href: "/search", label: "অনুসন্ধান" },
-                { href: "/auth", label: "যোগ দিন" },
+                { href: "/donate", label: "অনুদান" },
+                { href: "/auth", label: "লগ-ইন করুন" },
               ].map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className="text-white/60 text-sm font-bn hover:text-gold transition-colors">
