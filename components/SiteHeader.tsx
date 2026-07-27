@@ -217,8 +217,8 @@ export const SiteHeader = () => {
           <div className="flex items-center h-20 gap-4">
             {/* Logo */}
             <Link href="/" className="flex items-center group flex-shrink-0">
-              <div className="flex flex-col leading-none h-14 justify-center">
-                <img src="/kishti%20banner%20name.png" alt="Kisti" className="h-12 object-contain dark:brightness-0 dark:invert" />
+              <div className="flex flex-col leading-none h-18 justify-center">
+                <img src="/kishti%20banner%20name.png" alt="Kisti" className="h-16 object-contain dark:brightness-0 dark:invert" />
               </div>
             </Link>
 
