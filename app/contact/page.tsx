@@ -14,7 +14,7 @@ export default function Contact() {
           যেকোনো প্রয়োজনে আমাদের সাথে যোগাযোগ করতে পারেন। আপনার মতামত, পরামর্শ, বা লেখা পাঠাতে আমাদের ইমেইল করুন।
         </p>
         <p className="mt-8 font-en-sans">
-          <strong>Email:</strong> editor@kisti.bd <br />
+          <strong>Email:</strong> kishti.editor@gmail.com <br />
           <strong>Address:</strong> Dhaka, Bangladesh
         </p>
       </div>

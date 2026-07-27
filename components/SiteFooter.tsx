@@ -113,8 +113,8 @@ export const SiteFooter = () => {
               <div className="pt-3 border-t border-white/10">
                 <p className="text-white/40 text-xs font-en-sans">কিশতী</p>
                 <p className="text-white/40 text-xs font-en-sans">সাপ্তাহিক · বাংলাদেশ</p>
-                <a href="mailto:kishti@example.com" className="text-white/40 text-xs font-en-sans hover:text-gold transition-colors">
-                  kishti@example.com
+                <a href="mailto:kishti.editor@gmail.com" className="text-white/40 text-xs font-en-sans hover:text-gold transition-colors">
+                  kishti.editor@gmail.com
                 </a>
               </div>
             </div>
