@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { supabase } from "@/lib/supabase/client";
 
+import { unstable_noStore as noStore } from "next/cache";
+
 export const dynamic = "force-dynamic"; // always fetch latest content from DB
 
 
 export async function generateMetadata(): Promise<Metadata> {
+  noStore();
   const { data } = await (supabase as any)
     .from("site_pages")
     .select("title_bn")
@@ -19,6 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function About() {
+  noStore();
   const { data } = await (supabase as any)
     .from("site_pages")
     .select("title_bn, body_bn")
