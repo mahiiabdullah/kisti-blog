@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
-import { Home, ChevronRight, BookOpen, Eye, Hash } from "lucide-react";
+import { Home, ChevronRight, BookOpen, Eye } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { Comments } from "@/components/Comments";
 import { PostPageSkeleton } from "@/components/Skeletons";
@@ -176,7 +176,6 @@ const TocWidget = ({ headings, activeId }: { headings: { id: string; text: strin
 };
 
 const MostReadWidget = ({ posts }: { posts: RelatedPost[] }) => {
-  const bnNum = (n: number) => n.toString().replace(/\d/g, (x) => "০১২৩৪৫৬৭৮৯"[+x]).padStart(2, "০");
   return (
     <div className="mb-6 border border-border overflow-hidden">
       <div className="bg-primary dark:bg-[hsl(220,18%,22%)] px-4 py-2.5 border-b-2 border-gold">
@@ -184,14 +183,12 @@ const MostReadWidget = ({ posts }: { posts: RelatedPost[] }) => {
       </div>
       <div>
         {posts.length > 0 ? (
-          posts.map((p, i) => {
+          posts.map((p) => {
             const title = p.post_translations[0]?.title ?? "";
             return (
               <Link key={p.id} href={`/post/${p.slug}`}
                 className="flex items-start gap-3 px-4 py-3 border-b border-border last:border-0 hover:bg-secondary/40 transition-colors group">
-                <span className="font-en-sans text-2xl font-bold text-border group-hover:text-gold transition-colors shrink-0 leading-none pt-0.5">
-                  {bnNum(i + 1)}
-                </span>
+                <div className="w-1 h-4 bg-gold/50 group-hover:bg-gold transition-colors shrink-0 mt-0.5 rounded-sm" />
                 <span className="text-xs font-bn text-foreground leading-snug line-clamp-3">{title}</span>
               </Link>
             );
@@ -214,8 +211,8 @@ const TagsWidget = ({ tags }: { tags: string[] }) => {
         {tags.length > 0 ? (
           tags.map((tag) => (
             <Link key={tag} href={`/search?q=${encodeURIComponent(tag)}`}
-              className="inline-flex items-center gap-0.5 text-[11px] font-bn px-2.5 py-1 border border-border bg-background text-muted-foreground hover:bg-primary hover:text-gold hover:border-primary transition-colors">
-              <Hash className="w-2.5 h-2.5 opacity-50" />{tag}
+              className="inline-flex items-center text-[11px] font-bn px-2.5 py-1 border border-border bg-background text-muted-foreground hover:bg-primary hover:text-gold hover:border-primary transition-colors">
+              {tag}
             </Link>
           ))
         ) : (

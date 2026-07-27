@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   BookOpen, Scale, Landmark, Lightbulb, ScrollText,
-  Users, PenSquare, ChevronRight, Hash,
+  Users, PenSquare, ChevronRight,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
@@ -291,17 +291,12 @@ const MostReadWidget = ({ posts }: { posts: Post[] }) => (
       <h3 className="font-bn text-[1.05rem] font-semibold text-gold">সর্বাধিক পঠিত</h3>
     </div>
     <ol className="space-y-2 px-1">
-      {posts.slice(0, 5).map((p, i) => {
+      {posts.slice(0, 5).map((p) => {
         const t = p.post_translations[0];
         if (!t) return null;
         return (
-          <li key={p.id} className="flex items-start gap-3 py-2.5 border-b border-border/30 last:border-0">
-            <span
-              className="text-[1.8rem] font-bold leading-none shrink-0 w-8 text-right text-gold opacity-90"
-              style={{ opacity: `${1 - i * 0.15}` }}
-            >
-              {getBengaliNum(i + 1)}
-            </span>
+          <li key={p.id} className="flex items-start gap-3 py-2.5 border-b border-border/30 last:border-0 group">
+            <div className="w-1 h-5 bg-gold/50 group-hover:bg-gold transition-colors shrink-0 mt-0.5 rounded-sm" />
             <Link href={`/post/${p.slug}`} className="font-bn text-[0.95rem] leading-snug hover:text-gold transition-colors line-clamp-3">
               {t.title}
             </Link>
@@ -354,9 +349,9 @@ const TagsWidget = ({ tags }: { tags: string[] }) => (
         <Link
           key={tag}
           href={`/search?q=${encodeURIComponent(tag)}`}
-          className="inline-flex items-center gap-1.5 text-[0.95rem] font-bn-sans px-2.5 py-1.5 border border-border rounded-sm text-muted-foreground hover:border-gold hover:text-gold transition-colors"
+          className="inline-flex items-center text-[0.95rem] font-bn-sans px-2.5 py-1.5 border border-border rounded-sm text-muted-foreground hover:border-gold hover:text-gold transition-colors"
         >
-          <Hash className="w-3.5 h-3.5 opacity-50" />{tag}
+          {tag}
         </Link>
       ))}
     </div>
