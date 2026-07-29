@@ -362,6 +362,85 @@ export const SiteHeader = () => {
                       )}
                     </div>
                   ))}
+
+                  {/* Divider */}
+                  <div className="my-4 border-t border-white/10" />
+
+                  {/* Utility Links */}
+                  <div className="flex flex-col space-y-1">
+                    <Link
+                      href="/about"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block px-2 py-2 text-sm text-white/70 hover:text-gold font-bn transition-colors"
+                    >
+                      আমাদের কথা
+                    </Link>
+                    <Link
+                      href="/writers"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block px-2 py-2 text-sm text-white/70 hover:text-gold font-bn transition-colors"
+                    >
+                      লেখকবৃন্দ
+                    </Link>
+                    <Link
+                      href="/contact"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block px-2 py-2 text-sm text-white/70 hover:text-gold font-bn transition-colors"
+                    >
+                      যোগাযোগ
+                    </Link>
+                    <Link
+                      href="/search"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block px-2 py-2 text-sm text-white/70 hover:text-gold font-bn transition-colors"
+                    >
+                      অনুসন্ধান
+                    </Link>
+                    <Link
+                      href="/donate"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block px-2 py-2 text-sm text-white/70 hover:text-gold font-bn transition-colors"
+                    >
+                      অনুদান
+                    </Link>
+                    {!user ? (
+                      <Link
+                        href="/auth"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="block px-2 py-2 text-sm text-white/70 hover:text-gold font-bn transition-colors"
+                      >
+                        লগ-ইন করুন
+                      </Link>
+                    ) : (
+                      <>
+                        <Link
+                          href="/profile"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="block px-2 py-2 text-sm text-white/70 hover:text-gold font-bn transition-colors"
+                        >
+                          প্রোফাইল
+                        </Link>
+                        {isAdmin && (
+                          <Link
+                            href="/admin"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="block px-2 py-2 text-sm text-white/70 hover:text-gold font-bn transition-colors"
+                          >
+                            অ্যাডমিন
+                          </Link>
+                        )}
+                        <button
+                          onClick={() => {
+                            setIsMobileMenuOpen(false);
+                            supabase.auth.signOut();
+                          }}
+                          className="block text-left w-full px-2 py-2 text-sm text-destructive hover:text-destructive/80 font-bn transition-colors"
+                        >
+                          প্রস্থান
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </nav>
               </SheetContent>
             </Sheet>
