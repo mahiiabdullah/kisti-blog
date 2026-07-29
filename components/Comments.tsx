@@ -210,7 +210,7 @@ export const Comments = ({ postId }: { postId: string }) => {
   const commentCount = visibleComments.reduce((acc, c) => acc + 1 + (c.replies?.filter(r => r.approved || r.user_id === user?.id).length ?? 0), 0);
 
   return (
-    <section className="mt-20 pt-12 border-t border-border/60">
+    <section className="mt-20 pt-12 border-t border-border/60 px-4 sm:px-0">
       <div className="flex items-center gap-3 mb-8 pb-3 border-b-2 border-accent/30">
         <MessageSquare className="w-4 h-4 text-accent" />
         <h2 className="font-bn-sans uppercase text-sm font-semibold tracking-wider">
@@ -219,7 +219,7 @@ export const Comments = ({ postId }: { postId: string }) => {
       </div>
 
       {/* Comment Form */}
-      <div className="bg-card border border-border rounded-lg p-6 mb-8">
+      <div className="bg-transparent sm:bg-card border-x-0 sm:border border-y sm:border border-border rounded-none sm:rounded-lg p-4 sm:p-6 mb-8">
         {user ? (
           <form onSubmit={submit} className="space-y-4">
             {replyTo && (

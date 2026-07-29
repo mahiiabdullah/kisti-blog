@@ -505,7 +505,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
       </section>
 
       {/* ── PAGE BODY ───────────────────────────────── */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 flex gap-8">
+      <div className="mx-auto max-w-7xl px-0 sm:px-6 lg:px-8 py-8 flex gap-8">
 
         {/* ── MAIN ──────────────────────────────────── */}
         <main className="flex-1 min-w-0">
@@ -526,7 +526,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
           )}
 
           {/* Article card */}
-          <article className="bg-card border border-border p-7 sm:p-10 mb-6" onClick={handleLinkClick}>
+          <article className="bg-transparent sm:bg-card border-x-0 sm:border border-y-0 sm:border border-border px-4 py-6 sm:p-10 mb-6" onClick={handleLinkClick}>
             {/* Lead / excerpt */}
             {t.excerpt && (
               <div className="font-bn text-lg leading-loose border-l-[3px] border-gold pl-5 mb-8 text-foreground/80 italic">
@@ -598,7 +598,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
           </article>
 
           {/* Tags + Share */}
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-6 border-t border-b border-border/60 py-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-6 border-t border-b border-border/60 py-4 px-4 sm:px-0">
             <div className="flex flex-wrap gap-1.5 flex-1">
               <span className="text-xs font-bold text-muted-foreground font-bn-sans mr-1">ট্যাগ:</span>
               {post.post_tags.map(({ tag }) => (
@@ -613,7 +613,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
 
           {/* Author bio */}
           {(post.writer || authorName !== "কিশতী") && (
-            <div className="bg-card border border-border border-t-[3px] border-t-gold p-6 flex gap-5 items-start mb-6">
+            <div className="bg-transparent sm:bg-card border-0 border-t-[3px] border-t-gold sm:border sm:border-border sm:border-t-[3px] sm:border-t-gold p-4 sm:p-6 flex gap-4 sm:gap-5 items-start mb-6">
               <AuthorAvatar name={authorName} size={64} />
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-gold font-en-sans mb-1">লেখক পরিচিতি</p>
@@ -643,7 +643,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
               <div className="bg-primary dark:bg-[hsl(220,18%,22%)] px-4 py-3 border-t-[3px] border-gold">
                 <h2 className="font-bn text-base font-bold text-gold">সম্পর্কিত প্রবন্ধ</h2>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 border border-border border-t-0 bg-card">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 border-x-0 sm:border border-y sm:border border-border border-t-0 sm:border-t-0 bg-transparent sm:bg-card">
                 {relatedPosts.map((rp, i) => {
                   const rTitle = rp.post_translations.find((x) => x.lang === "bn")?.title ?? rp.post_translations[0]?.title ?? "";
                   return (
