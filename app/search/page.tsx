@@ -56,21 +56,74 @@ function SearchPageInner() {
   }, [inputValue, query, router]);
 
   const doSearch = useCallback(async (q: string) => {
-    if (!q) { setResults([]); return; }
-    setLoading(true);
-    const { data } = await supabase
-      .from("post_translations")
-      .select(`post_id, lang, title, excerpt,
-               posts!inner(id, slug, cover_url, category_bn, status, published_at, reading_minutes)`)
-      .eq("posts.status", "published")
-      .or(`title.ilike.%${q}%,excerpt.ilike.%${q}%,body.ilike.%${q}%`);
-
-    const unique = new Map<string, any>();
-    for (const r of data ?? []) {
-      if (!unique.has(r.post_id)) unique.set(r.post_id, r);
+    const cleanQ = q.trim();
+    if (!cleanQ) {
+      setResults([]);
+      return;
     }
-    setResults(Array.from(unique.values()));
-    setLoading(false);
+    setLoading(true);
+
+    try {
+      // 1. Query post_tags, writers, and category in parallel
+      const [tagRes, writerRes, catRes] = await Promise.all([
+        supabase.from("post_tags").select("post_id").ilike("tag", `%${cleanQ}%`),
+        supabase.from("writers").select("id").or(`name.ilike.%${cleanQ}%,bengali_name.ilike.%${cleanQ}%`),
+        supabase.from("posts").select("id").eq("status", "published").or(`category_bn.ilike.%${cleanQ}%,category_en.ilike.%${cleanQ}%`),
+      ]);
+
+      const tagPostIds = (tagRes.data ?? []).map((t: any) => t.post_id);
+      const catPostIds = (catRes.data ?? []).map((p: any) => p.id);
+
+      const writerIds = (writerRes.data ?? []).map((w: any) => w.id);
+      let writerPostIds: string[] = [];
+      if (writerIds.length > 0) {
+        const { data: writerPosts } = await supabase
+          .from("posts")
+          .select("id")
+          .eq("status", "published")
+          .in("writer_id", writerIds);
+        writerPostIds = (writerPosts ?? []).map((p: any) => p.id);
+      }
+
+      const extraPostIds = Array.from(new Set([...tagPostIds, ...writerPostIds, ...catPostIds]));
+
+      // 2. Fetch post_translations for content match and extra matching post IDs
+      const resultsList = await Promise.all([
+        (async () =>
+          await supabase
+            .from("post_translations")
+            .select(`post_id, lang, title, excerpt,
+                     posts!inner(id, slug, cover_url, category_bn, status, published_at, reading_minutes)`)
+            .eq("posts.status", "published")
+            .or(`title.ilike.%${cleanQ}%,excerpt.ilike.%${cleanQ}%,body.ilike.%${cleanQ}%`))(),
+
+        extraPostIds.length > 0
+          ? (async () =>
+              await supabase
+                .from("post_translations")
+                .select(`post_id, lang, title, excerpt,
+                         posts!inner(id, slug, cover_url, category_bn, status, published_at, reading_minutes)`)
+                .eq("posts.status", "published")
+                .in("post_id", extraPostIds))()
+          : Promise.resolve({ data: [] }),
+      ]);
+
+      const unique = new Map<string, any>();
+      for (const res of resultsList) {
+        for (const item of res.data ?? []) {
+          if (!unique.has(item.post_id)) {
+            unique.set(item.post_id, item);
+          }
+        }
+      }
+
+      setResults(Array.from(unique.values()));
+    } catch (err) {
+      console.error("Search error:", err);
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { doSearch(query); }, [query, doSearch]);
