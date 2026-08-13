@@ -349,7 +349,7 @@ const TagsWidget = ({ tags }: { tags: string[] }) => (
         <Link
           key={tag}
           href={`/search?q=${encodeURIComponent(tag)}`}
-          className="inline-flex items-center text-[0.95rem] font-bn-sans px-2.5 py-1.5 border border-border rounded-sm text-muted-foreground hover:border-gold hover:text-gold transition-colors"
+          className="inline-flex items-center text-xs font-bn px-2.5 py-1 border border-border rounded-sm text-muted-foreground hover:border-gold hover:text-gold transition-colors"
         >
           {tag}
         </Link>
@@ -486,7 +486,7 @@ export default function HomePage() {
       {/* ── Category sections + Sidebar ───────────────── */}
       <div className="grid grid-cols-12 gap-0 items-start">
         {/* Main: category editorial sections */}
-        <main className="col-span-12 lg:col-span-8 lg:pr-6 min-w-0">
+        <main className="col-span-12 lg:col-span-9 lg:pr-8 min-w-0">
           {categories.map((cat) => (
             <EditorialSection
               key={cat.id}
@@ -503,7 +503,7 @@ export default function HomePage() {
         </main>
 
         {/* ── Right Sidebar ──────────────────────────────── */}
-        <aside className="col-span-12 lg:col-span-4 shrink-0 hidden lg:block pb-8">
+        <aside className="col-span-12 lg:col-span-3 shrink-0 hidden lg:block pb-8">
           <div className="sticky top-[6.5rem]">
             {mostRead.length > 0 && <MostReadWidget posts={mostRead} />}
             {writers.length > 0 && <WritersWidget writers={writers} />}
