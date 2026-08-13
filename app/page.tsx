@@ -259,7 +259,7 @@ const EditorialSection = ({ category, posts }: { category: Category; posts: Post
   );
 };
 
-/** Hero (top) section — abstract light background from left to right */
+/** Hero (top) section — bespoke abstract background from left to right */
 const HeroSection = ({ posts }: { posts: Post[] }) => {
   if (posts.length === 0) return null;
   const featured = posts[0];
@@ -267,30 +267,29 @@ const HeroSection = ({ posts }: { posts: Post[] }) => {
   const thumbPosts = posts.slice(4, 8);
 
   return (
-    <section className="mb-8 bg-card border border-border/80 border-t-2 border-t-gold rounded-sm shadow-sm relative overflow-hidden">
-      {/* Abstract geometric background overlay */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-40 dark:opacity-20"
-        style={{
-          backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(201,168,76,0.06) 35px, rgba(201,168,76,0.06) 36px)"
-        }}
-      />
-      <div
-        className="absolute top-0 right-0 w-96 h-96 rounded-full pointer-events-none"
-        style={{
-          background: "radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%)",
-          transform: "translate(30%, -30%)"
-        }}
-      />
+    <section className="mb-8 bg-card border border-border/80 border-t-2 border-t-gold rounded-sm shadow-md relative overflow-hidden">
+      {/* Bespoke literary abstract background image overlay */}
+      <div className="absolute inset-0 pointer-events-none opacity-30 dark:opacity-15 mix-blend-multiply dark:mix-blend-overlay">
+        <Image
+          src="/hero_abstract_bg.png"
+          alt=""
+          fill
+          className="object-cover"
+          priority
+        />
+      </div>
+
+      {/* Soft gradient wash */}
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-background/30 via-transparent to-background/50 dark:from-background/70 dark:to-background/80" />
 
       <div className="grid grid-cols-12 gap-0 relative z-10">
-        <div className="col-span-12 md:col-span-4 p-4 border-b md:border-b-0 md:border-r border-border/60">
+        <div className="col-span-12 md:col-span-4 p-4 border-b md:border-b-0 md:border-r border-border/60 backdrop-blur-[2px]">
           <FeaturedCard post={featured} />
         </div>
-        <div className="col-span-12 md:col-span-4 p-4 border-b md:border-b-0 md:border-r border-border/60">
+        <div className="col-span-12 md:col-span-4 p-4 border-b md:border-b-0 md:border-r border-border/60 backdrop-blur-[2px]">
           {listPosts.map((p) => <ListCard key={p.id} post={p} />)}
         </div>
-        <div className="col-span-12 md:col-span-4 bg-secondary/30 dark:bg-secondary/15 p-4">
+        <div className="col-span-12 md:col-span-4 bg-secondary/40 dark:bg-secondary/20 p-4 backdrop-blur-[2px]">
           {thumbPosts.map((p) => <ThumbCard key={p.id} post={p} />)}
         </div>
       </div>
