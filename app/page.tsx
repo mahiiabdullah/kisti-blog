@@ -149,28 +149,28 @@ const ListCard = ({ post }: { post: Post }) => {
   );
 };
 
-/** Right column — dark navy thumbnail card */
+/** Right column — thumbnail card */
 const ThumbCard = ({ post }: { post: Post }) => {
   const t = post.post_translations[0];
   if (!t) return null;
   return (
-    <Link href={`/post/${post.slug}`} className="group flex items-start gap-2.5 py-2.5 border-b border-white/10 last:border-0">
-      <div className="w-14 h-14 shrink-0 bg-white/10 flex items-center justify-center overflow-hidden rounded-sm">
+    <Link href={`/post/${post.slug}`} className="group flex items-start gap-2.5 py-2.5 border-b border-border/40 last:border-0">
+      <div className="w-14 h-14 shrink-0 bg-secondary/40 border border-border/50 flex items-center justify-center overflow-hidden rounded-sm">
         {post.cover_url ? (
-          <Image src={post.cover_url} alt={t.title} width={56} height={56} className="w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-opacity" />
+          <Image src={post.cover_url} alt={t.title} width={56} height={56} className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-all duration-300" />
         ) : (
           <img src="/kishti%20logo.png" alt="Kisti Logo" className="w-full h-full object-cover opacity-80" />
         )}
       </div>
       <div className="flex-1 min-w-0">
         {post.category_bn && (
-          <p className="text-[9px] text-gold uppercase tracking-wider mb-0.5 font-en-sans">{post.category_bn}</p>
+          <p className="text-[9px] text-gold uppercase tracking-wider mb-0.5 font-en-sans font-semibold">{post.category_bn}</p>
         )}
-        <h5 className="text-white text-[0.95rem] font-bn leading-snug line-clamp-3 group-hover:text-gold transition-colors">{t.title}</h5>
+        <h5 className="text-foreground text-[0.95rem] font-bn leading-snug line-clamp-3 group-hover:text-gold transition-colors">{t.title}</h5>
         <div className="flex flex-col gap-0.5 mt-0.5">
-          <span className="text-[11px] text-white/50 font-bn">{getAuthorName(post)}</span>
+          <span className="text-[11px] text-muted-foreground font-bn">{getAuthorName(post)}</span>
           {post.published_at && (
-            <p className="text-white/35 text-[9px] font-en-sans">{toBengaliDate(post.published_at)}</p>
+            <p className="text-muted-foreground/70 text-[9px] font-en-sans">{toBengaliDate(post.published_at)}</p>
           )}
         </div>
       </div>
@@ -259,7 +259,7 @@ const EditorialSection = ({ category, posts }: { category: Category; posts: Post
   );
 };
 
-/** Hero (top) section — same structure, no header */
+/** Hero (top) section — abstract light background from left to right */
 const HeroSection = ({ posts }: { posts: Post[] }) => {
   if (posts.length === 0) return null;
   const featured = posts[0];
@@ -267,15 +267,30 @@ const HeroSection = ({ posts }: { posts: Post[] }) => {
   const thumbPosts = posts.slice(4, 8);
 
   return (
-    <section className="mb-8 border border-border/60">
-      <div className="grid grid-cols-12 gap-0">
+    <section className="mb-8 bg-card border border-border/80 border-t-2 border-t-gold rounded-sm shadow-sm relative overflow-hidden">
+      {/* Abstract geometric background overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-40 dark:opacity-20"
+        style={{
+          backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(201,168,76,0.06) 35px, rgba(201,168,76,0.06) 36px)"
+        }}
+      />
+      <div
+        className="absolute top-0 right-0 w-96 h-96 rounded-full pointer-events-none"
+        style={{
+          background: "radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%)",
+          transform: "translate(30%, -30%)"
+        }}
+      />
+
+      <div className="grid grid-cols-12 gap-0 relative z-10">
         <div className="col-span-12 md:col-span-4 p-4 border-b md:border-b-0 md:border-r border-border/60">
           <FeaturedCard post={featured} />
         </div>
         <div className="col-span-12 md:col-span-4 p-4 border-b md:border-b-0 md:border-r border-border/60">
           {listPosts.map((p) => <ListCard key={p.id} post={p} />)}
         </div>
-        <div className="col-span-12 md:col-span-4 bg-primary dark:bg-[hsl(220,18%,22%)] p-4">
+        <div className="col-span-12 md:col-span-4 bg-secondary/30 dark:bg-secondary/15 p-4">
           {thumbPosts.map((p) => <ThumbCard key={p.id} post={p} />)}
         </div>
       </div>
