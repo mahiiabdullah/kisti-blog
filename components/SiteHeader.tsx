@@ -219,83 +219,87 @@ export const SiteHeader = () => {
       {/* ── TOP UTILITY BAR ──────────────────────────── */}
       <div className="bg-background border-b border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-20 gap-4">
-            {/* Logo */}
-            <Link href="/" className="flex items-center group flex-shrink-0">
-              <div className="flex flex-col leading-none h-18 justify-center">
-                <img src="/kishti%20banner%20name_2.png" alt="Kisti" className="h-16 object-contain dark:brightness-0 dark:invert" />
-              </div>
-            </Link>
+          <div className="grid grid-cols-3 items-center h-20 gap-2 sm:gap-4">
+            {/* Left Column: Date block (desktop) */}
+            <div className="flex items-center justify-start">
+              {dates && (
+                <div className="hidden md:flex flex-col text-left gap-0.5">
+                  <span className="text-[11px] font-bn-sans text-muted-foreground leading-tight">{dates.bnLine}</span>
+                  <span className="text-[11px] font-bn-sans text-muted-foreground/75 leading-tight">{dates.hijriBn}</span>
+                  <span className="text-[11px] font-bn-sans text-muted-foreground/60 leading-tight">{dates.bangabdaLine}</span>
+                </div>
+              )}
+            </div>
 
-            {/* Spacer */}
-            <div className="flex-1" />
-
-            {/* Utility links (desktop) */}
-            <nav className="hidden md:flex items-center gap-4 text-xs font-bn-sans text-muted-foreground">
-              <Link href="/about" className="hover:text-foreground transition-colors">আমাদের কথা</Link>
-              <span className="text-border">·</span>
-              <Link href="/writers" className="hover:text-foreground transition-colors">লেখকবৃন্দ</Link>
-              <span className="text-border">·</span>
-              <Link href="/contact" className="hover:text-foreground transition-colors">যোগাযোগ</Link>
-            </nav>
-
-            {/* Date block (desktop) */}
-            {dates && (
-              <div className="hidden lg:flex flex-col items-end text-right border-l border-border pl-4 gap-0.5">
-                <span className="text-[11px] font-bn-sans text-muted-foreground leading-tight">{dates.bnLine}</span>
-                <span className="text-[11px] font-bn-sans text-muted-foreground/75 leading-tight">{dates.hijriBn}</span>
-                <span className="text-[11px] font-bn-sans text-muted-foreground/60 leading-tight">{dates.bangabdaLine}</span>
-              </div>
-            )}
-
-            {/* Auth */}
-            {!user ? (
-              <Link
-                href="/auth"
-                className="hidden md:block px-4 py-1.5 bg-primary text-primary-foreground text-xs font-bn-sans hover:bg-primary/90 transition-colors rounded-sm"
-              >
-                প্রবেশ করুন
+            {/* Center Column: Logo (Middle Aligned) */}
+            <div className="flex items-center justify-center">
+              <Link href="/" className="flex items-center group flex-shrink-0">
+                <div className="flex flex-col leading-none h-18 justify-center">
+                  <img src="/kishti%20banner%20name_2.png" alt="Kisti" className="h-14 sm:h-16 object-contain dark:brightness-0 dark:invert" />
+                </div>
               </Link>
-            ) : (
-              <DropdownMenu>
-                <DropdownMenuTrigger className="outline-none">
-                  <Avatar className="h-8 w-8 hover:ring-2 hover:ring-gold transition-all">
-                    <AvatarImage src={user.user_metadata?.avatar_url} />
-                    <AvatarFallback className="text-xs bg-primary text-primary-foreground font-bn">
-                      {user.email?.charAt(0).toUpperCase() || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile" className="cursor-pointer font-bn">প্রোফাইল</Link>
-                  </DropdownMenuItem>
-                  {isAdmin && (
+            </div>
+
+            {/* Right Column: Utility links + Auth + Theme toggle */}
+            <div className="flex items-center justify-end gap-2 sm:gap-3">
+              {/* Utility links (desktop) */}
+              <nav className="hidden lg:flex items-center gap-3 text-xs font-bn-sans text-muted-foreground mr-2">
+                <Link href="/about" className="hover:text-foreground transition-colors">আমাদের কথা</Link>
+                <span className="text-border">·</span>
+                <Link href="/writers" className="hover:text-foreground transition-colors">লেখকবৃন্দ</Link>
+                <span className="text-border">·</span>
+                <Link href="/contact" className="hover:text-foreground transition-colors">যোগাযোগ</Link>
+              </nav>
+
+              {/* Auth */}
+              {!user ? (
+                <Link
+                  href="/auth"
+                  className="hidden sm:block px-3 py-1.5 bg-primary text-primary-foreground text-xs font-bn-sans hover:bg-primary/90 transition-colors rounded-sm"
+                >
+                  প্রবেশ করুন
+                </Link>
+              ) : (
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="outline-none">
+                    <Avatar className="h-8 w-8 hover:ring-2 hover:ring-gold transition-all">
+                      <AvatarImage src={user.user_metadata?.avatar_url} />
+                      <AvatarFallback className="text-xs bg-primary text-primary-foreground font-bn">
+                        {user.email?.charAt(0).toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem asChild>
-                      <Link href="/admin" className="cursor-pointer font-bn">অ্যাডমিন</Link>
+                      <Link href="/profile" className="cursor-pointer font-bn">প্রোফাইল</Link>
                     </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => supabase.auth.signOut()}
-                    className="cursor-pointer text-destructive focus:text-destructive font-bn"
-                  >
-                    প্রস্থান
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+                    {isAdmin && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin" className="cursor-pointer font-bn">অ্যাডমিন</Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => supabase.auth.signOut()}
+                      className="cursor-pointer text-destructive focus:text-destructive font-bn"
+                    >
+                      প্রস্থান
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
 
-            <ThemeToggle />
+              <ThemeToggle />
 
-            {/* Mobile search toggle */}
-            <button
-              className="md:hidden p-2 text-muted-foreground hover:text-foreground transition-colors"
-              onClick={() => setIsMobileSearchOpen((v) => !v)}
-              aria-label="Toggle Search"
-            >
-              <Search className="w-4 h-4" />
-            </button>
+              {/* Mobile search toggle */}
+              <button
+                className="md:hidden p-2 text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setIsMobileSearchOpen((v) => !v)}
+                aria-label="Toggle Search"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Mobile search bar */}
