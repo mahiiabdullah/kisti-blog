@@ -114,7 +114,7 @@ const getAllDates = (): DateInfo => {
 };
 
 // Desktop nav dropdown
-const DesktopDropdown = ({ label, items }: { label: string; items: { to: string; label: string }[] }) => {
+const DesktopDropdown = ({ label, to, items }: { label: string; to?: string; items: { to: string; label: string }[] }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -128,10 +128,13 @@ const DesktopDropdown = ({ label, items }: { label: string; items: { to: string;
 
   return (
     <div ref={ref} className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
-      <button className="flex items-center gap-1 px-3 py-3 text-sm text-white/90 hover:text-gold transition-colors font-bn">
+      <Link
+        href={to ?? "#"}
+        className="flex items-center gap-1 px-3 py-3 text-sm text-white/90 hover:text-gold transition-colors font-bn"
+      >
         {label}
         <ChevronDown className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
+      </Link>
       {open && (
         <div className="absolute top-full left-0 min-w-[180px] bg-primary border-t-2 border-gold shadow-lg z-50">
           {items.map((item) => (
@@ -178,8 +181,10 @@ export const SiteHeader = () => {
         const built: NavItem[] = [];
         for (const m of mains) {
           const children = all.filter((c) => c.parent_id === m.id).sort((a, b) => a.position - b.position);
+          const parentUrl = m.slug ? `/category/${m.slug}` : `/?cat=${m.id}`;
           if (children.length > 0) {
             built.push({
+              to: parentUrl,
               label: m.name_bn,
               items: children.map((c) => ({
                 to: c.slug ? `/category/${c.slug}` : `/?cat=${c.id}`,
@@ -188,7 +193,7 @@ export const SiteHeader = () => {
             });
           } else {
             built.push({
-              to: m.slug ? `/category/${m.slug}` : `/?cat=${m.id}`,
+              to: parentUrl,
               label: m.name_bn,
             });
           }
@@ -449,7 +454,7 @@ export const SiteHeader = () => {
             <nav className="hidden lg:flex items-center justify-center flex-1">
               {nav.map((n) =>
                 n.items ? (
-                  <DesktopDropdown key={n.label} label={n.label} items={n.items} />
+                  <DesktopDropdown key={n.label} label={n.label} to={n.to} items={n.items} />
                 ) : (
                   <Link
                     key={n.label}
