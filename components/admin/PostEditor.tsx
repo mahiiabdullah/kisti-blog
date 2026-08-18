@@ -569,6 +569,8 @@ export default function AdminPostEditor() {
             categoryEn={categoryEn || getFlatCats().find(c => c.id === selectedCatIds[0])?.name_en || ""}
             readingMinutes={readingMinutes}
             tags={tags}
+            authorName={allWriters.find(w => w.id === writerId)?.bengali_name || allWriters.find(w => w.id === writerId)?.name || user?.user_metadata?.display_name_bn || "কিশতী"}
+            date={new Date().toISOString()}
           />
         </div>
       </aside>

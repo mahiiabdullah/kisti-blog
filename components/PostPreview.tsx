@@ -15,8 +15,24 @@ export interface PreviewTranslation {
 interface Props {
   translations: Record<Lang, PreviewTranslation>; coverUrl?: string;
   categoryBn?: string; categoryEn?: string; readingMinutes?: number;
-  tags?: string[];
+  tags?: string[]; authorName?: string; date?: string;
 }
+
+const toBengaliDateStr = (dateInput?: string) => {
+  if (!dateInput) return "";
+  try {
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return "";
+    const bnNums = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+    const bnMonths = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+    const day = d.getDate().toString().replace(/\d/g, (x) => bnNums[+x]);
+    const month = bnMonths[d.getMonth()];
+    const year = d.getFullYear().toString().replace(/\d/g, (x) => bnNums[+x]);
+    return `${day} ${month}, ${year}`;
+  } catch {
+    return "";
+  }
+};
 
 const renderBody = (body: string) => {
   if (body.trim().startsWith("<")) {
@@ -32,7 +48,7 @@ const renderBody = (body: string) => {
   });
 };
 
-export function PostPreview({ translations, coverUrl, categoryBn, categoryEn, readingMinutes, tags = [] }: Props) {
+export function PostPreview({ translations, coverUrl, categoryBn, categoryEn, readingMinutes, tags = [], authorName, date }: Props) {
   const available = (Object.keys(translations) as Lang[]).filter((l) => translations[l].title.trim());
   const [lang, setLang] = useState<Lang>(available[0] ?? "bn");
   const [exporting, setExporting] = useState(false);
@@ -48,88 +64,71 @@ export function PostPreview({ translations, coverUrl, categoryBn, categoryEn, re
       canvas.height = H;
       const ctx = canvas.getContext("2d")!;
 
-      // 1. Handle Cover image or KiSti logo with texture
-      let hasCover = false;
-      if (coverUrl) {
-        const img = new window.Image();
-        img.crossOrigin = "anonymous";
+      // 1. Draw Full-bleed background image or fallback logo image covering 1080x1080
+      let backgroundLoaded = false;
+      const bgImg = new window.Image();
+      bgImg.crossOrigin = "anonymous";
+
+      if (coverUrl && coverUrl.trim()) {
         await new Promise<void>((resolve) => {
-          img.onload = () => { hasCover = true; resolve(); };
-          img.onerror = () => { hasCover = false; resolve(); };
-          img.src = coverUrl;
+          bgImg.onload = () => { backgroundLoaded = true; resolve(); };
+          bgImg.onerror = () => { backgroundLoaded = false; resolve(); };
+          bgImg.src = coverUrl;
         });
-        if (hasCover && img.width) {
-          const ratio = Math.max(W / img.width, H / img.height);
-          const w = img.width * ratio, h = img.height * ratio;
-          ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
-        }
       }
 
-      if (!hasCover) {
-        // Draw rich dark navy paper background
+      if (!backgroundLoaded) {
+        await new Promise<void>((resolve) => {
+          bgImg.onload = () => { backgroundLoaded = true; resolve(); };
+          bgImg.onerror = () => { backgroundLoaded = false; resolve(); };
+          bgImg.src = "/kishti%20logo.png";
+        });
+      }
+
+      if (backgroundLoaded && bgImg.width) {
+        const ratio = Math.max(W / bgImg.width, H / bgImg.height);
+        const w = bgImg.width * ratio;
+        const h = bgImg.height * ratio;
+        ctx.drawImage(bgImg, (W - w) / 2, (H - h) / 2, w, h);
+      } else {
         ctx.fillStyle = "#0B1528";
         ctx.fillRect(0, 0, W, H);
-
-        // Radial gold ambient glow in center behind logo
-        const ambientGrad = ctx.createRadialGradient(W / 2, 280, 20, W / 2, 280, 400);
-        ambientGrad.addColorStop(0, "rgba(201, 168, 76, 0.18)");
-        ambientGrad.addColorStop(0.5, "rgba(201, 168, 76, 0.06)");
-        ambientGrad.addColorStop(1, "rgba(11, 21, 40, 0)");
-        ctx.fillStyle = ambientGrad;
-        ctx.fillRect(0, 0, W, H);
-
-        // Abstract golden line texture
-        ctx.strokeStyle = "rgba(201, 168, 76, 0.07)";
-        ctx.lineWidth = 1;
-        for (let i = -W; i < W * 2; i += 36) {
-          ctx.beginPath();
-          ctx.moveTo(i, 0);
-          ctx.lineTo(i + H, H);
-          ctx.stroke();
-        }
-
-        // Draw kishti logo emblem (/kishti logo.png) in top center
-        const logoImg = new window.Image();
-        logoImg.crossOrigin = "anonymous";
-        await new Promise<void>((resolve) => {
-          logoImg.onload = () => resolve();
-          logoImg.onerror = () => resolve();
-          logoImg.src = "/kishti%20logo.png";
-        });
-
-        if (logoImg.width) {
-          const logoW = 280;
-          const logoH = (logoImg.height / logoImg.width) * logoW;
-          ctx.drawImage(logoImg, (W - logoW) / 2, 140, logoW, logoH);
-        }
       }
 
-      // Dark gradient overlay for text legibility
-      const grad = ctx.createLinearGradient(0, H * 0.3, 0, H);
-      grad.addColorStop(0, "rgba(10, 25, 47, 0.1)");
-      grad.addColorStop(0.5, "rgba(10, 25, 47, 0.75)");
-      grad.addColorStop(1, "rgba(10, 25, 47, 0.95)");
+      // 2. Top Header Gradient Shadow for branding contrast
+      const topGrad = ctx.createLinearGradient(0, 0, 0, 180);
+      topGrad.addColorStop(0, "rgba(10, 20, 35, 0.75)");
+      topGrad.addColorStop(1, "rgba(10, 20, 35, 0)");
+      ctx.fillStyle = topGrad;
+      ctx.fillRect(0, 0, W, 180);
+
+      // 3. Bottom Gradient Shadow for title, author, date, tagline readability
+      const grad = ctx.createLinearGradient(0, H * 0.25, 0, H);
+      grad.addColorStop(0, "rgba(10, 20, 35, 0)");
+      grad.addColorStop(0.45, "rgba(10, 20, 35, 0.60)");
+      grad.addColorStop(0.75, "rgba(10, 20, 35, 0.88)");
+      grad.addColorStop(1, "rgba(10, 20, 35, 0.97)");
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, W, H);
 
-      // Top branding
+      // 4. Top Header Row — Left: Brand logo text, Right: Category Name
       ctx.textAlign = "left";
       ctx.fillStyle = "#C9A84C";
-      ctx.font = "bold 26px 'Noto Serif Bengali', serif";
-      ctx.fillText("কিশতী · kiSti", 60, 70);
+      ctx.font = "600 28px 'Noto Serif Bengali', serif";
+      ctx.fillText("কিশতী  kiSti", 60, 70);
 
       const catText = lang === "bn" ? categoryBn : categoryEn;
       if (catText) {
         ctx.textAlign = "right";
         ctx.fillStyle = "#C9A84C";
-        ctx.font = "bold 20px 'Noto Serif Bengali', serif";
+        ctx.font = "bold 22px 'Noto Serif Bengali', serif";
         ctx.fillText(catText, W - 60, 70);
       }
 
-      // Title
+      // 5. Title Wrapping & Position Calculation
       const fontFamily = lang === "ar" ? "Amiri, serif" : lang === "en" ? "Cormorant Garamond, serif" : "Noto Serif Bengali, serif";
       const titleText = t.title;
-      const titleFont = `700 ${titleText.length > 40 ? "48" : "56"}px ${fontFamily}`;
+      const titleFont = `700 ${titleText.length > 40 ? "46" : "54"}px ${fontFamily}`;
       ctx.font = titleFont;
 
       const wrapText = (text: string, maxWidth: number) => {
@@ -148,17 +147,23 @@ export function PostPreview({ translations, coverUrl, categoryBn, categoryEn, re
       };
 
       const titleLines = wrapText(titleText, W - 120);
-      const lineHeight = titleText.length > 40 ? 64 : 74;
-      const totalTitleHeight = Math.min(titleLines.length, 4) * lineHeight;
-      const titleStartY = H - 180 - totalTitleHeight;
+      const lineHeight = titleText.length > 40 ? 62 : 72;
+      const totalTitleHeight = Math.min(titleLines.length, 3) * lineHeight;
 
+      // Position title so author & date fit neatly at the bottom
+      const authorStr = authorName || "কিশতী";
+      const formattedDate = toBengaliDateStr(date || new Date().toISOString());
+
+      const titleStartY = H - 230 - totalTitleHeight;
+
+      ctx.textAlign = "left";
       ctx.fillStyle = "#FFFFFF";
-      titleLines.slice(0, 4).forEach((ln, i) => {
+      titleLines.slice(0, 3).forEach((ln, i) => {
         ctx.fillText(ln, 60, titleStartY + i * lineHeight);
       });
 
-      // Gold line separator
-      const lineY = H - 150;
+      // 6. Gold Line Separator
+      const lineY = H - 180;
       ctx.strokeStyle = "#C9A84C";
       ctx.lineWidth = 3;
       ctx.beginPath();
@@ -166,11 +171,22 @@ export function PostPreview({ translations, coverUrl, categoryBn, categoryEn, re
       ctx.lineTo(180, lineY);
       ctx.stroke();
 
-      // Footer site tagline
-      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+      // 7. Author Name & Date
+      ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+      ctx.font = `600 24px ${fontFamily}`;
+      ctx.fillText(authorStr, 60, H - 135);
+
+      if (formattedDate) {
+        ctx.fillStyle = "rgba(255, 255, 255, 0.60)";
+        ctx.font = "400 20px 'Noto Serif Bengali', serif";
+        ctx.fillText(formattedDate, 60, H - 100);
+      }
+
+      // 8. Footer Site Tagline Strip
+      ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
       ctx.font = "500 16px 'Noto Serif Bengali', serif";
       ctx.textAlign = "center";
-      ctx.fillText("কিশতী  —  রাষ্ট্র, ইতিহাস ও চিন্তার রেখাচিত্র", W / 2, H - 35);
+      ctx.fillText("কিশতী · kiSti  —  রাষ্ট্র, ইতিহাস ও চিন্তার রেখাচিত্র", W / 2, H - 35);
 
       const dataUrl = canvas.toDataURL("image/png");
       const link = document.createElement("a");
