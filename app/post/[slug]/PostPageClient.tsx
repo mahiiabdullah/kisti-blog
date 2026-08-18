@@ -241,68 +241,74 @@ export default function PostPageClient({ slug }: { slug: string }) {
   useEffect(() => {
     if (!slug) return;
     (async () => {
-      const { data, error } = await supabase
-        .from("posts")
-        .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id, is_translation,
-                 writer:writers!writer_id(slug, name, bengali_name, bio),
-                 translator:writers!translator_id(slug, name, bengali_name),
-                 post_stats(view_count),
-                 post_translations(lang, title, excerpt, body, footnotes, citations),
-                 post_tags(tag),
-                 post_categories(categories(id, name_bn, name_en, slug))`)
-        .eq("slug", slug)
-        .eq("status", "published")
-        .maybeSingle();
+      try {
+        const { data, error } = await supabase
+          .from("posts")
+          .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id, is_translation,
+                   writer:writers!posts_writer_id_fkey(slug, name, bengali_name, bio),
+                   translator:writers!posts_translator_id_fkey(slug, name, bengali_name),
+                   post_stats(view_count),
+                   post_translations(lang, title, excerpt, body, footnotes, citations),
+                   post_tags(tag),
+                   post_categories(categories(id, name_bn, name_en, slug))`)
+          .eq("slug", slug)
+          .eq("status", "published")
+          .maybeSingle();
 
-      if (error) { setError(error.message); setLoading(false); return; }
+        if (error) { setError(error.message); setLoading(false); return; }
 
-      if (data) {
-        const p = data as any as PostData;
+        if (data) {
+          const p = data as any as PostData;
 
-        if (p.author_id) {
-          const { data: profile } = await supabase
-            .from("profiles").select("display_name, display_name_bn")
-            .eq("id", p.author_id).maybeSingle();
-          if (profile) p.profiles = profile;
-        }
+          if (p.author_id) {
+            const { data: profile } = await supabase
+              .from("profiles").select("display_name, display_name_bn")
+              .eq("id", p.author_id).maybeSingle();
+            if (profile) p.profiles = profile;
+          }
 
-        if (p.post_categories && p.post_categories.length > 0) {
-          const cats = p.post_categories.map((pc) => pc.categories).filter((c): c is CategoryInfo => c != null);
-          if (cats.length > 0) { setPostCategories(cats); p.categories = cats; }
-        }
+          if (p.post_categories && p.post_categories.length > 0) {
+            const cats = p.post_categories.map((pc) => pc.categories).filter((c): c is CategoryInfo => c != null);
+            if (cats.length > 0) { setPostCategories(cats); p.categories = cats; }
+          }
 
-        setPost(p);
-        const langs = p.post_translations.map((t) => t.lang);
-        if (langs[0]) setLang(langs[0]);
+          setPost(p);
+          const langs = p.post_translations.map((t) => t.lang);
+          if (langs[0]) setLang(langs[0]);
 
-        // Fetch related posts (same category)
-        if (p.category_bn) {
-          const { data: related } = await supabase
+          // Fetch related posts (same category)
+          if (p.category_bn) {
+            const { data: related } = await supabase
+              .from("posts")
+              .select("id, slug, cover_url, category_bn, published_at, post_translations(lang, title)")
+              .eq("status", "published")
+              .eq("category_bn", p.category_bn)
+              .neq("slug", slug)
+              .order("published_at", { ascending: false })
+              .limit(3);
+            if (related) setRelatedPosts(related as any[]);
+          }
+
+          // Popular posts
+          const { data: popular } = await supabase
             .from("posts")
             .select("id, slug, cover_url, category_bn, published_at, post_translations(lang, title)")
             .eq("status", "published")
-            .eq("category_bn", p.category_bn)
             .neq("slug", slug)
             .order("published_at", { ascending: false })
-            .limit(3);
-          if (related) setRelatedPosts(related as any[]);
+            .limit(5);
+          if (popular) setPopularPosts(popular as any[]);
+
+          // Tags
+          const { data: tagData } = await supabase.from("post_tags").select("tag").limit(20);
+          if (tagData) setAllTags(Array.from(new Set((tagData as any[]).map((t: any) => t.tag as string))).slice(0, 16));
         }
-
-        // Popular posts
-        const { data: popular } = await supabase
-          .from("posts")
-          .select("id, slug, cover_url, category_bn, published_at, post_translations(lang, title)")
-          .eq("status", "published")
-          .neq("slug", slug)
-          .order("published_at", { ascending: false })
-          .limit(5);
-        if (popular) setPopularPosts(popular as any[]);
-
-        // Tags
-        const { data: tagData } = await supabase.from("post_tags").select("tag").limit(20);
-        if (tagData) setAllTags(Array.from(new Set((tagData as any[]).map((t: any) => t.tag as string))).slice(0, 16));
+      } catch (err: any) {
+        console.error("Post loading error:", err);
+        setError(err.message || "Error loading post");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     })();
   }, [slug]);
 
@@ -598,37 +604,65 @@ export default function PostPageClient({ slug }: { slug: string }) {
             )}
 
             {/* Footnotes */}
-            {Array.isArray(t.footnotes) && t.footnotes.length > 0 && (
-              <section className="mt-12 pt-8 border-t border-border/60" dir={dir}>
-                <h2 className="font-en-sans uppercase text-xs tracking-[0.25em] text-muted-foreground mb-5" dir="ltr">Footnotes · টীকা</h2>
-                <ol className={`${langClass[lang]} space-y-3 text-sm text-muted-foreground`}>
-                  {t.footnotes.map((f: any) => (
-                    <li key={f.id} id={`fn-${f.id}`} className="leading-relaxed scroll-m-24">
-                      <span className="text-accent mr-2">[{f.id}]</span>
-                      {f.text}
-                      <a href={`#fnref-${f.id}`} className="ml-2 text-accent hover:underline inline-block" aria-label="Back">↩</a>
-                    </li>
-                  ))}
-                </ol>
-              </section>
-            )}
+            {(() => {
+              let fnList: { id: string | number; text: string }[] = [];
+              if (t.footnotes) {
+                let parsed = t.footnotes;
+                if (typeof parsed === "string") {
+                  try { parsed = JSON.parse(parsed); } catch (e) { parsed = []; }
+                }
+                if (Array.isArray(parsed)) {
+                  fnList = parsed;
+                } else if (typeof parsed === "object" && parsed !== null) {
+                  fnList = Object.entries(parsed).map(([id, text]) => ({ id, text: String(text) }));
+                }
+              }
+              if (fnList.length === 0) return null;
+              return (
+                <section className="mt-12 pt-8 border-t border-border/60" dir={dir}>
+                  <h2 className="font-en-sans uppercase text-xs tracking-[0.25em] text-muted-foreground mb-5" dir="ltr">Footnotes · টীকা</h2>
+                  <ol className={`${langClass[lang]} space-y-3 text-sm text-muted-foreground`}>
+                    {fnList.map((f: any) => (
+                      <li key={f.id} id={`fn-${f.id}`} className="leading-relaxed scroll-m-24">
+                        <span className="text-accent mr-2">[{f.id}]</span>
+                        {f.text}
+                        <a href={`#fnref-${f.id}`} className="ml-2 text-accent hover:underline inline-block" aria-label="Back">↩</a>
+                      </li>
+                    ))}
+                  </ol>
+                </section>
+              );
+            })()}
 
             {/* Citations */}
-            {Array.isArray(t.citations) && t.citations.length > 0 && (
-              <section className="mt-10 pt-8 border-t border-border/60" dir={dir}>
-                <h2 className="font-en-sans uppercase text-xs tracking-[0.25em] text-muted-foreground mb-5" dir="ltr">Citations</h2>
-                <ul className={`${langClass[lang]} space-y-3 text-sm text-muted-foreground list-none`}>
-                  {t.citations.map((c: any, i: number) => (
-                    <li key={i} className="leading-relaxed">
-                      {c.url ? (
-                        <a href={c.url} target="_blank" rel="noopener noreferrer"
-                          className="hover:text-accent transition-colors underline decoration-border underline-offset-4">{c.label}</a>
-                      ) : c.label}
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
+            {(() => {
+              let citList: { label: string; url?: string }[] = [];
+              if (t.citations) {
+                let parsed = t.citations;
+                if (typeof parsed === "string") {
+                  try { parsed = JSON.parse(parsed); } catch (e) { parsed = []; }
+                }
+                if (Array.isArray(parsed)) {
+                  citList = parsed;
+                }
+              }
+              if (citList.length === 0) return null;
+              return (
+                <section className="mt-10 pt-8 border-t border-border/60" dir={dir}>
+                  <h2 className="font-en-sans uppercase text-xs tracking-[0.25em] text-muted-foreground mb-5" dir="ltr">Citations</h2>
+                  <ul className={`${langClass[lang]} space-y-3 text-sm text-muted-foreground list-none`}>
+                    {citList.map((c: any, i: number) => (
+                      <li key={i} className="leading-relaxed">
+                        {c.url ? (
+                          <a href={c.url} target="_blank" rel="noopener noreferrer"
+                            className="hover:text-accent transition-colors underline decoration-border underline-offset-4">{c.label}</a>
+                        ) : c.label}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              );
+            })()}
           </article>
 
           {/* Tags + Share */}
