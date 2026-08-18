@@ -39,18 +39,141 @@ export function PostPreview({ translations, coverUrl, categoryBn, categoryEn, re
   const [node, setNode] = useState<HTMLDivElement | null>(null);
   const t = translations[lang];
 
-  const exportImage = async (format: "png" | "card") => {
-    if (!node) return;
+  const exportCardImage = async () => {
     setExporting(true);
     try {
-      const { toPng } = await import("html-to-image");
-      const target = format === "card" ? node.querySelector<HTMLElement>("[data-export-card]") ?? node : node;
-      const dataUrl = await toPng(target, { pixelRatio: 2, cacheBust: true, backgroundColor: format === "card" ? undefined : "#faf6ef" });
+      const canvas = document.createElement("canvas");
+      const W = 1080, H = 1080;
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext("2d")!;
+
+      // 1. Handle Cover image or KiSti logo with texture
+      let hasCover = false;
+      if (coverUrl) {
+        const img = new window.Image();
+        img.crossOrigin = "anonymous";
+        await new Promise<void>((resolve) => {
+          img.onload = () => { hasCover = true; resolve(); };
+          img.onerror = () => { hasCover = false; resolve(); };
+          img.src = coverUrl;
+        });
+        if (hasCover && img.width) {
+          const ratio = Math.max(W / img.width, H / img.height);
+          const w = img.width * ratio, h = img.height * ratio;
+          ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+        }
+      }
+
+      if (!hasCover) {
+        // Draw rich dark navy textured background
+        ctx.fillStyle = "#0A192F";
+        ctx.fillRect(0, 0, W, H);
+
+        // Abstract golden line texture
+        ctx.strokeStyle = "rgba(201, 168, 76, 0.08)";
+        ctx.lineWidth = 1;
+        for (let i = -W; i < W * 2; i += 40) {
+          ctx.beginPath();
+          ctx.moveTo(i, 0);
+          ctx.lineTo(i + H, H);
+          ctx.stroke();
+        }
+
+        // Draw KiSti logo in top center
+        const logoImg = new window.Image();
+        logoImg.crossOrigin = "anonymous";
+        await new Promise<void>((resolve) => {
+          logoImg.onload = () => resolve();
+          logoImg.onerror = () => resolve();
+          logoImg.src = "/kishti%20banner%20name_2.png";
+        });
+
+        if (logoImg.width) {
+          const logoW = 480;
+          const logoH = (logoImg.height / logoImg.width) * logoW;
+          ctx.drawImage(logoImg, (W - logoW) / 2, 180, logoW, logoH);
+        }
+      }
+
+      // Dark gradient overlay for text legibility
+      const grad = ctx.createLinearGradient(0, H * 0.3, 0, H);
+      grad.addColorStop(0, "rgba(10, 25, 47, 0.1)");
+      grad.addColorStop(0.5, "rgba(10, 25, 47, 0.75)");
+      grad.addColorStop(1, "rgba(10, 25, 47, 0.95)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Top branding
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#C9A84C";
+      ctx.font = "bold 26px 'Noto Serif Bengali', serif";
+      ctx.fillText("কিশতী · kiSti", 60, 70);
+
+      const catText = lang === "bn" ? categoryBn : categoryEn;
+      if (catText) {
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#C9A84C";
+        ctx.font = "bold 20px 'Noto Serif Bengali', serif";
+        ctx.fillText(catText, W - 60, 70);
+      }
+
+      // Title
+      const fontFamily = lang === "ar" ? "Amiri, serif" : lang === "en" ? "Cormorant Garamond, serif" : "Noto Serif Bengali, serif";
+      const titleText = t.title;
+      const titleFont = `700 ${titleText.length > 40 ? "48" : "56"}px ${fontFamily}`;
+      ctx.font = titleFont;
+
+      const wrapText = (text: string, maxWidth: number) => {
+        const words = text.split(" ");
+        const lines: string[] = [];
+        let cur = "";
+        for (const w of words) {
+          const test = cur ? cur + " " + w : w;
+          if (ctx.measureText(test).width > maxWidth) {
+            if (cur) lines.push(cur);
+            cur = w;
+          } else cur = test;
+        }
+        if (cur) lines.push(cur);
+        return lines;
+      };
+
+      const titleLines = wrapText(titleText, W - 120);
+      const lineHeight = titleText.length > 40 ? 64 : 74;
+      const totalTitleHeight = Math.min(titleLines.length, 4) * lineHeight;
+      const titleStartY = H - 180 - totalTitleHeight;
+
+      ctx.fillStyle = "#FFFFFF";
+      titleLines.slice(0, 4).forEach((ln, i) => {
+        ctx.fillText(ln, 60, titleStartY + i * lineHeight);
+      });
+
+      // Gold line separator
+      const lineY = H - 150;
+      ctx.strokeStyle = "#C9A84C";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(60, lineY);
+      ctx.lineTo(180, lineY);
+      ctx.stroke();
+
+      // Footer site tagline
+      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+      ctx.font = "500 16px 'Noto Serif Bengali', serif";
+      ctx.textAlign = "center";
+      ctx.fillText("কিশতী  —  রাষ্ট্র, ইতিহাস ও চিন্তার রেখাচিত্র", W / 2, H - 35);
+
+      const dataUrl = canvas.toDataURL("image/png");
       const link = document.createElement("a");
-      link.download = `kisti-${lang}-${format}.png`;
+      link.download = `kisti-card-${Date.now()}.png`;
       link.href = dataUrl;
       link.click();
-    } catch (e) { console.error(e); } finally { setExporting(false); }
+    } catch (e) {
+      console.error("Photocard generation failed:", e);
+    } finally {
+      setExporting(false);
+    }
   };
 
   if (!t || !t.title.trim()) return <div className="text-sm text-muted-foreground italic p-8 text-center">Add a title to see preview.</div>;
@@ -76,8 +199,7 @@ export function PostPreview({ translations, coverUrl, categoryBn, categoryEn, re
           ))}
         </div>
         <div className="flex gap-1" data-html2canvas-ignore>
-          <button type="button" disabled={exporting} onClick={() => exportImage("card")} className="text-[10px] uppercase tracking-[0.15em] font-en-sans px-2 py-1 border border-border hover:bg-secondary disabled:opacity-50">{exporting ? "…" : "Card"}</button>
-          <button type="button" disabled={exporting} onClick={() => exportImage("png")} className="text-[10px] uppercase tracking-[0.15em] font-en-sans px-2 py-1 border border-border hover:bg-secondary disabled:opacity-50">{exporting ? "…" : "Full PNG"}</button>
+          <button type="button" disabled={exporting} onClick={exportCardImage} className="text-[10px] uppercase tracking-[0.15em] font-en-sans px-3 py-1 border border-border bg-primary text-primary-foreground hover:bg-primary/90 rounded-sm disabled:opacity-50">{exporting ? "..." : "CARD"}</button>
         </div>
       </div>
       <article className="px-6 pb-8" onClick={handleLinkClick}>

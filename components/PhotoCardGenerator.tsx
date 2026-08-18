@@ -43,21 +43,52 @@ export const PhotoCardGenerator = ({ title, author, cover, lang, date, categoryB
     const W = 1080, H = 1080;
     canvas.width = W; canvas.height = H;
 
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    await new Promise<void>((resolve) => {
-      img.onload = () => resolve();
-      img.onerror = () => resolve();
-      img.src = cover;
-    });
+    let hasCover = false;
+    if (cover) {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      await new Promise<void>((resolve) => {
+        img.onload = () => { hasCover = true; resolve(); };
+        img.onerror = () => { hasCover = false; resolve(); };
+        img.src = cover;
+      });
 
-    if (img.width) {
-      const ratio = Math.max(W / img.width, H / img.height);
-      const w = img.width * ratio, h = img.height * ratio;
-      ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
-    } else {
-      ctx.fillStyle = "hsl(25, 18%, 12%)";
+      if (hasCover && img.width) {
+        const ratio = Math.max(W / img.width, H / img.height);
+        const w = img.width * ratio, h = img.height * ratio;
+        ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+      }
+    }
+
+    if (!hasCover) {
+      // Draw rich dark navy textured background
+      ctx.fillStyle = "#0A192F";
       ctx.fillRect(0, 0, W, H);
+
+      // Abstract golden line texture
+      ctx.strokeStyle = "rgba(201, 168, 76, 0.08)";
+      ctx.lineWidth = 1;
+      for (let i = -W; i < W * 2; i += 40) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i + H, H);
+        ctx.stroke();
+      }
+
+      // Draw KiSti logo in top center
+      const logoImg = new Image();
+      logoImg.crossOrigin = "anonymous";
+      await new Promise<void>((resolve) => {
+        logoImg.onload = () => resolve();
+        logoImg.onerror = () => resolve();
+        logoImg.src = "/kishti%20banner%20name_2.png";
+      });
+
+      if (logoImg.width) {
+        const logoW = 480;
+        const logoH = (logoImg.height / logoImg.width) * logoW;
+        ctx.drawImage(logoImg, (W - logoW) / 2, 180, logoW, logoH);
+      }
     }
 
     const grad = ctx.createLinearGradient(0, H * 0.25, 0, H);
