@@ -28,7 +28,7 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   if (!loading && user) {
-    router.push(isAdmin ? "/admin" : "/profile");
+    router.push("/");
     return null;
   }
 
@@ -46,7 +46,7 @@ export default function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: typeof window !== "undefined" ? `${window.location.origin}/profile` : "/profile",
+            emailRedirectTo: typeof window !== "undefined" ? `${window.location.origin}/` : "/",
             data: { display_name: displayName || email.split("@")[0] },
           },
         });
@@ -66,6 +66,7 @@ export default function AuthPage() {
           return;
         }
         toast.success("স্বাগতম!");
+        router.push("/");
       }
     } catch (err: any) {
       toast.error(err.message ?? "Something went wrong");

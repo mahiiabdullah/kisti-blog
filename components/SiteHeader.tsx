@@ -314,7 +314,7 @@ export const SiteHeader = () => {
                       onClick={() => supabase.auth.signOut()}
                       className="cursor-pointer text-destructive focus:text-destructive font-bn"
                     >
-                      প্রস্থান
+                      লগ-আউট
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -477,7 +477,7 @@ export const SiteHeader = () => {
                           }}
                           className="block text-left w-full px-2 py-2 text-sm text-destructive hover:text-destructive/80 font-bn transition-colors"
                         >
-                          প্রস্থান
+                          লগ-আউট
                         </button>
                       </>
                     )}
