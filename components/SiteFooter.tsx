@@ -97,10 +97,11 @@ export const SiteFooter = () => {
                   <Facebook className="w-4 h-4 text-white" />
                 </a>
               </div>
-              <div className="pt-3 border-t border-white/10">
+              <div className="pt-3 border-t border-white/10 space-y-1">
+                <p className="text-gold font-bn font-semibold text-xs mb-2">যোগাযোগ</p>
                 <p className="text-white/80 text-xs font-bn font-medium">বুরহান আল মাহমুদ</p>
                 <p className="text-white/50 text-xs font-bn">সম্পাদক, কিশতী</p>
-                <a href="mailto:kishti.editor@gmail.com" className="text-white/60 text-xs font-en-sans hover:text-gold transition-colors block mt-0.5">
+                <a href="mailto:kishti.editor@gmail.com" className="text-white/60 text-xs font-en-sans hover:text-gold transition-colors block pt-0.5">
                   kishti.editor@gmail.com
                 </a>
               </div>
