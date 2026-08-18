@@ -66,33 +66,41 @@ export function PostPreview({ translations, coverUrl, categoryBn, categoryEn, re
       }
 
       if (!hasCover) {
-        // Draw rich dark navy textured background
-        ctx.fillStyle = "#0A192F";
+        // Draw rich dark navy paper background
+        ctx.fillStyle = "#0B1528";
+        ctx.fillRect(0, 0, W, H);
+
+        // Radial gold ambient glow in center behind logo
+        const ambientGrad = ctx.createRadialGradient(W / 2, 280, 20, W / 2, 280, 400);
+        ambientGrad.addColorStop(0, "rgba(201, 168, 76, 0.18)");
+        ambientGrad.addColorStop(0.5, "rgba(201, 168, 76, 0.06)");
+        ambientGrad.addColorStop(1, "rgba(11, 21, 40, 0)");
+        ctx.fillStyle = ambientGrad;
         ctx.fillRect(0, 0, W, H);
 
         // Abstract golden line texture
-        ctx.strokeStyle = "rgba(201, 168, 76, 0.08)";
+        ctx.strokeStyle = "rgba(201, 168, 76, 0.07)";
         ctx.lineWidth = 1;
-        for (let i = -W; i < W * 2; i += 40) {
+        for (let i = -W; i < W * 2; i += 36) {
           ctx.beginPath();
           ctx.moveTo(i, 0);
           ctx.lineTo(i + H, H);
           ctx.stroke();
         }
 
-        // Draw KiSti logo in top center
+        // Draw kishti logo emblem (/kishti logo.png) in top center
         const logoImg = new window.Image();
         logoImg.crossOrigin = "anonymous";
         await new Promise<void>((resolve) => {
           logoImg.onload = () => resolve();
           logoImg.onerror = () => resolve();
-          logoImg.src = "/kishti%20banner%20name_2.png";
+          logoImg.src = "/kishti%20logo.png";
         });
 
         if (logoImg.width) {
-          const logoW = 480;
+          const logoW = 280;
           const logoH = (logoImg.height / logoImg.width) * logoW;
-          ctx.drawImage(logoImg, (W - logoW) / 2, 180, logoW, logoH);
+          ctx.drawImage(logoImg, (W - logoW) / 2, 140, logoW, logoH);
         }
       }
 
