@@ -82,8 +82,15 @@ export const useAuth = () => {
     };
   }, []);
 
-  const isAdmin = roles.includes("admin") || roles.includes("super_admin");
-  const isSuperAdmin = roles.includes("super_admin");
+  const isAdmin =
+    roles.includes("admin") ||
+    roles.includes("super_admin") ||
+    user?.user_metadata?.role === "admin" ||
+    user?.user_metadata?.role === "super_admin";
+
+  const isSuperAdmin =
+    roles.includes("super_admin") ||
+    user?.user_metadata?.role === "super_admin";
 
   return { session, user, roles, isAdmin, isSuperAdmin, loading };
 };
