@@ -24,7 +24,7 @@ export default function DonatePage() {
             <p className="text-sm text-muted-foreground font-en-sans">Personal Account</p>
           </div>
           <div className="text-right">
-            <span className="font-en-sans text-lg font-semibold text-accent block">+8801996259421</span>
+            <span className="font-en-sans text-lg font-semibold text-accent block">+8801735289060</span>
             <span className="text-xs text-muted-foreground font-bn">সেন্ড মানি করুন</span>
           </div>
         </div>
@@ -36,7 +36,7 @@ export default function DonatePage() {
             <p className="text-sm text-muted-foreground font-en-sans">Personal Account</p>
           </div>
           <div className="text-right">
-            <span className="font-en-sans text-lg font-semibold text-accent block">+8801996259421</span>
+            <span className="font-en-sans text-lg font-semibold text-accent block">+8801735289060</span>
             <span className="text-xs text-muted-foreground font-bn">সেন্ড মানি করুন</span>
           </div>
         </div>

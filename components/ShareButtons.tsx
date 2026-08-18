@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Facebook, Twitter, Link as LinkIcon, Check } from "lucide-react";
+import { Facebook, Link as LinkIcon, Check } from "lucide-react";
 
 interface ShareButtonsProps {
   url: string;
@@ -25,10 +25,6 @@ export const ShareButtons = ({ url, title }: ShareButtonsProps) => {
     window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, "_blank", "width=600,height=400");
   };
 
-  const shareTwitter = () => {
-    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`, "_blank", "width=600,height=400");
-  };
-
   return (
     <div className="flex items-center gap-3">
       <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-en-sans mr-2">Share</span>
@@ -38,13 +34,6 @@ export const ShareButtons = ({ url, title }: ShareButtonsProps) => {
         aria-label="Share on Facebook"
       >
         <Facebook className="w-4 h-4" />
-      </button>
-      <button 
-        onClick={shareTwitter}
-        className="p-2.5 rounded-full border border-border hover:border-accent hover:text-accent transition-colors bg-background"
-        aria-label="Share on Twitter"
-      >
-        <Twitter className="w-4 h-4" />
       </button>
       <button 
         onClick={handleCopy}

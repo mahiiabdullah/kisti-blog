@@ -220,15 +220,15 @@ export const SiteHeader = () => {
       <div className="bg-background border-b border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-3 items-center h-20 gap-2 sm:gap-4">
-            {/* Left Column: Date block (desktop) */}
+            {/* Left Column: Utility links (desktop) */}
             <div className="flex items-center justify-start">
-              {dates && (
-                <div className="hidden md:flex flex-col text-left gap-0.5">
-                  <span className="text-[11px] font-bn-sans text-muted-foreground leading-tight">{dates.bnLine}</span>
-                  <span className="text-[11px] font-bn-sans text-muted-foreground/75 leading-tight">{dates.hijriBn}</span>
-                  <span className="text-[11px] font-bn-sans text-muted-foreground/60 leading-tight">{dates.bangabdaLine}</span>
-                </div>
-              )}
+              <nav className="hidden lg:flex items-center gap-3 text-xs font-bn-sans text-muted-foreground">
+                <Link href="/about" className="hover:text-foreground transition-colors">আমাদের কথা</Link>
+                <span className="text-border">·</span>
+                <Link href="/writers" className="hover:text-foreground transition-colors">লেখকবৃন্দ</Link>
+                <span className="text-border">·</span>
+                <Link href="/contact" className="hover:text-foreground transition-colors">যোগাযোগ</Link>
+              </nav>
             </div>
 
             {/* Center Column: Logo (Middle Aligned) */}
@@ -240,16 +240,16 @@ export const SiteHeader = () => {
               </Link>
             </div>
 
-            {/* Right Column: Utility links + Auth + Theme toggle */}
+            {/* Right Column: Date block (right top corner) + Auth + Theme toggle */}
             <div className="flex items-center justify-end gap-2 sm:gap-3">
-              {/* Utility links (desktop) */}
-              <nav className="hidden lg:flex items-center gap-3 text-xs font-bn-sans text-muted-foreground mr-2">
-                <Link href="/about" className="hover:text-foreground transition-colors">আমাদের কথা</Link>
-                <span className="text-border">·</span>
-                <Link href="/writers" className="hover:text-foreground transition-colors">লেখকবৃন্দ</Link>
-                <span className="text-border">·</span>
-                <Link href="/contact" className="hover:text-foreground transition-colors">যোগাযোগ</Link>
-              </nav>
+              {/* Date block (desktop right top corner) */}
+              {dates && (
+                <div className="hidden md:flex flex-col text-right items-end gap-0.5 border-r border-border/60 pr-3">
+                  <span className="text-[11px] font-bn-sans text-muted-foreground leading-tight">{dates.bnLine}</span>
+                  <span className="text-[11px] font-bn-sans text-muted-foreground/75 leading-tight">{dates.hijriBn}</span>
+                  <span className="text-[11px] font-bn-sans text-muted-foreground/60 leading-tight">{dates.bangabdaLine}</span>
+                </div>
+              )}
 
               {/* Auth */}
               {!user ? (

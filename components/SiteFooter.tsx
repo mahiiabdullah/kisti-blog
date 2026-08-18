@@ -1,14 +1,14 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { Facebook, Twitter } from "lucide-react";
+import { Facebook } from "lucide-react";
 
 interface CategoryLink {
   id: string;
   name_bn: string;
-  slug: string | null;
+  slug: string;
 }
 
 export const SiteFooter = () => {
@@ -35,7 +35,7 @@ export const SiteFooter = () => {
           {/* Column 1 — Brand */}
           <div>
             <Link href="/" className="inline-block mb-3 group">
-              <img src="/kishti%20banner%20name.png" alt="Kisti" className="h-10 object-contain invert mix-blend-screen opacity-90 group-hover:opacity-100 transition-opacity" />
+              <img src="/kishti%20banner%20name_2.png" alt="Kisti" className="h-12 object-contain invert mix-blend-screen opacity-90 group-hover:opacity-100 transition-opacity" />
             </Link>
             <p className="text-white/50 text-xs font-en-sans tracking-[0.2em] mb-3">
               রাষ্ট্র · ইতিহাস · আইন · চিন্তা
@@ -45,41 +45,37 @@ export const SiteFooter = () => {
             </p>
           </div>
 
-          {/* Column 2 — Categories */}
+          {/* Column 2 — Category Links */}
           <div>
-            <h4 className="text-gold font-bn-sans uppercase text-xs tracking-[0.2em] mb-4">বিভাগ</h4>
-            <ul className="space-y-2">
+            <h4 className="text-gold font-bn-sans uppercase text-xs tracking-[0.2em] mb-4">ক্যাটাগরি</h4>
+            <ul className="space-y-2 text-sm font-bn">
               {categories.map((c) => (
                 <li key={c.id}>
-                  <Link
-                    href={c.slug ? `/category/${c.slug}` : `/?cat=${c.id}`}
-                    className="text-white/60 text-sm font-bn hover:text-gold transition-colors"
-                  >
+                  <Link href={`/category/${c.slug}`} className="text-white/70 hover:text-gold transition-colors">
                     {c.name_bn}
                   </Link>
                 </li>
               ))}
+              {categories.length === 0 && (
+                <>
+                  <li><Link href="/category/history" className="text-white/70 hover:text-gold transition-colors">ইতিহাস</Link></li>
+                  <li><Link href="/category/law" className="text-white/70 hover:text-gold transition-colors">আইন</Link></li>
+                  <li><Link href="/category/state" className="text-white/70 hover:text-gold transition-colors">রাষ্ট্র</Link></li>
+                  <li><Link href="/category/thoughts" className="text-white/70 hover:text-gold transition-colors">সমকালীন ভাবনা</Link></li>
+                </>
+              )}
             </ul>
           </div>
 
-          {/* Column 3 — Links */}
+          {/* Column 3 — Quick Links */}
           <div>
-            <h4 className="text-gold font-bn-sans uppercase text-xs tracking-[0.2em] mb-4">সাইট</h4>
-            <ul className="space-y-2">
-              {[
-                { href: "/about", label: "আমাদের কথা" },
-                { href: "/writers", label: "লেখকবৃন্দ" },
-                { href: "/contact", label: "যোগাযোগ" },
-                { href: "/search", label: "অনুসন্ধান" },
-                { href: "/donate", label: "অনুদান" },
-                { href: "/auth", label: "লগ-ইন করুন" },
-              ].map((l) => (
-                <li key={l.href}>
-                  <Link href={l.href} className="text-white/60 text-sm font-bn hover:text-gold transition-colors">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
+            <h4 className="text-gold font-bn-sans uppercase text-xs tracking-[0.2em] mb-4">দ্রুত লিংক</h4>
+            <ul className="space-y-2 text-sm font-bn">
+              <li><Link href="/about" className="text-white/70 hover:text-gold transition-colors">আমাদের কথা</Link></li>
+              <li><Link href="/writers" className="text-white/70 hover:text-gold transition-colors">লেখকবৃন্দ</Link></li>
+              <li><Link href="/contact" className="text-white/70 hover:text-gold transition-colors">যোগাযোগ</Link></li>
+              <li><Link href="/donate" className="text-white/70 hover:text-gold transition-colors">অনুদান</Link></li>
+              <li><Link href="/auth" className="text-white/70 hover:text-gold transition-colors">লগ-ইন করুন</Link></li>
             </ul>
           </div>
 
@@ -92,22 +88,13 @@ export const SiteFooter = () => {
               </p>
               <div className="flex items-center gap-2 mt-2">
                 <a
-                  href="https://facebook.com"
+                  href="https://www.facebook.com/kishtiblog"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-8 h-8 rounded-full bg-[#1877f2] flex items-center justify-center hover:opacity-80 transition-opacity"
                   aria-label="Facebook"
                 >
                   <Facebook className="w-4 h-4 text-white" />
-                </a>
-                <a
-                  href="https://twitter.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-8 h-8 rounded-full bg-black flex items-center justify-center hover:opacity-80 transition-opacity border border-white/20"
-                  aria-label="X / Twitter"
-                >
-                  <Twitter className="w-4 h-4 text-white" />
                 </a>
               </div>
               <div className="pt-3 border-t border-white/10">
