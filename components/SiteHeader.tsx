@@ -340,14 +340,15 @@ export const SiteHeader = () => {
       {/* ── DARK NAV BAR ─────────────────────────────── */}
       <div className="bg-navy">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center">
-            {/* Mobile hamburger on left */}
-            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <button className="lg:hidden p-3 text-white hover:text-gold transition-colors" aria-label="Menu">
-                  {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                </button>
-              </SheetTrigger>
+          <div className="grid grid-cols-3 items-center w-full">
+            {/* Left: Mobile hamburger */}
+            <div className="flex items-center">
+              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <button className="lg:hidden p-3 text-white hover:text-gold transition-colors" aria-label="Menu">
+                    {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                  </button>
+                </SheetTrigger>
               <SheetContent side="left" className="w-full max-w-sm bg-navy text-white border-r-0">
                 <div className="mb-8 mt-2">
                   <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="font-bn text-2xl text-gold">
@@ -469,9 +470,10 @@ export const SiteHeader = () => {
                 </nav>
               </SheetContent>
             </Sheet>
+            </div>
 
-            {/* Desktop nav */}
-            <nav className="hidden lg:flex items-center justify-center flex-1">
+            {/* Center: Desktop nav — truly centered */}
+            <nav className="hidden lg:flex items-center justify-center">
               {nav.map((n) =>
                 n.items ? (
                   <DesktopDropdown key={n.label} label={n.label} to={n.to} items={n.items} />
@@ -489,19 +491,21 @@ export const SiteHeader = () => {
               )}
             </nav>
 
-            {/* Desktop search (right side of nav) */}
-            <form onSubmit={handleSearch} className="hidden lg:flex items-center ml-auto">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/40" />
-                <input
-                  type="search"
-                  placeholder="খুঁজুন..."
-                  className="h-8 w-44 bg-white/10 border border-white/20 text-white placeholder:text-white/40 px-3 pl-8 text-xs font-bn rounded-sm focus:outline-none focus:border-gold focus:bg-white/15 transition-colors"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </form>
+            {/* Right: Desktop search */}
+            <div className="hidden lg:flex items-center justify-end">
+              <form onSubmit={handleSearch} className="flex items-center">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/40" />
+                  <input
+                    type="search"
+                    placeholder="খুঁজুন..."
+                    className="h-8 w-44 bg-white/10 border border-white/20 text-white placeholder:text-white/40 px-3 pl-8 text-xs font-bn rounded-sm focus:outline-none focus:border-gold focus:bg-white/15 transition-colors"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       </div>
