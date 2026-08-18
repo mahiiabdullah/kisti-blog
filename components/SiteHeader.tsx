@@ -35,25 +35,41 @@ interface NavItem {
 
 const getFullHijriDate = () => {
   const now = new Date();
-  const jd = Math.floor(now.getTime() / 86400000) + 2440588;
-  const l = jd - 1948440 + 10632;
-  const n = Math.floor((l - 1) / 10631);
-  const ll = l - 10631 * n + 354;
-  const j = Math.floor((10985 - ll) / 5316) * Math.floor((50 * ll) / 17719)
-    + Math.floor(ll / 5670) * Math.floor((43 * ll) / 15238);
-  const ll2 = ll - Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50)
-    - Math.floor(j / 16) * Math.floor((15238 * j) / 43) + 29;
-  const year = 30 * n + Math.floor(ll2 / 30) - 30;
-  const month = Math.ceil(ll2 / 29.5);
-  const day = ll2 - Math.floor((month - 1) * 29.5);
-  const hijriMonthsBn = ["মুহাররম", "সফর", "রবিউল আউয়াল", "রবিউস সানি", "জমাদিউল আউয়াল", "জমাদিউস সানি", "রজব", "শাবান", "রমজান", "শাওয়াল", "জিলকদ", "জিলহজ"];
-  const hijriMonthsEn = ["Muharram", "Safar", "Rabi al-Awwal", "Rabi al-Thani", "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban", "Ramadan", "Shawwal", "Dhul Qi'dah", "Dhul Hijjah"];
-  const monthIdx = Math.min(Math.max((month || 1) - 1, 0), 11);
-  const bn = (num: number) => num.toString().replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯"[+d]);
-  return {
-    hijriBn: `${bn(day)} ${hijriMonthsBn[monthIdx]}, ${bn(year)} হি.`,
-    hijriEn: `${day} ${hijriMonthsEn[monthIdx]}, ${year} AH`,
-  };
+  try {
+    const formatter = new Intl.DateTimeFormat("en-US-u-ca-islamic-umalqura", {
+      day: "numeric",
+      month: "numeric",
+      year: "numeric",
+    });
+    const parts = formatter.formatToParts(now);
+    const day = parseInt(parts.find((p) => p.type === "day")?.value || "1", 10);
+    const month = parseInt(parts.find((p) => p.type === "month")?.value || "1", 10);
+    const year = parseInt(parts.find((p) => p.type === "year")?.value || "1448", 10);
+
+    const hijriMonthsBn = [
+      "মুহাররম", "সফর", "রবিউল আউয়াল", "রবিউস সানি",
+      "জমাদিউল আউয়াল", "জমাদিউস সানি", "রজব", "শাবান",
+      "রমজান", "শাওয়াল", "জিলকদ", "জিলহজ"
+    ];
+    const hijriMonthsEn = [
+      "Muharram", "Safar", "Rabi al-Awwal", "Rabi al-Thani",
+      "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban",
+      "Ramadan", "Shawwal", "Dhul Qi'dah", "Dhul Hijjah"
+    ];
+
+    const monthIdx = Math.min(Math.max(month - 1, 0), 11);
+    const bn = (num: number) => num.toString().replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯"[+d]);
+
+    return {
+      hijriBn: `${bn(day)} ${hijriMonthsBn[monthIdx]}, ${bn(year)} হি.`,
+      hijriEn: `${day} ${hijriMonthsEn[monthIdx]}, ${year} AH`,
+    };
+  } catch (e) {
+    return {
+      hijriBn: "৫ রবিউল আউয়াল, ১৪৪৮ হি.",
+      hijriEn: "5 Rabi al-Awwal, 1448 AH",
+    };
+  }
 };
 
 interface DateInfo { bnLine: string; hijriBn: string; bangabdaLine: string; }
@@ -220,8 +236,16 @@ export const SiteHeader = () => {
       <div className="bg-background border-b border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-3 items-center h-20 gap-2 sm:gap-4">
-            {/* Left Column (empty to keep logo dead-centered) */}
-            <div className="flex items-center justify-start" />
+            {/* Left Column: Utility links (desktop) */}
+            <div className="flex items-center justify-start">
+              <nav className="hidden lg:flex items-center gap-3 text-xs font-bn-sans text-muted-foreground">
+                <Link href="/about" className="hover:text-foreground transition-colors">আমাদের কথা</Link>
+                <span className="text-border">·</span>
+                <Link href="/writers" className="hover:text-foreground transition-colors">লেখকবৃন্দ</Link>
+                <span className="text-border">·</span>
+                <Link href="/contact" className="hover:text-foreground transition-colors">যোগাযোগ</Link>
+              </nav>
+            </div>
 
             {/* Center Column: Logo (Middle Aligned) */}
             <div className="flex items-center justify-center">
@@ -232,16 +256,16 @@ export const SiteHeader = () => {
               </Link>
             </div>
 
-            {/* Right Column: Utility links + Auth + Theme toggle + Date block (MOST RIGHT) */}
-            <div className="flex items-center justify-end gap-2 sm:gap-3.5">
-              {/* Utility links (desktop) */}
-              <nav className="hidden lg:flex items-center gap-3 text-xs font-bn-sans text-muted-foreground mr-1">
-                <Link href="/about" className="hover:text-foreground transition-colors">আমাদের কথা</Link>
-                <span className="text-border">·</span>
-                <Link href="/writers" className="hover:text-foreground transition-colors">লেখকবৃন্দ</Link>
-                <span className="text-border">·</span>
-                <Link href="/contact" className="hover:text-foreground transition-colors">যোগাযোগ</Link>
-              </nav>
+            {/* Right Column: Date block + Auth + Theme toggle */}
+            <div className="flex items-center justify-end gap-2 sm:gap-3">
+              {/* Date block */}
+              {dates && (
+                <div className="hidden md:flex flex-col text-right items-end gap-0.5 border-r border-border/60 pr-3 mr-1">
+                  <span className="text-[11px] font-bn-sans text-muted-foreground leading-tight">{dates.bnLine}</span>
+                  <span className="text-[11px] font-bn-sans text-muted-foreground/75 leading-tight">{dates.hijriBn}</span>
+                  <span className="text-[11px] font-bn-sans text-muted-foreground/60 leading-tight">{dates.bangabdaLine}</span>
+                </div>
+              )}
 
               {/* Auth */}
               {!user ? (
@@ -291,15 +315,6 @@ export const SiteHeader = () => {
               >
                 <Search className="w-4 h-4" />
               </button>
-
-              {/* Date block (MOST RIGHT) */}
-              {dates && (
-                <div className="hidden md:flex flex-col text-right items-end gap-0.5 border-l border-border/60 pl-3 ml-1">
-                  <span className="text-[11px] font-bn-sans text-muted-foreground leading-tight">{dates.bnLine}</span>
-                  <span className="text-[11px] font-bn-sans text-muted-foreground/75 leading-tight">{dates.hijriBn}</span>
-                  <span className="text-[11px] font-bn-sans text-muted-foreground/60 leading-tight">{dates.bangabdaLine}</span>
-                </div>
-              )}
             </div>
           </div>
 
