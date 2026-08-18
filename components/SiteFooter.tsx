@@ -82,7 +82,7 @@ export const SiteFooter = () => {
 
           {/* Column 4 — Colophon / Contact */}
           <div>
-            <h4 className="text-gold font-bn-sans uppercase text-xs tracking-[0.2em] mb-4">সম্পর্ক</h4>
+            <h4 className="text-gold font-bn-sans uppercase text-xs tracking-[0.2em] mb-4">যোগাযোগ</h4>
             <div className="space-y-3">
               <p className="text-white/60 text-xs font-bn leading-relaxed">
                 যোগাযোগের জন্য সামাজিক যোগাযোগ মাধ্যম বা ইমেইল ব্যবহার করুন।
