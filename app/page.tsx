@@ -390,7 +390,7 @@ export default function HomePage() {
           // All published posts
           (supabase as any)
             .from("posts")
-            .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, is_featured, is_translation,
+            .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, is_featured, is_translation, translation_type,
               post_translations(lang, title, excerpt),
               writers!writer_id(name, bengali_name),
               translator:writers!translator_id(name, bengali_name)`)

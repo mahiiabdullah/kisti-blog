@@ -61,7 +61,7 @@ export default function AdminPostEditor() {
   const [status, setStatus] = useState<"draft" | "published">("draft");
   const [coverUrl, setCoverUrl] = useState("");
   const [writerId, setWriterId] = useState<string>("");
-  const [isTranslation, setIsTranslation] = useState<boolean>(false);
+  const [translationType, setTranslationType] = useState<string>("");
   const [translatorId, setTranslatorId] = useState<string>("");
   const [allWriters, setAllWriters] = useState<any[]>([]);
   const [readingMinutes, setReadingMinutes] = useState(5);
@@ -116,7 +116,7 @@ export default function AdminPostEditor() {
       setCategoryBn(data.category_bn ?? "");
       setCategoryEn(data.category_en ?? "");
       setWriterId(data.writer_id ?? "");
-      setIsTranslation(data.is_translation ?? false);
+      setTranslationType((data as any).translation_type ?? (data.is_translation ? "অনুবাদ" : ""));
       setTranslatorId(data.translator_id ?? "");
       setCoverUrl(data.cover_url ?? "");
       setReadingMinutes(data.reading_minutes ?? 5);
@@ -226,8 +226,9 @@ export default function AdminPostEditor() {
         category_bn: finalCatBn || null, category_en: finalCatEn || null,
         cover_url: coverUrl || null, reading_minutes: readingMinutes,
         writer_id: writerId || null,
-        is_translation: isTranslation,
-        translator_id: isTranslation ? (translatorId || null) : null,
+        is_translation: translationType !== "",
+        translation_type: translationType || null,
+        translator_id: translationType !== "" ? (translatorId || null) : null,
         is_featured: isFeatured,
         published_at: newStatus === "published" ? (status === "published" ? undefined : new Date().toISOString()) : null,
       };
@@ -327,25 +328,40 @@ export default function AdminPostEditor() {
             </div>
 
             <div className="flex flex-col gap-2 justify-end">
-              <label className="flex items-center gap-2 text-sm font-bn cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  checked={isTranslation} 
-                  onChange={(e) => setIsTranslation(e.target.checked)} 
-                  className="rounded-none border-border"
-                />
-                This is a translated writing
-              </label>
-              
-              {isTranslation && (
+              <div>
+                <Label className="text-xs uppercase tracking-wider font-en-sans">রচনার ধরন (Adaptation Type)</Label>
+                <select
+                  value={translationType}
+                  onChange={(e) => setTranslationType(e.target.value)}
+                  className="w-full mt-1 px-3 py-2 border border-border bg-background text-sm font-bn"
+                >
+                  <option value="">[ মৌলিক রচনা ]</option>
+                  <option value="অনুবাদ">অনুবাদ</option>
+                  <option value="ভাষান্তর">ভাষান্তর</option>
+                  <option value="রূপান্তর">রূপান্তর</option>
+                  <option value="সংক্ষিপ্ত পাঠ">সংক্ষিপ্ত পাঠ</option>
+                  <option value="অভিযোজন">অভিযোজন</option>
+                  <option value="পুনর্লিখন">পুনর্লিখন</option>
+                </select>
+              </div>
+
+              {translationType !== "" && (
                 <div className="animate-in fade-in slide-in-from-top-2">
-                  <Label className="text-xs uppercase tracking-wider font-en-sans">অনুবাদক (Translator)</Label>
-                  <select 
-                    value={translatorId} 
+                  <Label className="text-xs uppercase tracking-wider font-en-sans">
+                    {translationType === "অনুবাদ" || translationType === "ভাষান্তর"
+                      ? "অনুবাদক / ভাষান্তরকারী"
+                      : translationType === "রূপান্তর" || translationType === "অভিযোজন"
+                      ? "রূপান্তরকারী"
+                      : translationType === "সংক্ষিপ্ত পাঠ"
+                      ? "সংকলক"
+                      : "লেখক"}
+                  </Label>
+                  <select
+                    value={translatorId}
                     onChange={(e) => setTranslatorId(e.target.value)}
                     className="w-full mt-1 px-3 py-2 border border-border bg-background text-sm font-bn"
                   >
-                    <option value="">[ Select Translator ]</option>
+                    <option value="">[ Select Writer ]</option>
                     {allWriters.map(w => (
                       <option key={w.id} value={w.id}>{w.bengali_name} ({w.name})</option>
                     ))}

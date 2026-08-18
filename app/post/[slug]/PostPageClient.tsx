@@ -30,6 +30,7 @@ interface PostData {
   id: string; slug: string; cover_url: string | null; category_bn: string | null; category_en: string | null;
   published_at: string | null; reading_minutes: number | null; author_id: string;
   is_translation?: boolean;
+  translation_type?: string | null;
   writer?: { slug: string; name: string; bengali_name: string; bio?: string } | null;
   translator?: { slug: string; name: string; bengali_name: string } | null;
   post_stats?: { view_count: number }[] | null;
@@ -243,7 +244,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
     (async () => {
       const { data, error } = await supabase
         .from("posts")
-        .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id, is_translation,
+        .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id, is_translation, translation_type,
                  writer:writers!posts_writer_id_fkey(slug, name, bengali_name, bio),
                  translator:writers!posts_translator_id_fkey(slug, name, bengali_name),
                  post_stats(view_count),
@@ -491,7 +492,8 @@ export default function PostPageClient({ slug }: { slug: string }) {
                 </div>
                 {post.is_translation && post.translator && (
                   <div className="text-xs text-white/40 font-bn">
-                    অনুবাদ: <Link href={`/writers/${post.translator.slug}`} className="hover:text-gold">{post.translator.bengali_name}</Link>
+                    {post.translation_type || "অনুবাদ"}:{" "}
+                    <Link href={`/writers/${post.translator.slug}`} className="hover:text-gold">{post.translator.bengali_name}</Link>
                   </div>
                 )}
               </div>
