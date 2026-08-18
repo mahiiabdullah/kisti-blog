@@ -400,12 +400,46 @@ export default function PostPageClient({ slug }: { slug: string }) {
 
   const handleLinkClick = (e: React.MouseEvent<HTMLElement>) => {
     const a = (e.target as HTMLElement).closest("a");
-    if (a && a.getAttribute("href")?.startsWith("#fn")) {
+    if (!a) return;
+    const href = a.getAttribute("href");
+    if (href && (href.startsWith("#fn") || href.startsWith("#fnref"))) {
       e.preventDefault();
-      const id = a.getAttribute("href")?.substring(1);
-      if (id) document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+      const id = href.substring(1);
+      const target = document.getElementById(id);
+      if (target) {
+        const rect = target.getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        // Position target line/footnote at ~30% from top of viewport (25% upper / 75% lower alignment)
+        const targetY = rect.top + scrollTop - (window.innerHeight * 0.30);
+        window.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
+
+        // Highlight target line briefly for smooth visual feedback
+        target.classList.add("highlight-footnote");
+        setTimeout(() => {
+          target.classList.remove("highlight-footnote");
+        }, 2500);
+      }
     }
   };
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hash) {
+      const hash = window.location.hash.substring(1);
+      if (hash.startsWith("fn") || hash.startsWith("fnref")) {
+        setTimeout(() => {
+          const target = document.getElementById(hash);
+          if (target) {
+            const rect = target.getBoundingClientRect();
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const targetY = rect.top + scrollTop - (window.innerHeight * 0.30);
+            window.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
+            target.classList.add("highlight-footnote");
+            setTimeout(() => target.classList.remove("highlight-footnote"), 2500);
+          }
+        }, 500);
+      }
+    }
+  }, []);
 
   return (
     <>
