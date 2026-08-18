@@ -68,6 +68,7 @@ export default function AdminPostEditor() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [isFeatured, setIsFeatured] = useState(false);
+  const [hasDropCap, setHasDropCap] = useState(true);
   const [translations, setTranslations] = useState<Record<Lang, TranslationDraft>>({
     bn: emptyTranslation("bn"), en: emptyTranslation("en"), ar: emptyTranslation("ar"),
   });
@@ -121,6 +122,7 @@ export default function AdminPostEditor() {
       setCoverUrl(data.cover_url ?? "");
       setReadingMinutes(data.reading_minutes ?? 5);
       setIsFeatured((data as any).is_featured ?? false);
+      setHasDropCap((data as any).has_drop_cap ?? true);
       setTags((data.post_tags as any[]).map((t) => t.tag));
       const next = { bn: emptyTranslation("bn"), en: emptyTranslation("en"), ar: emptyTranslation("ar") };
       for (const t of data.post_translations as any[]) {
@@ -230,6 +232,7 @@ export default function AdminPostEditor() {
         translation_type: translationType || null,
         translator_id: translationType !== "" ? (translatorId || null) : null,
         is_featured: isFeatured,
+        has_drop_cap: hasDropCap,
         published_at: newStatus === "published" ? (status === "published" ? undefined : new Date().toISOString()) : null,
       };
 
@@ -472,8 +475,8 @@ export default function AdminPostEditor() {
             </div>
           </div>
 
-          {/* Featured toggle */}
-          <div className="flex items-center gap-3 pt-2 border-t border-border">
+          {/* Featured & Drop-Cap toggles */}
+          <div className="flex items-center gap-6 pt-2 border-t border-border flex-wrap">
             <label className="flex items-center gap-2 text-sm font-bn cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -483,6 +486,16 @@ export default function AdminPostEditor() {
               />
               <span className="font-bn-sans text-sm">প্রধান লেখা হিসেবে প্রদর্শন করুন</span>
               {isFeatured && <span className="text-[10px] font-en-sans uppercase tracking-wider bg-accent/15 text-accent px-2 py-0.5 rounded-sm">Featured</span>}
+            </label>
+
+            <label className="flex items-center gap-2 text-sm font-bn cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={hasDropCap}
+                onChange={(e) => setHasDropCap(e.target.checked)}
+                className="w-4 h-4 accent-[hsl(var(--accent))] cursor-pointer"
+              />
+              <span className="font-bn-sans text-sm">প্রথম অক্ষরে ড্রপ-ক্যাপ (Drop Cap) দেখান</span>
             </label>
           </div>
         </section>
@@ -587,6 +600,7 @@ export default function AdminPostEditor() {
             tags={tags}
             authorName={allWriters.find(w => w.id === writerId)?.bengali_name || allWriters.find(w => w.id === writerId)?.name || user?.user_metadata?.display_name_bn || "কিশতী"}
             date={new Date().toISOString()}
+            hasDropCap={hasDropCap}
           />
         </div>
       </aside>

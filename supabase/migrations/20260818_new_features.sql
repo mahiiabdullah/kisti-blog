@@ -1,4 +1,4 @@
-﻿-- ================================================================
+-- ================================================================
 -- KiSti Blog — Incremental Migration
 -- Date: 2026-08-18
 -- Run this in: Supabase Dashboard → SQL Editor
@@ -14,6 +14,9 @@
 
 ALTER TABLE public.posts
   ADD COLUMN IF NOT EXISTS translation_type text DEFAULT NULL;
+
+ALTER TABLE public.posts
+  ADD COLUMN IF NOT EXISTS has_drop_cap boolean DEFAULT true;
 
 -- Backfill: existing is_translation=true rows get type 'অনুবাদ'
 UPDATE public.posts

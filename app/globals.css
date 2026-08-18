@@ -208,8 +208,8 @@
   .rich-body h3 { @apply text-xl md:text-2xl mt-8 mb-3 font-semibold; }
   .rich-body h4 { @apply text-lg mt-6 mb-2 font-semibold; }
 
-  /* Drop cap on first paragraph */
-  .rich-body > p:first-child::first-letter {
+  /* Drop cap on first paragraph when enabled */
+  .rich-body.has-drop-cap > p:first-child::first-letter {
     float: left;
     font-size: 4.5em;
     line-height: 0.85;
@@ -479,8 +479,8 @@
     margin-bottom: 0;
   }
 
-  /* Drop-cap for first paragraph after excerpt */
-  .rich-body > p:first-of-type::first-letter {
+  /* Drop-cap for first paragraph after excerpt when enabled */
+  .rich-body.has-drop-cap > p:first-of-type::first-letter {
     font-family: var(--font-bn, 'Tiro Bangla', serif);
     font-size: 3.2em;
     font-weight: 700;
@@ -492,7 +492,7 @@
   }
 
   /* Dark mode: drop-cap uses gold instead of navy */
-  .dark .rich-body > p:first-of-type::first-letter {
+  .dark .rich-body.has-drop-cap > p:first-of-type::first-letter {
     color: hsl(var(--gold));
   }
 }

@@ -31,6 +31,7 @@ interface PostData {
   published_at: string | null; reading_minutes: number | null; author_id: string;
   is_translation?: boolean;
   translation_type?: string | null;
+  has_drop_cap?: boolean;
   writer?: { slug: string; name: string; bengali_name: string; bio?: string } | null;
   translator?: { slug: string; name: string; bengali_name: string } | null;
   post_stats?: { view_count: number }[] | null;
@@ -568,23 +569,25 @@ export default function PostPageClient({ slug }: { slug: string }) {
                     dangerouslySetInnerHTML={{
                       __html: processedHtml
                     }}
-                    className="rich-body"
+                    className={`rich-body ${post.has_drop_cap !== false ? "has-drop-cap" : ""}`}
                   />
                 ) : (
-                  <ReactMarkdown
-                    rehypePlugins={[rehypeSlug]}
-                    components={{
-                      a: ({ node, ...props }) => {
-                        if (props.href?.startsWith("#fn-")) {
-                          const fnId = props.href.replace("#fn-", "");
-                          return <sup id={`fnref-${fnId}`} className="ml-0.5 scroll-m-24"><a {...props} className="text-accent hover:underline">{props.children}</a></sup>;
+                  <div className={`rich-body ${post.has_drop_cap !== false ? "has-drop-cap" : ""}`}>
+                    <ReactMarkdown
+                      rehypePlugins={[rehypeSlug]}
+                      components={{
+                        a: ({ node, ...props }) => {
+                          if (props.href?.startsWith("#fn-")) {
+                            const fnId = props.href.replace("#fn-", "");
+                            return <sup id={`fnref-${fnId}`} className="ml-0.5 scroll-m-24"><a {...props} className="text-accent hover:underline">{props.children}</a></sup>;
+                          }
+                          return <a {...props} className="text-accent hover:underline decoration-border underline-offset-4" target="_blank" rel="noopener noreferrer" />;
                         }
-                        return <a {...props} className="text-accent hover:underline decoration-border underline-offset-4" target="_blank" rel="noopener noreferrer" />;
-                      }
-                    }}
-                  >
-                    {t.body.replace(/(?:<a[^>]*>)?\s*\[\^?\s*(\d+)\s*\]\s*(?:<\/a>)?/g, '[\\[^$1\\]](#fn-$1)')}
-                  </ReactMarkdown>
+                      }}
+                    >
+                      {t.body.replace(/(?:<a[^>]*>)?\s*\[\^?\s*(\d+)\s*\]\s*(?:<\/a>)?/g, '[\\[^$1\\]](#fn-$1)')}
+                    </ReactMarkdown>
+                  </div>
                 )}
               </div>
             )}
