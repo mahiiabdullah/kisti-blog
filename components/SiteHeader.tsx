@@ -177,10 +177,25 @@ export const SiteHeader = () => {
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [nav, setNav] = useState<NavItem[]>([]);
   const [dates, setDates] = useState<DateInfo | null>(null);
+  const [profileAvatarUrl, setProfileAvatarUrl] = useState<string>("");
 
   useEffect(() => {
     setDates(getAllDates());
   }, []);
+
+  // Fetch the user's profile avatar from the profiles table
+  useEffect(() => {
+    if (!user) { setProfileAvatarUrl(""); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("id", user.id)
+        .single();
+      if (data?.avatar_url) setProfileAvatarUrl(data.avatar_url);
+      else setProfileAvatarUrl(user.user_metadata?.avatar_url || "");
+    })();
+  }, [user?.id]);
 
   useEffect(() => {
     (async () => {
@@ -279,7 +294,7 @@ export const SiteHeader = () => {
                 <DropdownMenu>
                   <DropdownMenuTrigger className="outline-none">
                     <Avatar className="h-8 w-8 hover:ring-2 hover:ring-gold transition-all">
-                      <AvatarImage src={user.user_metadata?.avatar_url} />
+                      <AvatarImage src={profileAvatarUrl || user.user_metadata?.avatar_url} />
                       <AvatarFallback className="text-xs bg-primary text-primary-foreground font-bn">
                         {user.email?.charAt(0).toUpperCase() || "U"}
                       </AvatarFallback>

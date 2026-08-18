@@ -104,8 +104,10 @@ const FeaturedCard = ({ post }: { post: Post }) => {
               className="object-cover opacity-75 group-hover:opacity-85 group-hover:scale-105 transition-all duration-500"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-primary">
-              <img src="/kishti%20logo.png" alt="Kisti Logo" className="w-full h-full object-cover opacity-80" />
+            <div className="w-full h-full flex items-center justify-center relative" style={{ background: "#0B1E3D" }}>
+              <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(rgba(201,168,76,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.08) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+              <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at center, transparent 40%, rgba(5,10,20,0.55) 100%)" }} />
+              <img src="/kishti logo.png" alt="কিশতী" className="relative z-10 w-24 h-24 object-contain opacity-80 drop-shadow-lg" />
             </div>
           )}
         </div>
@@ -160,7 +162,10 @@ const ThumbCard = ({ post }: { post: Post }) => {
         {post.cover_url ? (
           <Image src={post.cover_url} alt={t.title} width={56} height={56} className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-all duration-300" />
         ) : (
-          <img src="/kishti%20logo.png" alt="Kisti Logo" className="w-full h-full object-cover opacity-80" />
+          <div className="w-full h-full relative flex items-center justify-center" style={{ background: "#0B1E3D" }}>
+            <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(rgba(201,168,76,0.09) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.09) 1px, transparent 1px)", backgroundSize: "14px 14px" }} />
+            <img src="/kishti logo.png" alt="কিশতী" className="relative z-10 w-8 h-8 object-contain opacity-75" />
+          </div>
         )}
       </div>
       <div className="flex-1 min-w-0">
@@ -226,7 +231,10 @@ const SectionListItem = ({ post }: { post: Post }) => {
         {post.cover_url ? (
           <Image src={post.cover_url} alt={t.title} width={72} height={72} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         ) : (
-          <img src="/kishti%20logo.png" alt="Kisti Logo" className="w-full h-full object-cover opacity-80" />
+          <div className="w-full h-full relative flex items-center justify-center" style={{ background: "#0B1E3D" }}>
+            <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(rgba(201,168,76,0.09) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.09) 1px, transparent 1px)", backgroundSize: "14px 14px" }} />
+            <img src="/kishti logo.png" alt="কিশতী" className="relative z-10 w-9 h-9 object-contain opacity-75" />
+          </div>
         )}
       </div>
     </Link>
