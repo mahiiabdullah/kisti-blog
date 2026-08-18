@@ -104,9 +104,10 @@ const FeaturedCard = ({ post }: { post: Post }) => {
               className="object-cover opacity-75 group-hover:opacity-85 group-hover:scale-105 transition-all duration-500"
             />
           ) : (
-            <div className="w-full h-full relative overflow-hidden">
-              <img src="/kishti logo.png" alt="" className="absolute inset-0 w-full h-full object-cover" />
-              <div className="absolute inset-0" style={{ background: "rgba(255,255,255,0.82)" }} />
+            <div className="w-full h-full relative overflow-hidden bg-[#0B1528]">
+              <img src="/kishti logo.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" />
+              <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-[#0A1423]/75 to-transparent pointer-events-none" />
+              <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-[#0A1423]/95 via-[#0A1423]/60 to-transparent pointer-events-none" />
             </div>
           )}
         </div>
@@ -161,9 +162,10 @@ const ThumbCard = ({ post }: { post: Post }) => {
         {post.cover_url ? (
           <Image src={post.cover_url} alt={t.title} width={56} height={56} className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-all duration-300" />
         ) : (
-          <div className="w-full h-full relative overflow-hidden">
-            <img src="/kishti logo.png" alt="" className="absolute inset-0 w-full h-full object-cover" />
-            <div className="absolute inset-0" style={{ background: "rgba(255,255,255,0.82)" }} />
+          <div className="w-full h-full relative overflow-hidden bg-[#0B1528]">
+            <img src="/kishti logo.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-90" />
+            <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-[#0A1423]/75 to-transparent pointer-events-none" />
+            <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-[#0A1423]/95 via-[#0A1423]/60 to-transparent pointer-events-none" />
           </div>
         )}
       </div>
@@ -230,9 +232,10 @@ const SectionListItem = ({ post }: { post: Post }) => {
         {post.cover_url ? (
           <Image src={post.cover_url} alt={t.title} width={72} height={72} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         ) : (
-          <div className="w-full h-full relative overflow-hidden">
-            <img src="/kishti logo.png" alt="" className="absolute inset-0 w-full h-full object-cover" />
-            <div className="absolute inset-0" style={{ background: "rgba(255,255,255,0.82)" }} />
+          <div className="w-full h-full relative overflow-hidden bg-[#0B1528]">
+            <img src="/kishti logo.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-90" />
+            <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-[#0A1423]/75 to-transparent pointer-events-none" />
+            <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-[#0A1423]/95 via-[#0A1423]/60 to-transparent pointer-events-none" />
           </div>
         )}
       </div>
