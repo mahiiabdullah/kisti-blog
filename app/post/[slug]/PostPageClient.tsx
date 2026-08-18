@@ -244,23 +244,32 @@ export default function PostPageClient({ slug }: { slug: string }) {
       try {
         const rawSlug = slug;
         const decodedSlug = rawSlug ? decodeURIComponent(rawSlug) : "";
-        let query = supabase
+        
+        let { data, error } = await (supabase as any)
           .from("posts")
           .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id, is_translation,
-                   writer:writers!posts_writer_id_fkey(slug, name, bengali_name, bio),
-                   translator:writers!posts_translator_id_fkey(slug, name, bengali_name),
+                   writer:writers!writer_id(slug, name, bengali_name, bio),
+                   translator:writers!translator_id(slug, name, bengali_name),
                    post_stats(view_count),
                    post_translations(lang, title, excerpt, body, footnotes, citations),
                    post_tags(tag),
-                   post_categories(categories(id, name_bn, name_en, slug))`);
+                   post_categories(categories(id, name_bn, name_en, slug))`)
+          .or(`slug.eq.${rawSlug},slug.eq.${decodedSlug}`)
+          .maybeSingle();
 
-        if (rawSlug === decodedSlug) {
-          query = query.eq("slug", rawSlug);
-        } else {
-          query = query.or(`slug.eq.${rawSlug},slug.eq.${decodedSlug}`);
+        if (error || !data) {
+          // Fallback query without relational joins
+          const { data: fallbackData, error: fallbackErr } = await (supabase as any)
+            .from("posts")
+            .select(`*, post_translations(*), post_tags(*)`)
+            .or(`slug.eq.${rawSlug},slug.eq.${decodedSlug}`)
+            .maybeSingle();
+
+          if (fallbackData) {
+            data = fallbackData;
+            error = null;
+          }
         }
-
-        const { data, error } = await query.maybeSingle();
 
         if (error) { setError(error.message); setLoading(false); return; }
 

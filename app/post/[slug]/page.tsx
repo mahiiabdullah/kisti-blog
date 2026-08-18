@@ -10,19 +10,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const rawSlug = params?.slug || "";
     const decodedSlug = rawSlug ? decodeURIComponent(rawSlug) : "";
     
-    let query = supabase
+    let { data } = await (supabase as any)
       .from("posts")
       .select(`slug, cover_url, category_bn, published_at,
-               writer:writers!posts_writer_id_fkey(bengali_name),
-               post_translations(lang, title, excerpt)`);
+               writers!writer_id(bengali_name),
+               post_translations(lang, title, excerpt)`)
+      .or(`slug.eq.${rawSlug},slug.eq.${decodedSlug}`)
+      .maybeSingle();
 
-    if (rawSlug === decodedSlug) {
-      query = query.eq("slug", rawSlug);
-    } else {
-      query = query.or(`slug.eq.${rawSlug},slug.eq.${decodedSlug}`);
+    if (!data) {
+      const { data: fallback } = await (supabase as any)
+        .from("posts")
+        .select(`slug, cover_url, category_bn, published_at, post_translations(lang, title, excerpt)`)
+        .or(`slug.eq.${rawSlug},slug.eq.${decodedSlug}`)
+        .maybeSingle();
+      data = fallback;
     }
-
-    const { data } = await query.maybeSingle();
 
     if (!data) {
       return {
@@ -35,7 +38,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const bn = d.post_translations?.find((t: any) => t.lang === "bn") ?? d.post_translations?.[0];
     const title = bn?.title ?? "কিশতী";
     const description = bn?.excerpt?.slice(0, 160) ?? "কিশতী — রাষ্ট্র, ইতিহাস ও চিন্তার রেখাচিত্র";
-    const author = d.writer?.bengali_name ?? "কিশতী";
+    const author = d.writers?.bengali_name ?? "কিশতী";
     const url = `https://kishti.org/post/${rawSlug}`;
     const image = d.cover_url ?? "https://kishti.org/og-default.png";
 
@@ -74,7 +77,7 @@ function ArticleJsonLd({ data }: { data: any }) {
   const bn = data.post_translations?.find((t: any) => t.lang === "bn") ?? data.post_translations?.[0];
   const title = bn?.title ?? "কিশতী";
   const description = bn?.excerpt?.slice(0, 200) ?? "";
-  const author = data.writer?.bengali_name ?? "কিশতী";
+  const author = data.writers?.bengali_name ?? "কিশতী";
   const url = `https://kishti.org/post/${data.slug}`;
 
   const jsonLd = {
@@ -110,19 +113,13 @@ export default async function PostPage({ params }: Props) {
     const rawSlug = params?.slug || "";
     const decodedSlug = rawSlug ? decodeURIComponent(rawSlug) : "";
     if (rawSlug) {
-      let query = supabase
+      const res = await (supabase as any)
         .from("posts")
         .select(`slug, cover_url, category_bn, published_at,
-                 writer:writers!posts_writer_id_fkey(bengali_name),
-                 post_translations(lang, title, excerpt)`);
-
-      if (rawSlug === decodedSlug) {
-        query = query.eq("slug", rawSlug);
-      } else {
-        query = query.or(`slug.eq.${rawSlug},slug.eq.${decodedSlug}`);
-      }
-
-      const res = await query.maybeSingle();
+                 writers!writer_id(bengali_name),
+                 post_translations(lang, title, excerpt)`)
+        .or(`slug.eq.${rawSlug},slug.eq.${decodedSlug}`)
+        .maybeSingle();
       data = res.data;
     }
   } catch (e) {
