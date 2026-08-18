@@ -19,7 +19,16 @@ export async function generateMetadata(
     .eq("slug", params.slug)
     .single();
 
-  if (!data) return { title: "Category Not Found | KiSti" };
+  if (!data) {
+    const slugLower = params.slug.toLowerCase();
+    if (slugLower.includes("editorial") || slugLower.includes("shompadokiyo") || slugLower.includes("%e0%a6%b8%e0%a6%ae%e0%a6%aa%e0%a6%be%e0%a6%a6%e0%a6%95%e0%a7%80%e0%a6%af%e0%a6%bc")) {
+      return {
+        title: "Editorial Column (সম্পাদকীয় কলাম) — কিশতী",
+        description: "কিশতী সম্পাদকীয় এবং নিয়মিত কলামের নির্বাচিত প্রবন্ধসমূহ।",
+      };
+    }
+    return { title: "Category Not Found | KiSti" };
+  }
 
   return {
     title: `${data.name_bn} — কিশতী`,
@@ -83,14 +92,36 @@ const renderPostCard = (p: any) => {
 
 export default async function CategoryPage({ params }: PageProps) {
   // 1. Fetch the category using the slug
-  const { data: catData, error: catError } = await supabase
+  const { data: rawCatData, error: catError } = await supabase
     .from("categories")
     .select("*")
     .eq("slug", params.slug)
     .single();
 
-  if (catError || !catData) {
-    notFound();
+  let catData = rawCatData;
+  if (!catData) {
+    const slugLower = params.slug.toLowerCase();
+    if (
+      slugLower.includes("editorial") ||
+      slugLower.includes("shompadokiyo") ||
+      decodeURIComponent(params.slug).includes("সম্পাদকীয়")
+    ) {
+      catData = {
+        id: "editorial-column",
+        name_bn: "Editorial Column (সম্পাদকীয় কলাম)",
+        name_en: "Editorial Column",
+        slug: params.slug,
+        description: "কিশতী সম্পাদকীয় এবং নিয়মিত কলামের নির্বাচিত প্রবন্ধসমূহ।",
+        icon_url: null,
+        is_active: true,
+        parent_id: null,
+        is_main: true,
+        position: 99,
+        created_at: new Date().toISOString(),
+      };
+    } else {
+      notFound();
+    }
   }
 
   // 2. Fetch all child categories if this is a parent category

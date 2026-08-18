@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   BookOpen, Scale, Landmark, Lightbulb, ScrollText,
-  Users, PenSquare, ChevronRight,
+  Users, PenSquare, ChevronRight, Newspaper,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
@@ -45,6 +45,7 @@ interface Writer {
 
 const getCategoryIcon = (nameBn: string | null) => {
   if (!nameBn) return BookOpen;
+  if (nameBn.includes("সম্পাদকীয়") || nameBn.includes("কলাম")) return Newspaper;
   if (nameBn.includes("ইতিহাস")) return ScrollText;
   if (nameBn.includes("আইন")) return Scale;
   if (nameBn.includes("রাষ্ট্র")) return Landmark;

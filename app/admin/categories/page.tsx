@@ -6,13 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Plus, Trash2, ChevronDown, ChevronRight, FolderTree, Sparkles } from "lucide-react";
+import { Plus, Trash2, Lock, ChevronDown, ChevronRight, FolderTree } from "lucide-react";
 
 interface Category {
   id: string;
   name_bn: string;
   name_en: string | null;
-  slug: string | null;
   parent_id: string | null;
   is_main: boolean;
   position: number;
@@ -24,19 +23,8 @@ export default function AdminCategories() {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [addingTo, setAddingTo] = useState<string | null>(null);
-
-  // New main category form
-  const [showMainForm, setShowMainForm] = useState(false);
-  const [mainNameBn, setMainNameBn] = useState("");
-  const [mainNameEn, setMainNameEn] = useState("");
-
-  // New subcategory form
   const [newNameBn, setNewNameBn] = useState("");
   const [newNameEn, setNewNameEn] = useState("");
-
-  const slugify = (text: string) => {
-    return text.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^\w\u0980-\u09FF-]+/g, '');
-  };
 
   const load = async () => {
     setLoading(true);
@@ -46,12 +34,14 @@ export default function AdminCategories() {
       .order("position", { ascending: true });
     if (error) { toast.error(error.message); setLoading(false); return; }
 
+    // Build tree
     const all = data as Category[];
     const mainCats = all.filter(c => !c.parent_id);
     for (const main of mainCats) {
       main.children = all.filter(c => c.parent_id === main.id).sort((a, b) => a.position - b.position);
     }
     setCategories(mainCats);
+    // Auto-expand all
     setExpanded(new Set(mainCats.map(c => c.id)));
     setLoading(false);
   };
@@ -66,40 +56,13 @@ export default function AdminCategories() {
     });
   };
 
-  const addMainCategory = async (bnName: string, enName?: string) => {
-    const nameBn = bnName.trim();
-    if (!nameBn) { toast.error("বাংলা নাম প্রয়োজন"); return; }
-    const nameEn = enName?.trim() || null;
-    const slug = slugify(nameEn || nameBn) || "editorial-column";
-    const nextPos = categories.length + 1;
-
-    const { error } = await supabase.from("categories").insert({
-      name_bn: nameBn,
-      name_en: nameEn,
-      slug: slug,
-      is_main: true,
-      position: nextPos,
-      parent_id: null,
-    });
-
-    if (error) { toast.error(error.message); return; }
-    toast.success(`"${nameBn}" ক্যাটাগরি যুক্ত করা হয়েছে`);
-    setMainNameBn("");
-    setMainNameEn("");
-    setShowMainForm(false);
-    load();
-  };
-
   const addSubcategory = async (parentId: string) => {
     if (!newNameBn.trim()) { toast.error("Bengali name is required"); return; }
     const parent = categories.find(c => c.id === parentId);
     const nextPos = (parent?.children?.length ?? 0) + 1;
-    const slug = slugify(newNameEn || newNameBn);
-
     const { error } = await supabase.from("categories").insert({
       name_bn: newNameBn.trim(),
       name_en: newNameEn.trim() || null,
-      slug: slug,
       parent_id: parentId,
       is_main: false,
       position: nextPos,
@@ -112,83 +75,34 @@ export default function AdminCategories() {
     load();
   };
 
-  const deleteCategory = async (cat: Category) => {
-    if (!confirm(`ক্যাটাগরি "${cat.name_bn}" মুছে ফেলতে চান?`)) return;
+  const deleteSubcategory = async (cat: Category) => {
+    if (cat.is_main) { toast.error("Cannot delete main categories"); return; }
+    if (!confirm(`Delete "${cat.name_bn}"? Posts using this category will be unlinked.`)) return;
     const { error } = await supabase.from("categories").delete().eq("id", cat.id);
     if (error) { toast.error(error.message); return; }
-    toast.success("ক্যাটাগরি মুছে ফেলা হয়েছে");
+    toast.success("Subcategory deleted");
     load();
   };
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <div>
-          <h1 className="font-bn text-4xl mb-1">ক্যাটাগরি সমূহ</h1>
-          <p className="text-sm text-muted-foreground font-en">Manage main categories & subcategories</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={() => addMainCategory("সম্পাদকীয় কলাম", "Editorial Column")}
-            variant="outline"
-            className="font-bn gap-2 border-gold text-foreground hover:bg-gold/10"
-          >
-            <Sparkles className="w-4 h-4 text-gold" />
-            + "সম্পাদকীয় কলাম" যোগ করুন
-          </Button>
-          <Button
-            onClick={() => setShowMainForm(!showMainForm)}
-            className="font-bn gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            নতুন মূল ক্যাটাগরি
-          </Button>
-        </div>
+      <div className="mb-10">
+        <h1 className="font-bn text-4xl mb-1">ক্যাটাগরি</h1>
+        <p className="text-sm text-muted-foreground font-en">Manage categories & subcategories</p>
       </div>
 
-      {showMainForm && (
-        <div className="mb-8 p-5 border border-primary/30 bg-card rounded-sm shadow-soft space-y-4">
-          <h3 className="font-bn text-lg font-bold">নতুন মূল ক্যাটাগরি তৈরি করুন</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Label className="text-xs font-bn">বাংলা নাম *</Label>
-              <Input
-                value={mainNameBn}
-                onChange={e => setMainNameBn(e.target.value)}
-                placeholder="যেমন: Editorial Column"
-                className="font-bn"
-              />
-            </div>
-            <div>
-              <Label className="text-xs font-en-sans">English Name</Label>
-              <Input
-                value={mainNameEn}
-                onChange={e => setMainNameEn(e.target.value)}
-                placeholder="e.g. Editorial Column"
-              />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button size="sm" variant="ghost" onClick={() => setShowMainForm(false)}>বাতিল</Button>
-            <Button size="sm" onClick={() => addMainCategory(mainNameBn, mainNameEn)}>সংরক্ষণ করুন</Button>
-          </div>
-        </div>
-      )}
-
       {loading ? (
-        <p className="text-muted-foreground font-bn py-8 text-center">ক্যাটাগরি লোড হচ্ছে…</p>
+        <p className="text-muted-foreground">…</p>
       ) : categories.length === 0 ? (
         <div className="text-center py-20 border border-dashed border-border">
           <FolderTree className="w-8 h-8 mx-auto mb-3 text-muted-foreground/40" />
-          <p className="font-bn text-muted-foreground mb-4">কোনো ক্যাটাগরি পাওয়া যায়নি।</p>
-          <Button onClick={() => addMainCategory("Editorial Column", "Editorial Column")} className="font-bn">
-            "Editorial Column" ক্যাটাগরি তৈরি করুন
-          </Button>
+          <p className="font-bn text-muted-foreground">No categories found. Run the SQL migration first.</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {categories.map((main) => (
-            <div key={main.id} className="border border-border bg-card rounded-sm shadow-soft overflow-hidden">
+            <div key={main.id} className="border border-border">
+              {/* Main category header */}
               <div className="flex items-center justify-between px-5 py-4 bg-secondary/30">
                 <button
                   onClick={() => toggleExpand(main.id)}
@@ -196,29 +110,28 @@ export default function AdminCategories() {
                 >
                   {expanded.has(main.id) ? <ChevronDown className="w-4 h-4 shrink-0" /> : <ChevronRight className="w-4 h-4 shrink-0" />}
                   <div className="min-w-0">
-                    <div className="font-bn text-lg font-bold truncate">{main.name_bn}</div>
+                    <div className="font-bn text-lg truncate">{main.name_bn}</div>
                     {main.name_en && <div className="text-xs text-muted-foreground font-en-sans">{main.name_en}</div>}
                   </div>
                 </button>
                 <div className="flex items-center gap-2 shrink-0">
+                  <Lock className="w-3.5 h-3.5 text-muted-foreground" />
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-xs font-bn gap-1"
+                    className="rounded-none text-xs"
                     onClick={() => { setAddingTo(addingTo === main.id ? null : main.id); setNewNameBn(""); setNewNameEn(""); }}
                   >
-                    <Plus className="w-3 h-3" /> সাবক্যাটাগরি
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => deleteCategory(main)} title="Delete Category">
-                    <Trash2 className="w-4 h-4 text-destructive" />
+                    <Plus className="w-3 h-3 mr-1" />Sub
                   </Button>
                 </div>
               </div>
 
+              {/* Add subcategory form */}
               {addingTo === main.id && (
                 <div className="px-5 py-4 border-t border-border bg-background flex flex-col sm:flex-row gap-3">
                   <div className="flex-1">
-                    <Label className="text-xs font-bn">সাবক্যাটাগরি নাম (বাংলা) *</Label>
+                    <Label className="text-xs font-en-sans">Bengali name *</Label>
                     <Input
                       value={newNameBn}
                       onChange={e => setNewNameBn(e.target.value)}
@@ -237,12 +150,13 @@ export default function AdminCategories() {
                     />
                   </div>
                   <div className="flex items-end gap-2">
-                    <Button size="sm" onClick={() => addSubcategory(main.id)}>Add</Button>
-                    <Button size="sm" variant="ghost" onClick={() => setAddingTo(null)}>Cancel</Button>
+                    <Button size="sm" className="rounded-none" onClick={() => addSubcategory(main.id)}>Add</Button>
+                    <Button size="sm" variant="ghost" className="rounded-none" onClick={() => setAddingTo(null)}>Cancel</Button>
                   </div>
                 </div>
               )}
 
+              {/* Subcategories */}
               {expanded.has(main.id) && main.children && main.children.length > 0 && (
                 <div className="border-t border-border">
                   {main.children.map((sub) => (
@@ -251,11 +165,17 @@ export default function AdminCategories() {
                         <div className="font-bn truncate">{sub.name_bn}</div>
                         {sub.name_en && <div className="text-xs text-muted-foreground font-en-sans">{sub.name_en}</div>}
                       </div>
-                      <Button variant="ghost" size="icon" onClick={() => deleteCategory(sub)}>
+                      <Button variant="ghost" size="icon" onClick={() => deleteSubcategory(sub)}>
                         <Trash2 className="w-4 h-4 text-destructive" />
                       </Button>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {expanded.has(main.id) && (!main.children || main.children.length === 0) && (
+                <div className="border-t border-border px-5 pl-12 py-4 text-xs text-muted-foreground font-en-sans">
+                  No subcategories yet
                 </div>
               )}
             </div>
