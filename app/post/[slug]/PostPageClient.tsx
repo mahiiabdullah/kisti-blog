@@ -242,6 +242,8 @@ export default function PostPageClient({ slug }: { slug: string }) {
     if (!slug) return;
     (async () => {
       try {
+        const rawSlug = slug;
+        const decodedSlug = rawSlug ? decodeURIComponent(rawSlug) : "";
         const { data, error } = await supabase
           .from("posts")
           .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id, is_translation,
@@ -251,8 +253,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
                    post_translations(lang, title, excerpt, body, footnotes, citations),
                    post_tags(tag),
                    post_categories(categories(id, name_bn, name_en, slug))`)
-          .eq("slug", slug)
-          .eq("status", "published")
+          .or(`slug.eq."${rawSlug}",slug.eq."${decodedSlug}"`)
           .maybeSingle();
 
         if (error) { setError(error.message); setLoading(false); return; }
@@ -669,7 +670,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-6 border-t border-b border-border/60 py-4 px-4 sm:px-0">
             <div className="flex flex-wrap gap-1.5 flex-1">
               <span className="text-xs font-bold text-muted-foreground font-bn-sans mr-1">ট্যাগ:</span>
-              {post.post_tags.map(({ tag }) => (
+              {(post.post_tags || []).map(({ tag }) => (
                 <Link key={tag} href={`/search?q=${encodeURIComponent(tag)}`}
                   className="text-xs font-bn px-3 py-1 border border-border bg-card text-muted-foreground hover:bg-primary hover:text-gold hover:border-primary transition-colors">
                   #{tag}

@@ -7,13 +7,15 @@ interface Props { params: { slug: string } }
 // Server-side metadata generation for SEO
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
+    const rawSlug = params?.slug || "";
+    const decodedSlug = rawSlug ? decodeURIComponent(rawSlug) : "";
+    
     const { data } = await supabase
       .from("posts")
       .select(`slug, cover_url, category_bn, published_at,
                writer:writers!posts_writer_id_fkey(bengali_name),
                post_translations(lang, title, excerpt)`)
-      .eq("slug", params.slug)
-      .eq("status", "published")
+      .or(`slug.eq."${rawSlug}",slug.eq."${decodedSlug}"`)
       .maybeSingle();
 
     if (!data) {
@@ -28,8 +30,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const title = bn?.title ?? "কিশতী";
     const description = bn?.excerpt?.slice(0, 160) ?? "কিশতী — রাষ্ট্র, ইতিহাস ও চিন্তার রেখাচিত্র";
     const author = d.writer?.bengali_name ?? "কিশতী";
-    const url = `https://kisti-next.vercel.app/post/${params.slug}`;
-    const image = d.cover_url ?? "https://kisti-next.vercel.app/og-default.png";
+    const url = `https://kishti.org/post/${rawSlug}`;
+    const image = d.cover_url ?? "https://kishti.org/og-default.png";
 
     return {
       title: `${title} — কিশতী`,
@@ -67,7 +69,7 @@ function ArticleJsonLd({ data }: { data: any }) {
   const title = bn?.title ?? "কিশতী";
   const description = bn?.excerpt?.slice(0, 200) ?? "";
   const author = data.writer?.bengali_name ?? "কিশতী";
-  const url = `https://kisti-next.vercel.app/post/${data.slug}`;
+  const url = `https://kishti.org/post/${data.slug}`;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -78,7 +80,7 @@ function ArticleJsonLd({ data }: { data: any }) {
     publisher: {
       "@type": "Organization",
       name: "কিশতী",
-      url: "https://kisti-next.vercel.app",
+      url: "https://kishti.org",
     },
     datePublished: data.published_at ?? undefined,
     dateModified: data.published_at ?? undefined,
@@ -99,15 +101,18 @@ function ArticleJsonLd({ data }: { data: any }) {
 export default async function PostPage({ params }: Props) {
   let data = null;
   try {
-    const res = await supabase
-      .from("posts")
-      .select(`slug, cover_url, category_bn, published_at,
-               writer:writers!posts_writer_id_fkey(bengali_name),
-               post_translations(lang, title, excerpt)`)
-      .eq("slug", params.slug)
-      .eq("status", "published")
-      .maybeSingle();
-    data = res.data;
+    const rawSlug = params?.slug || "";
+    const decodedSlug = rawSlug ? decodeURIComponent(rawSlug) : "";
+    if (rawSlug) {
+      const res = await supabase
+        .from("posts")
+        .select(`slug, cover_url, category_bn, published_at,
+                 writer:writers!posts_writer_id_fkey(bengali_name),
+                 post_translations(lang, title, excerpt)`)
+        .or(`slug.eq."${rawSlug}",slug.eq."${decodedSlug}"`)
+        .maybeSingle();
+      data = res.data;
+    }
   } catch (e) {
     console.error("PostPage server fetch error:", e);
   }
