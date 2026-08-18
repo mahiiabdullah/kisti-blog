@@ -105,9 +105,8 @@ const FeaturedCard = ({ post }: { post: Post }) => {
             />
           ) : (
             <div className="w-full h-full relative overflow-hidden">
-              <img src="/kishti logo.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />
-              <div className="absolute inset-0" style={{ background: "#0B1E3D", mixBlendMode: "multiply" }} />
-              <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(rgba(201,168,76,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.07) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+              <img src="/kishti logo.png" alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0" style={{ background: "rgba(255,255,255,0.82)" }} />
             </div>
           )}
         </div>
@@ -163,9 +162,8 @@ const ThumbCard = ({ post }: { post: Post }) => {
           <Image src={post.cover_url} alt={t.title} width={56} height={56} className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-all duration-300" />
         ) : (
           <div className="w-full h-full relative overflow-hidden">
-            <img src="/kishti logo.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />
-            <div className="absolute inset-0" style={{ background: "#0B1E3D", mixBlendMode: "multiply" }} />
-            <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(rgba(201,168,76,0.09) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.09) 1px, transparent 1px)", backgroundSize: "14px 14px" }} />
+            <img src="/kishti logo.png" alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0" style={{ background: "rgba(255,255,255,0.82)" }} />
           </div>
         )}
       </div>
@@ -233,9 +231,8 @@ const SectionListItem = ({ post }: { post: Post }) => {
           <Image src={post.cover_url} alt={t.title} width={72} height={72} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         ) : (
           <div className="w-full h-full relative overflow-hidden">
-            <img src="/kishti logo.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />
-            <div className="absolute inset-0" style={{ background: "#0B1E3D", mixBlendMode: "multiply" }} />
-            <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(rgba(201,168,76,0.09) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.09) 1px, transparent 1px)", backgroundSize: "14px 14px" }} />
+            <img src="/kishti logo.png" alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0" style={{ background: "rgba(255,255,255,0.82)" }} />
           </div>
         )}
       </div>

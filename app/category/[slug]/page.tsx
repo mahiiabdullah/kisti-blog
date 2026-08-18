@@ -62,26 +62,11 @@ const renderPostCard = (p: any) => {
                 className="w-full aspect-video object-cover transition-transform duration-700 group-hover:scale-[1.03] mix-blend-multiply dark:mix-blend-screen opacity-90"
               />
             ) : (
-              <div
-                className="w-full aspect-video relative overflow-hidden transition-transform duration-700 group-hover:scale-[1.02]"
-              >
-                {/* Logo fills entire area */}
-                <img
-                  src="/kishti logo.png"
-                  alt=""
-                  className="absolute inset-0 w-full h-full object-cover opacity-30"
-                />
-                {/* Dark navy tint blend */}
-                <div className="absolute inset-0" style={{ background: "#0B1E3D", mixBlendMode: "multiply" }} />
-                {/* Subtle gold mesh overlay */}
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(rgba(201,168,76,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.07) 1px, transparent 1px)",
-                    backgroundSize: "28px 28px",
-                  }}
-                />
+              <div className="w-full aspect-video relative overflow-hidden transition-transform duration-700 group-hover:scale-[1.02]">
+                {/* Logo fills full area */}
+                <img src="/kishti logo.png" alt="" className="absolute inset-0 w-full h-full object-cover" />
+                {/* White wash overlay — blends to light paper-white */}
+                <div className="absolute inset-0" style={{ background: "rgba(255,255,255,0.82)" }} />
               </div>
             )}
           </div>
