@@ -10,13 +10,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const rawSlug = params?.slug || "";
     const decodedSlug = rawSlug ? decodeURIComponent(rawSlug) : "";
     
-    const { data } = await supabase
+    let query = supabase
       .from("posts")
       .select(`slug, cover_url, category_bn, published_at,
                writer:writers!posts_writer_id_fkey(bengali_name),
-               post_translations(lang, title, excerpt)`)
-      .or(`slug.eq."${rawSlug}",slug.eq."${decodedSlug}"`)
-      .maybeSingle();
+               post_translations(lang, title, excerpt)`);
+
+    if (rawSlug === decodedSlug) {
+      query = query.eq("slug", rawSlug);
+    } else {
+      query = query.or(`slug.eq.${rawSlug},slug.eq.${decodedSlug}`);
+    }
+
+    const { data } = await query.maybeSingle();
 
     if (!data) {
       return {
@@ -104,13 +110,19 @@ export default async function PostPage({ params }: Props) {
     const rawSlug = params?.slug || "";
     const decodedSlug = rawSlug ? decodeURIComponent(rawSlug) : "";
     if (rawSlug) {
-      const res = await supabase
+      let query = supabase
         .from("posts")
         .select(`slug, cover_url, category_bn, published_at,
                  writer:writers!posts_writer_id_fkey(bengali_name),
-                 post_translations(lang, title, excerpt)`)
-        .or(`slug.eq."${rawSlug}",slug.eq."${decodedSlug}"`)
-        .maybeSingle();
+                 post_translations(lang, title, excerpt)`);
+
+      if (rawSlug === decodedSlug) {
+        query = query.eq("slug", rawSlug);
+      } else {
+        query = query.or(`slug.eq.${rawSlug},slug.eq.${decodedSlug}`);
+      }
+
+      const res = await query.maybeSingle();
       data = res.data;
     }
   } catch (e) {

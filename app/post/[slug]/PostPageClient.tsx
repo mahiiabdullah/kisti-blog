@@ -244,7 +244,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
       try {
         const rawSlug = slug;
         const decodedSlug = rawSlug ? decodeURIComponent(rawSlug) : "";
-        const { data, error } = await supabase
+        let query = supabase
           .from("posts")
           .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id, is_translation,
                    writer:writers!posts_writer_id_fkey(slug, name, bengali_name, bio),
@@ -252,9 +252,15 @@ export default function PostPageClient({ slug }: { slug: string }) {
                    post_stats(view_count),
                    post_translations(lang, title, excerpt, body, footnotes, citations),
                    post_tags(tag),
-                   post_categories(categories(id, name_bn, name_en, slug))`)
-          .or(`slug.eq."${rawSlug}",slug.eq."${decodedSlug}"`)
-          .maybeSingle();
+                   post_categories(categories(id, name_bn, name_en, slug))`);
+
+        if (rawSlug === decodedSlug) {
+          query = query.eq("slug", rawSlug);
+        } else {
+          query = query.or(`slug.eq.${rawSlug},slug.eq.${decodedSlug}`);
+        }
+
+        const { data, error } = await query.maybeSingle();
 
         if (error) { setError(error.message); setLoading(false); return; }
 
