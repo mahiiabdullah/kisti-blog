@@ -99,9 +99,9 @@ export const SiteFooter = () => {
                 </a>
               </div>
               <div className="pt-3 border-t border-white/10">
-                <p className="text-white/40 text-xs font-en-sans">কিশতী</p>
-                <p className="text-white/40 text-xs font-en-sans">সাপ্তাহিক · বাংলাদেশ</p>
-                <a href="mailto:kishti.editor@gmail.com" className="text-white/40 text-xs font-en-sans hover:text-gold transition-colors">
+                <p className="text-white/80 text-xs font-bn font-medium">বুরহান আল মাহমুদ</p>
+                <p className="text-white/50 text-xs font-bn">সম্পাদক, কিশতী</p>
+                <a href="mailto:kishti.editor@gmail.com" className="text-white/60 text-xs font-en-sans hover:text-gold transition-colors block mt-0.5">
                   kishti.editor@gmail.com
                 </a>
               </div>
