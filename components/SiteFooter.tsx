@@ -58,6 +58,7 @@ export const SiteFooter = () => {
               ))}
               {categories.length === 0 && (
                 <>
+                  <li><Link href="/category/editorial-column" className="text-white/70 hover:text-gold transition-colors">Editorial Column</Link></li>
                   <li><Link href="/category/history" className="text-white/70 hover:text-gold transition-colors">ইতিহাস</Link></li>
                   <li><Link href="/category/law" className="text-white/70 hover:text-gold transition-colors">আইন</Link></li>
                   <li><Link href="/category/state" className="text-white/70 hover:text-gold transition-colors">রাষ্ট্র</Link></li>
