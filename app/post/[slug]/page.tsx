@@ -6,70 +6,52 @@ interface Props { params: { slug: string } }
 
 // Server-side metadata generation for SEO
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  try {
-    const rawSlug = params?.slug || "";
-    const decodedSlug = rawSlug ? decodeURIComponent(rawSlug) : "";
-    
-    let { data } = await (supabase as any)
-      .from("posts")
-      .select(`slug, cover_url, category_bn, published_at,
-               writers!writer_id(bengali_name),
-               post_translations(lang, title, excerpt)`)
-      .or(`slug.eq.${rawSlug},slug.eq.${decodedSlug}`)
-      .maybeSingle();
+  const { data } = await supabase
+    .from("posts")
+    .select(`slug, cover_url, category_bn, published_at,
+             writer:writers!posts_writer_id_fkey(bengali_name),
+             post_translations(lang, title, excerpt)`)
+    .eq("slug", params.slug)
+    .eq("status", "published")
+    .maybeSingle();
 
-    if (!data) {
-      const { data: fallback } = await (supabase as any)
-        .from("posts")
-        .select(`slug, cover_url, category_bn, published_at, post_translations(lang, title, excerpt)`)
-        .or(`slug.eq.${rawSlug},slug.eq.${decodedSlug}`)
-        .maybeSingle();
-      data = fallback;
-    }
-
-    if (!data) {
-      return {
-        title: "পৃষ্ঠাটি পাওয়া যায়নি — কিশতী",
-        description: "কিশতী — রাষ্ট্র, ইতিহাস ও চিন্তার রেখাচিত্র",
-      };
-    }
-
-    const d = data as any;
-    const bn = d.post_translations?.find((t: any) => t.lang === "bn") ?? d.post_translations?.[0];
-    const title = bn?.title ?? "কিশতী";
-    const description = bn?.excerpt?.slice(0, 160) ?? "কিশতী — রাষ্ট্র, ইতিহাস ও চিন্তার রেখাচিত্র";
-    const author = d.writers?.bengali_name ?? "কিশতী";
-    const url = `https://kishti.org/post/${rawSlug}`;
-    const image = d.cover_url ?? "https://kishti.org/og-default.png";
-
+  if (!data) {
     return {
-      title: `${title} — কিশতী`,
-      description,
-      authors: [{ name: author }],
-      openGraph: {
-        title: `${title} — কিশতী`,
-        description,
-        type: "article",
-        url,
-        images: [{ url: image, width: 1200, height: 630, alt: title }],
-        publishedTime: d.published_at ?? undefined,
-        authors: [author],
-        tags: [d.category_bn ?? "কিশতী"],
-      },
-      twitter: {
-        card: "summary_large_image",
-        title: `${title} — কিশতী`,
-        description,
-        images: [image],
-      },
-      alternates: { canonical: url },
-    };
-  } catch (err) {
-    return {
-      title: "কিশতী",
+      title: "পৃষ্ঠাটি পাওয়া যায়নি — কিশতী",
       description: "কিশতী — রাষ্ট্র, ইতিহাস ও চিন্তার রেখাচিত্র",
     };
   }
+
+  const d = data as any;
+  const bn = d.post_translations?.find((t: any) => t.lang === "bn") ?? d.post_translations?.[0];
+  const title = bn?.title ?? "কিশতী";
+  const description = bn?.excerpt?.slice(0, 160) ?? "কিশতী — রাষ্ট্র, ইতিহাস ও চিন্তার রেখাচিত্র";
+  const author = d.writer?.bengali_name ?? "কিশতী";
+  const url = `https://kisti-next.vercel.app/post/${params.slug}`;
+  const image = d.cover_url ?? "https://kisti-next.vercel.app/og-default.png";
+
+  return {
+    title: `${title} — কিশতী`,
+    description,
+    authors: [{ name: author }],
+    openGraph: {
+      title: `${title} — কিশতী`,
+      description,
+      type: "article",
+      url,
+      images: [{ url: image, width: 1200, height: 630, alt: title }],
+      publishedTime: d.published_at ?? undefined,
+      authors: [author],
+      tags: [d.category_bn ?? "কিশতী"],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} — কিশতী`,
+      description,
+      images: [image],
+    },
+    alternates: { canonical: url },
+  };
 }
 
 // JSON-LD structured data
@@ -77,8 +59,8 @@ function ArticleJsonLd({ data }: { data: any }) {
   const bn = data.post_translations?.find((t: any) => t.lang === "bn") ?? data.post_translations?.[0];
   const title = bn?.title ?? "কিশতী";
   const description = bn?.excerpt?.slice(0, 200) ?? "";
-  const author = data.writers?.bengali_name ?? "কিশতী";
-  const url = `https://kishti.org/post/${data.slug}`;
+  const author = data.writer?.bengali_name ?? "কিশতী";
+  const url = `https://kisti-next.vercel.app/post/${data.slug}`;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -89,7 +71,7 @@ function ArticleJsonLd({ data }: { data: any }) {
     publisher: {
       "@type": "Organization",
       name: "কিশতী",
-      url: "https://kishti.org",
+      url: "https://kisti-next.vercel.app",
     },
     datePublished: data.published_at ?? undefined,
     dateModified: data.published_at ?? undefined,
@@ -108,27 +90,20 @@ function ArticleJsonLd({ data }: { data: any }) {
 }
 
 export default async function PostPage({ params }: Props) {
-  let data = null;
-  try {
-    const rawSlug = params?.slug || "";
-    const decodedSlug = rawSlug ? decodeURIComponent(rawSlug) : "";
-    if (rawSlug) {
-      const res = await (supabase as any)
-        .from("posts")
-        .select(`slug, cover_url, category_bn, published_at,
-                 writers!writer_id(bengali_name),
-                 post_translations(lang, title, excerpt)`)
-        .or(`slug.eq.${rawSlug},slug.eq.${decodedSlug}`)
-        .maybeSingle();
-      data = res.data;
-    }
-  } catch (e) {
-    console.error("PostPage server fetch error:", e);
-  }
+  // Fetch minimal data server-side for JSON-LD
+  const { data } = await supabase
+    .from("posts")
+    .select(`slug, cover_url, category_bn, published_at,
+             writer:writers!posts_writer_id_fkey(bengali_name),
+             post_translations(lang, title, excerpt)`)
+    .eq("slug", params.slug)
+    .eq("status", "published")
+    .maybeSingle();
 
   return (
     <>
       {data && <ArticleJsonLd data={data} />}
+      {/* Full interactive client component handles data fetching + rendering */}
       <PostPageClient slug={params.slug} />
     </>
   );
