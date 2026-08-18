@@ -63,33 +63,24 @@ const renderPostCard = (p: any) => {
               />
             ) : (
               <div
-                className="w-full aspect-video relative flex items-center justify-center overflow-hidden transition-transform duration-700 group-hover:scale-[1.02]"
-                style={{ background: "#0B1E3D" }}
+                className="w-full aspect-video relative overflow-hidden transition-transform duration-700 group-hover:scale-[1.02]"
               >
-                {/* Mesh grid texture overlay */}
+                {/* Logo fills entire area */}
+                <img
+                  src="/kishti logo.png"
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover opacity-30"
+                />
+                {/* Dark navy tint blend */}
+                <div className="absolute inset-0" style={{ background: "#0B1E3D", mixBlendMode: "multiply" }} />
+                {/* Subtle gold mesh overlay */}
                 <div
                   className="absolute inset-0"
                   style={{
                     backgroundImage:
-                      "linear-gradient(rgba(201,168,76,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.08) 1px, transparent 1px)",
+                      "linear-gradient(rgba(201,168,76,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.07) 1px, transparent 1px)",
                     backgroundSize: "28px 28px",
                   }}
-                />
-                {/* Subtle radial vignette */}
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background:
-                      "radial-gradient(ellipse at center, transparent 40%, rgba(5,10,20,0.65) 100%)",
-                  }}
-                />
-                {/* Kishti Logo */}
-                <Image
-                  src="/kishti logo.png"
-                  alt="কিশতী"
-                  width={110}
-                  height={110}
-                  className="relative z-10 opacity-80 object-contain drop-shadow-lg"
                 />
               </div>
             )}
