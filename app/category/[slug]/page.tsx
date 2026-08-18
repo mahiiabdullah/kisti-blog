@@ -62,12 +62,8 @@ const renderPostCard = (p: any) => {
                 className="w-full aspect-video object-cover transition-transform duration-700 group-hover:scale-[1.03] mix-blend-multiply dark:mix-blend-screen opacity-90"
               />
             ) : (
-              <div className="w-full aspect-video relative overflow-hidden bg-[#0B1528] rounded-sm transition-transform duration-700 group-hover:scale-[1.02]">
-                <img src="/kishti logo.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-90" />
-                {/* Top dark gradient overlay */}
-                <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-[#0A1423]/75 to-transparent pointer-events-none" />
-                {/* Bottom dark gradient overlay */}
-                <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-[#0A1423]/95 via-[#0A1423]/60 to-transparent pointer-events-none" />
+              <div className="w-full aspect-video relative overflow-hidden bg-[#CFD8E3] dark:bg-[#1E293B] rounded-sm transition-transform duration-700 group-hover:scale-[1.02] flex items-center justify-center p-4">
+                <img src="/kishti logo.png" alt="" className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-screen opacity-90" />
               </div>
             )}
           </div>
