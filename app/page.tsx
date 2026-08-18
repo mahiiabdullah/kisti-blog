@@ -288,10 +288,10 @@ const HeroSection = ({ posts }: { posts: Post[] }) => {
       <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-background/30 via-transparent to-background/50 dark:from-background/70 dark:to-background/80" />
 
       <div className="grid grid-cols-12 gap-0 relative z-10">
-        <div className="col-span-12 md:col-span-4 p-4 border-b md:border-b-0 md:border-r border-border/60 backdrop-blur-[2px]">
+        <div className="col-span-12 md:col-span-4 p-4 border-b md:border-b-0 md:border-r border-gold/40 backdrop-blur-[2px]">
           <FeaturedCard post={featured} />
         </div>
-        <div className="col-span-12 md:col-span-4 p-4 border-b md:border-b-0 md:border-r border-border/60 backdrop-blur-[2px]">
+        <div className="col-span-12 md:col-span-4 p-4 border-b md:border-b-0 md:border-r border-gold/40 backdrop-blur-[2px]">
           {listPosts.map((p) => <ListCard key={p.id} post={p} />)}
         </div>
         <div className="col-span-12 md:col-span-4 bg-secondary/40 dark:bg-secondary/20 p-4 backdrop-blur-[2px]">

@@ -146,7 +146,7 @@ const DesktopDropdown = ({ label, to, items }: { label: string; to?: string; ite
     <div ref={ref} className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
       <Link
         href={to ?? "#"}
-        className="flex items-center gap-1 px-3 py-3 text-sm text-white/90 hover:text-gold transition-colors font-bn"
+        className="flex items-center gap-1 px-3 py-3 text-sm text-white/90 hover:text-gold transition-colors font-bn whitespace-nowrap"
       >
         {label}
         <ChevronDown className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`} />
@@ -487,8 +487,8 @@ export const SiteHeader = () => {
             </Sheet>
             </div>
 
-            {/* Center: Desktop nav — truly centered */}
-            <nav className="hidden lg:flex items-center justify-center">
+            {/* Center: Desktop nav — single line stretched */}
+            <nav className="hidden lg:flex items-center justify-center gap-1 xl:gap-2 whitespace-nowrap">
               {nav.map((n) =>
                 n.items ? (
                   <DesktopDropdown key={n.label} label={n.label} to={n.to} items={n.items} />
@@ -496,7 +496,7 @@ export const SiteHeader = () => {
                   <Link
                     key={n.label}
                     href={n.to!}
-                    className={`px-3 py-3 text-sm font-bn transition-colors ${
+                    className={`px-3 py-3 text-sm font-bn transition-colors whitespace-nowrap ${
                       pathname === n.to ? "text-gold" : "text-white/90 hover:text-gold"
                     }`}
                   >
