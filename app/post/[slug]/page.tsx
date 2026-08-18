@@ -9,7 +9,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { data } = await supabase
     .from("posts")
     .select(`slug, cover_url, category_bn, published_at,
-             writer:writers!posts_writer_id_fkey(bengali_name),
+             writer:writers!writer_id(bengali_name),
              post_translations(lang, title, excerpt)`)
     .eq("slug", params.slug)
     .eq("status", "published")
@@ -94,7 +94,7 @@ export default async function PostPage({ params }: Props) {
   const { data } = await supabase
     .from("posts")
     .select(`slug, cover_url, category_bn, published_at,
-             writer:writers!posts_writer_id_fkey(bengali_name),
+             writer:writers!writer_id(bengali_name),
              post_translations(lang, title, excerpt)`)
     .eq("slug", params.slug)
     .eq("status", "published")
