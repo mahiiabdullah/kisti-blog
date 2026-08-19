@@ -83,15 +83,12 @@ export const SiteFooter = () => {
             <div className="space-y-1 mb-3">
               <p className="text-white/80 text-xs font-bn font-medium">বুরহান আল মাহমুদ</p>
               <p className="text-white/50 text-xs font-bn">সম্পাদক, কিশতী</p>
-              <a href="mailto:kishti.editor@gmail.com" className="text-white/60 text-xs font-en-sans hover:text-gold transition-colors block pt-0.5">
-                kishti.editor@gmail.com
+              <a href="mailto:kishti.editor@gmail.com" className="text-white/70 text-xs font-bn hover:text-gold transition-colors block pt-0.5">
+                ইমেইল: <span className="font-en-sans underline underline-offset-2 decoration-white/20 hover:decoration-gold">kishti.editor@gmail.com</span>
               </a>
             </div>
-            <div className="pt-3 border-t border-white/10 space-y-2">
-              <p className="text-white/60 text-xs font-bn leading-relaxed">
-                যোগাযোগের জন্য সামাজিক যোগাযোগ মাধ্যম বা ইমেইল ব্যবহার করুন।
-              </p>
-              <div className="flex items-center gap-2 mt-2">
+            <div className="pt-3 border-t border-white/10">
+              <div className="flex items-center gap-2">
                 <a
                   href="https://www.facebook.com/kishtiblog"
                   target="_blank"
