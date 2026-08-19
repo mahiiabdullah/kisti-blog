@@ -238,11 +238,22 @@ export default function AdminPostEditor() {
 
       let postId = id;
       if (isNew) {
-        const { data, error } = await (supabase as any).from("posts").insert(payload).select("id").single();
+        let { data, error } = await (supabase as any).from("posts").insert(payload).select("id").single();
+        if (error && error.message?.includes("has_drop_cap")) {
+          delete (payload as any).has_drop_cap;
+          const retry = await (supabase as any).from("posts").insert(payload).select("id").single();
+          data = retry.data;
+          error = retry.error;
+        }
         if (error) throw error;
         postId = data.id;
       } else {
-        const { error } = await (supabase as any).from("posts").update(payload).eq("id", id!);
+        let { error } = await (supabase as any).from("posts").update(payload).eq("id", id!);
+        if (error && error.message?.includes("has_drop_cap")) {
+          delete (payload as any).has_drop_cap;
+          const retry = await (supabase as any).from("posts").update(payload).eq("id", id!);
+          error = retry.error;
+        }
         if (error) throw error;
       }
 
