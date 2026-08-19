@@ -20,10 +20,17 @@ export async function generateMetadata(
     .single();
 
   if (!data) {
-    const slugLower = params.slug.toLowerCase();
-    if (slugLower.includes("editorial") || slugLower.includes("shompadokiyo") || slugLower.includes("%e0%a6%b8%e0%a6%ae%e0%a6%aa%e0%a6%be%e0%a6%a6%e0%a6%95%e0%a7%80%e0%a6%af%e0%a6%bc")) {
+    const slugDecoded = decodeURIComponent(params.slug).toLowerCase();
+    if (
+      slugDecoded.includes("editorial") ||
+      slugDecoded.includes("sampadakiya") ||
+      slugDecoded.includes("shompadokiyo") ||
+      slugDecoded.includes("সম্পাদকা") ||
+      slugDecoded.includes("সম্পাদকীয়") ||
+      slugDecoded.includes("সম্পাদকীয়")
+    ) {
       return {
-        title: "Editorial Column (সম্পাদকীয় কলাম) — কিশতী",
+        title: "সম্পাদকীয় কলাম — কিশতী",
         description: "কিশতী সম্পাদকীয় এবং নিয়মিত কলামের নির্বাচিত প্রবন্ধসমূহ।",
       };
     }
@@ -105,15 +112,18 @@ export default async function CategoryPage({ params }: PageProps) {
 
   let catData = rawCatData;
   if (!catData) {
-    const slugLower = params.slug.toLowerCase();
+    const slugDecoded = decodeURIComponent(params.slug).toLowerCase();
     if (
-      slugLower.includes("editorial") ||
-      slugLower.includes("shompadokiyo") ||
-      decodeURIComponent(params.slug).includes("সম্পাদকীয়")
+      slugDecoded.includes("editorial") ||
+      slugDecoded.includes("sampadakiya") ||
+      slugDecoded.includes("shompadokiyo") ||
+      slugDecoded.includes("সম্পাদকা") ||
+      slugDecoded.includes("সম্পাদকীয়") ||
+      slugDecoded.includes("সম্পাদকীয়")
     ) {
       catData = {
         id: "editorial-column",
-        name_bn: "Editorial Column (সম্পাদকীয় কলাম)",
+        name_bn: "সম্পাদকীয় কলাম",
         name_en: "Editorial Column",
         slug: params.slug,
         description: "কিশতী সম্পাদকীয় এবং নিয়মিত কলামের নির্বাচিত প্রবন্ধসমূহ।",
@@ -121,7 +131,7 @@ export default async function CategoryPage({ params }: PageProps) {
         is_active: true,
         parent_id: null,
         is_main: true,
-        position: 99,
+        position: 8,
         created_at: new Date().toISOString(),
       };
     } else {
@@ -208,9 +218,9 @@ export default async function CategoryPage({ params }: PageProps) {
         .order("published_at", { ascending: false });
 
       if (postIds.length > 0) {
-        query = query.or(`id.in.(${postIds.join(',')}),category_bn.eq.${catData.name_bn}`);
+        query = query.or(`id.in.(${postIds.join(',')}),category_bn.eq.সম্পাদকীয় কলাম,category_bn.eq.সম্পাদকীয় কলাম,category_bn.eq.${catData.name_bn}`);
       } else {
-        query = query.eq("category_bn", catData.name_bn);
+        query = query.or(`category_bn.eq.সম্পাদকীয় কলাম,category_bn.eq.সম্পাদকীয় কলাম,category_bn.eq.${catData.name_bn}`);
       }
 
       const { data: postsData } = await query.limit(20);
