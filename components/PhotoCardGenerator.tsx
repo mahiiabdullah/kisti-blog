@@ -119,7 +119,7 @@ export const PhotoCardGenerator = ({ title, author, cover, lang, date, categoryB
     ctx.fillText("কিস্তি", 60, 70);
     ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
     ctx.font = "italic 18px 'Inter', sans-serif";
-    ctx.fillText("kiSti", 170, 70);
+    ctx.fillText("KiShti", 170, 70);
 
     if (categoryBn) {
       ctx.textAlign = "right";
@@ -169,7 +169,7 @@ export const PhotoCardGenerator = ({ title, author, cover, lang, date, categoryB
     ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
     ctx.font = "500 16px 'Inter', sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("কিস্তি · kiSti  —  রাষ্ট্র, ইতিহাস ও চিন্তার রেখাচিত্র", W / 2, H - 30);
+    ctx.fillText("কিশতী · KiShti  —  রাষ্ট্র, ইতিহাস ও চিন্তার রেখাচিত্র", W / 2, H - 30);
 
     setGenerating(false);
 

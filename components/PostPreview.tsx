@@ -121,7 +121,7 @@ export function PostPreview({ translations, coverUrl, categoryBn, categoryEn, re
       ctx.textAlign = "left";
       ctx.fillStyle = "#C9A84C";
       ctx.font = "600 28px 'Noto Serif Bengali', serif";
-      ctx.fillText("কিশতী  kiSti", 60, 70);
+      ctx.fillText("কিশতী  KiShti", 60, 70);
 
       const catText = lang === "bn" ? categoryBn : categoryEn;
       if (catText) {
@@ -192,7 +192,7 @@ export function PostPreview({ translations, coverUrl, categoryBn, categoryEn, re
       ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
       ctx.font = "500 16px 'Noto Serif Bengali', serif";
       ctx.textAlign = "center";
-      ctx.fillText("কিশতী · kiSti  —  রাষ্ট্র, ইতিহাস ও চিন্তার রেখাচিত্র", W / 2, H - 35);
+      ctx.fillText("কিশতী · KiShti  —  রাষ্ট্র, ইতিহাস ও চিন্তার রেখাচিত্র", W / 2, H - 35);
 
       const dataUrl = canvas.toDataURL("image/png");
       const link = document.createElement("a");
