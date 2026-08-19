@@ -12,7 +12,6 @@ export async function DELETE(
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
     if (!serviceRoleKey) {
       console.error("SUPABASE_SERVICE_ROLE_KEY is not set in environment variables.");
@@ -34,12 +33,10 @@ export async function DELETE(
     }
     const token = authHeader.split(" ")[1];
 
-    // Validate the token by creating a user-scoped client (anon key + bearer header).
-    // This is the correct way to verify a user JWT server-side in Supabase.
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
-    });
-    const { data: { user }, error: authError } = await userClient.auth.getUser();
+    // Validate the caller's JWT.
+    // Pass the token directly to getUser(jwt) — this makes a server-to-Supabase
+    // Auth API call and validates the token regardless of which client key is used.
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized: Invalid token" }, { status: 401 });
     }
