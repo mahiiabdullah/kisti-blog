@@ -124,6 +124,8 @@ create table public.posts (
   writer_id uuid references public.writers(id) on delete set null,
   translator_id uuid references public.writers(id) on delete set null,
   is_translation boolean not null default false,
+  translation_type text default null,
+  has_drop_cap boolean default true,
   cover_url text,
   category_bn text,
   category_en text,
@@ -385,7 +387,39 @@ create policy "admins upload media" on storage.objects for insert
 create policy "admins update media" on storage.objects for update
   using (bucket_id = 'media' and public.is_admin(auth.uid()));
 
-create policy "admins delete media" on storage.objects for delete
-  using (bucket_id = 'media' and public.is_admin(auth.uid()));
+-- Avatar storage policies for profile page uploads
+DROP POLICY IF EXISTS "users upload own avatar" ON storage.objects;
+CREATE POLICY "users upload own avatar"
+  ON storage.objects FOR INSERT
+  WITH CHECK (
+    bucket_id = 'media'
+    AND auth.role() = 'authenticated'
+    AND (storage.foldername(name))[1] = 'avatars'
+  );
+
+DROP POLICY IF EXISTS "users update own avatar" ON storage.objects;
+CREATE POLICY "users update own avatar"
+  ON storage.objects FOR UPDATE
+  USING (
+    bucket_id = 'media'
+    AND auth.role() = 'authenticated'
+    AND (storage.foldername(name))[1] = 'avatars'
+  );
+
+DROP POLICY IF EXISTS "public read avatars" ON storage.objects;
+CREATE POLICY "public read avatars"
+  ON storage.objects FOR SELECT
+  USING (
+    bucket_id = 'media'
+    AND (storage.foldername(name))[1] = 'avatars'
+  );
+
+-- ====================================================================================
+
+-- 9. DEFAULT CATEGORIES SEED
+
+INSERT INTO public.categories (name_bn, name_en, slug, is_main, is_active, position)
+SELECT 'সম্পাদকীয় কলাম', 'Editorial Column', 'sampadakiya-kolam', true, true, 8
+WHERE NOT EXISTS (SELECT 1 FROM public.categories WHERE slug = 'sampadakiya-kolam');
 
 -- File successfully consolidated and cleaned via MCP.
