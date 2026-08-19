@@ -1,20 +1,22 @@
 /** @type {import('next').NextConfig} */
 
 const securityHeaders = [
-  // ── Content-Security-Policy (Report-Only so it never breaks the site) ──
-  // Switch key to 'Content-Security-Policy' when you're happy with the reports.
+  // ── Content-Security-Policy (ENFORCED) ──
+  // Whitelisted: Google Fonts, Cloudflare Insights, Supabase
   {
-    key: 'Content-Security-Policy-Report-Only',
+    key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      // 'unsafe-inline' needed for Next.js inline scripts; 'unsafe-eval' for
-      // dynamic imports. Remove these incrementally once you add nonces/hashes.
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-      "style-src 'self' 'unsafe-inline'",
-      // data: for base64 images; https: for all remote images (Supabase, etc.)
+      // Next.js requires unsafe-inline/unsafe-eval; Cloudflare Insights script allowed
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com",
+      // Google Fonts stylesheet allowed
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      // Remote images via Supabase and any https source
       "img-src 'self' data: https:",
+      // Google Fonts actual font files + data URIs
       "font-src 'self' data: https://fonts.gstatic.com",
-      "connect-src 'self' https://gvallvncqtvlfubrnver.supabase.co wss://gvallvncqtvlfubrnver.supabase.co",
+      // Supabase REST + Realtime WebSocket
+      "connect-src 'self' https://gvallvncqtvlfubrnver.supabase.co wss://gvallvncqtvlfubrnver.supabase.co https://static.cloudflareinsights.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
