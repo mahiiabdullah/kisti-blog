@@ -245,7 +245,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
     (async () => {
       const { data, error } = await supabase
         .from("posts")
-        .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id, is_translation, translation_type,
+        .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id, is_translation, translation_type, has_drop_cap,
                  writer:writers!posts_writer_id_fkey(slug, name, bengali_name, bio),
                  translator:writers!posts_translator_id_fkey(slug, name, bengali_name),
                  post_stats(view_count),
