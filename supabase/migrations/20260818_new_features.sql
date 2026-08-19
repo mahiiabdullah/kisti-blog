@@ -81,6 +81,7 @@ CREATE POLICY "public read avatars"
 -- Done!
 -- Changes:
 --   posts.translation_type  TEXT     adaptation type label
+--   posts.has_drop_cap      BOOLEAN  drop cap toggle option
 --   categories              INSERT   সম্পাদকীয় কলাম  (position 8)
 --   storage policies        CREATED  avatar upload/read for users
 -- ================================================================
