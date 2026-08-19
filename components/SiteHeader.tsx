@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Menu, X, Search, ChevronDown } from "lucide-react";
+import { Menu, X, Search, ChevronDown, Home } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase/client";
@@ -371,6 +371,14 @@ export const SiteHeader = () => {
                   </Link>
                 </div>
                 <nav className="flex flex-col">
+                  <Link
+                    href="/"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-2 px-2 py-3 text-sm text-white/90 hover:text-gold font-bn transition-colors border-b border-white/10"
+                  >
+                    <Home className="w-4 h-4 text-gold" />
+                    <span>হোমপেইজ</span>
+                  </Link>
                   {nav.map((n) => (
                     <div key={n.label}>
                       {n.items ? (
@@ -489,6 +497,15 @@ export const SiteHeader = () => {
 
             {/* Center: Desktop nav — single line stretched */}
             <nav className="hidden lg:flex items-center justify-center gap-1 xl:gap-2 whitespace-nowrap">
+              <Link
+                href="/"
+                className={`px-2.5 py-3 text-sm font-bn transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+                  pathname === "/" ? "text-gold" : "text-white/90 hover:text-gold"
+                }`}
+              >
+                <Home className="w-3.5 h-3.5" />
+                <span>হোমপেইজ</span>
+              </Link>
               {nav.map((n) =>
                 n.items ? (
                   <DesktopDropdown key={n.label} label={n.label} to={n.to} items={n.items} />
