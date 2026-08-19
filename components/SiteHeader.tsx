@@ -212,7 +212,11 @@ export const SiteHeader = () => {
         const built: NavItem[] = [];
         for (const m of mains) {
           const children = all.filter((c) => c.parent_id === m.id).sort((a, b) => a.position - b.position);
-          const parentUrl = m.slug ? `/category/${m.slug}` : `/?cat=${m.id}`;
+          const parentUrl = m.slug && m.slug.trim()
+            ? `/category/${m.slug}`
+            : (m.name_bn.includes("সম্পাদকীয়") || m.name_bn.includes("EDITORIAL") || m.name_bn.includes("Editorial"))
+              ? "/category/sampadakiya-kolam"
+              : `/?cat=${m.id}`;
           if (children.length > 0) {
             built.push({
               to: parentUrl,
@@ -355,9 +359,9 @@ export const SiteHeader = () => {
       {/* ── DARK NAV BAR ─────────────────────────────── */}
       <div className="bg-navy">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-3 items-center w-full">
+          <div className="flex items-center justify-between gap-2 lg:gap-4 w-full py-0.5">
             {/* Left: Mobile hamburger */}
-            <div className="flex items-center">
+            <div className="flex items-center lg:hidden">
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
                   <button className="lg:hidden p-3 text-white hover:text-gold transition-colors" aria-label="Menu">
@@ -495,8 +499,8 @@ export const SiteHeader = () => {
             </Sheet>
             </div>
 
-            {/* Center: Desktop nav — single line stretched */}
-            <nav className="hidden lg:flex items-center justify-center gap-1 xl:gap-2 whitespace-nowrap">
+            {/* Center: Desktop nav — single line stretched with flex-1 */}
+            <nav className="hidden lg:flex items-center justify-center flex-1 gap-1 xl:gap-2.5 whitespace-nowrap z-10">
               <Link
                 href="/"
                 className={`px-2.5 py-3 text-sm font-bn transition-colors whitespace-nowrap flex items-center gap-1.5 ${
@@ -524,7 +528,7 @@ export const SiteHeader = () => {
             </nav>
 
             {/* Right: Desktop search */}
-            <div className="hidden lg:flex items-center justify-end">
+            <div className="hidden lg:flex items-center justify-end shrink-0 z-20">
               <form onSubmit={handleSearch} className="flex items-center">
                 <div className="relative">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/40" />
