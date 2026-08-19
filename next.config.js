@@ -3,6 +3,8 @@
 const securityHeaders = [
   // ── Content-Security-Policy (ENFORCED) ──
   // Whitelisted: Google Fonts, Cloudflare Insights, Supabase
+  // NOTE: unsafe-inline is required by Next.js App Router for hydration scripts.
+  // To remove it, implement CSP nonces via middleware.ts (a separate task).
   {
     key: 'Content-Security-Policy',
     value: [
@@ -15,8 +17,10 @@ const securityHeaders = [
       "img-src 'self' data: https:",
       // Google Fonts actual font files + data URIs
       "font-src 'self' data: https://fonts.gstatic.com",
-      // Supabase REST + Realtime WebSocket
+      // Supabase REST + Realtime WebSocket + Cloudflare beacon
       "connect-src 'self' https://gvallvncqtvlfubrnver.supabase.co wss://gvallvncqtvlfubrnver.supabase.co https://static.cloudflareinsights.com",
+      // Explicitly block Flash, plugins, and <object>/<embed> elements
+      "object-src 'none'",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
