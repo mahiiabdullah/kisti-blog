@@ -37,11 +37,8 @@ export const SiteFooter = () => {
             <Link href="/" className="inline-block mb-3 group">
               <img src="/kishti%20banner%20name_2.png" alt="Kisti" className="h-12 object-contain invert mix-blend-screen opacity-90 group-hover:opacity-100 transition-opacity" />
             </Link>
-            <p className="text-white/50 text-xs font-en-sans tracking-[0.2em] mb-3">
-              রাষ্ট্র · ইতিহাস · আইন · চিন্তা
-            </p>
-            <p className="text-white/60 text-sm font-bn leading-relaxed">
-              বাংলা ভাষায় রাষ্ট্র, ইতিহাস ও চিন্তার দীর্ঘ-পাঠের একটি প্রকাশনা।
+            <p className="text-white/70 text-sm font-bn leading-relaxed">
+              বাংলা ভাষায় ধর্ম, রাষ্ট্র, ইতিহাস ও সমকালীন চিন্তার এক বুদ্ধিবৃত্তিক অভিযাত্রা
             </p>
           </div>
 
@@ -113,12 +110,9 @@ export const SiteFooter = () => {
 
       {/* Bottom bar */}
       <div className="border-t border-white/10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-center">
           <p className="text-white/30 text-xs font-en-sans">
             © {new Date().getFullYear()} কিশতী — সর্বস্বত্ব সংরক্ষিত
-          </p>
-          <p className="text-white/20 text-[10px] font-en-sans italic">
-            Set in Noto Serif Bengali · Cormorant Garamond · Amiri
           </p>
         </div>
       </div>
