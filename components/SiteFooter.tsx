@@ -44,7 +44,7 @@ export const SiteFooter = () => {
 
           {/* Column 2 — Category Links */}
           <div>
-            <h4 className="text-gold font-bn-sans uppercase text-xs tracking-[0.2em] mb-4">ক্যাটাগরি</h4>
+            <h4 className="text-gold font-bn font-semibold text-xs mb-4">ক্যাটাগরি</h4>
             <ul className="space-y-2 text-sm font-bn">
               {categories.map((c) => (
                 <li key={c.id}>
@@ -67,7 +67,7 @@ export const SiteFooter = () => {
 
           {/* Column 3 — Quick Links */}
           <div>
-            <h4 className="text-gold font-bn-sans uppercase text-xs tracking-[0.2em] mb-4">দ্রুত লিংক</h4>
+            <h4 className="text-gold font-bn font-semibold text-xs mb-4">দ্রুত লিংক</h4>
             <ul className="space-y-2 text-sm font-bn">
               <li><Link href="/about" className="text-white/70 hover:text-gold transition-colors">আমাদের কথা</Link></li>
               <li><Link href="/writers" className="text-white/70 hover:text-gold transition-colors">লেখকবৃন্দ</Link></li>
@@ -77,9 +77,17 @@ export const SiteFooter = () => {
             </ul>
           </div>
 
-          {/* Column 4 — Colophon / Contact */}
+          {/* Column 4 — Contact */}
           <div>
-            <div className="space-y-3 pt-1">
+            <h4 className="text-gold font-bn font-semibold text-xs mb-4">যোগাযোগ</h4>
+            <div className="space-y-1 mb-3">
+              <p className="text-white/80 text-xs font-bn font-medium">বুরহান আল মাহমুদ</p>
+              <p className="text-white/50 text-xs font-bn">সম্পাদক, কিশতী</p>
+              <a href="mailto:kishti.editor@gmail.com" className="text-white/60 text-xs font-en-sans hover:text-gold transition-colors block pt-0.5">
+                kishti.editor@gmail.com
+              </a>
+            </div>
+            <div className="pt-3 border-t border-white/10 space-y-2">
               <p className="text-white/60 text-xs font-bn leading-relaxed">
                 যোগাযোগের জন্য সামাজিক যোগাযোগ মাধ্যম বা ইমেইল ব্যবহার করুন।
               </p>
@@ -92,14 +100,6 @@ export const SiteFooter = () => {
                   aria-label="Facebook"
                 >
                   <Facebook className="w-4 h-4 text-white" />
-                </a>
-              </div>
-              <div className="pt-3 border-t border-white/10 space-y-1">
-                <p className="text-gold font-bn font-semibold text-xs mb-2">যোগাযোগ</p>
-                <p className="text-white/80 text-xs font-bn font-medium">বুরহান আল মাহমুদ</p>
-                <p className="text-white/50 text-xs font-bn">সম্পাদক, কিশতী</p>
-                <a href="mailto:kishti.editor@gmail.com" className="text-white/60 text-xs font-en-sans hover:text-gold transition-colors block pt-0.5">
-                  kishti.editor@gmail.com
                 </a>
               </div>
             </div>
