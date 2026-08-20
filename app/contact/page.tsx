@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "যোগাযোগ — কিস্তি (kiSti)",
-  description: "কিস্তি — যোগাযোগ করুন।",
+  title: "যোগাযোগ — কিশতী (KiShti)",
+  description: "কিশতী — যোগাযোগ করুন।",
 };
 
 export default function Contact() {

@@ -5,7 +5,7 @@ import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "লেখকবৃন্দ — কিশতী",
-  description: "কিস্তির সাথে যুক্ত সকল লেখক, প্রাবন্ধিক এবং অনুবাদকদের তালিকা।",
+  description: "কিশতীর সাথে যুক্ত সকল লেখক, প্রাবন্ধিক এবং অনুবাদকদের তালিকা।",
 };
 
 export const revalidate = 60; // Revalidate every minute
@@ -38,7 +38,7 @@ export default async function WritersDirectoryPage() {
             WRITERS &amp; CONTRIBUTORS
           </div>
           <p className="font-bn text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            কিস্তির সাথে যুক্ত সকল লেখক, প্রাবন্ধিক এবং অনুবাদকদের তালিকা। 
+            কিশতীর সাথে যুক্ত সকল লেখক, প্রাবন্ধিক এবং অনুবাদকদের তালিকা। 
             তাদের প্রোফাইলে গিয়ে আপনি তাদের সব লেখা একসাথে পড়তে পারবেন।
           </p>
         </div>

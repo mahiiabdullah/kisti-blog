@@ -116,7 +116,7 @@ export const PhotoCardGenerator = ({ title, author, cover, lang, date, categoryB
     ctx.textAlign = "left";
     ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
     ctx.font = "600 28px 'Noto Serif Bengali', serif";
-    ctx.fillText("কিস্তি", 60, 70);
+    ctx.fillText("কিশতী", 60, 70);
     ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
     ctx.font = "italic 18px 'Inter', sans-serif";
     ctx.fillText("KiShti", 170, 70);
