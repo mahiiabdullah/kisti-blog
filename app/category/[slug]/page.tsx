@@ -122,7 +122,7 @@ export default async function CategoryPage({ params }: PageProps) {
       slugDecoded.includes("সম্পাদকীয়")
     ) {
       catData = {
-        id: "editorial-column",
+        id: "",  // empty string = falsy → skips all UUID-based queries below
         name_bn: "সম্পাদকীয় কলাম",
         name_en: "Editorial Column",
         slug: params.slug,
@@ -140,11 +140,14 @@ export default async function CategoryPage({ params }: PageProps) {
   }
 
   // 2. Fetch all child categories if this is a parent category
-  const { data: childCats } = await supabase
-    .from("categories")
-    .select("*")
-    .eq("parent_id", catData.id)
-    .order("position", { ascending: true });
+  // Guard: only query if catData.id is a real UUID (not null from the fallback)
+  const { data: childCats } = catData.id
+    ? await supabase
+        .from("categories")
+        .select("*")
+        .eq("parent_id", catData.id)
+        .order("position", { ascending: true })
+    : { data: [] };
 
   const hasChildCats = childCats && childCats.length > 0;
 
@@ -192,17 +195,20 @@ export default async function CategoryPage({ params }: PageProps) {
   }
 
   // 4. Fetch standalone category posts (if single category or for stats)
-  let catIdsToSearch = [catData.id];
-  if (hasChildCats) {
-    catIdsToSearch = [...catIdsToSearch, ...childCats.map((c) => c.id)];
+  // Guard: only use UUID-based lookup if catData.id is a real UUID
+  let catIdsToSearch: string[] = catData.id ? [catData.id] : [];
+  if (hasChildCats && childCats) {
+    catIdsToSearch = [...catIdsToSearch, ...childCats.map((c: any) => c.id)];
   }
 
-  const { data: pcData } = await supabase
-    .from("post_categories")
-    .select("post_id")
-    .in("category_id", catIdsToSearch);
-  
-  const postIds = pcData?.map((pc) => pc.post_id) ?? [];
+  const { data: pcData } = catIdsToSearch.length > 0
+    ? await supabase
+        .from("post_categories")
+        .select("post_id")
+        .in("category_id", catIdsToSearch)
+    : { data: [] };
+
+  const postIds = pcData?.map((pc: any) => pc.post_id) ?? [];
 
   let standalonePosts: any[] = [];
   if (!hasChildCats) {
