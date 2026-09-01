@@ -600,7 +600,14 @@ export default function PostPageClient({ slug }: { slug: string }) {
                   {t.footnotes.map((f: any) => (
                     <li key={f.id} id={`fn-${f.id}`} className="leading-relaxed scroll-m-24">
                       <span className="text-accent mr-2">[{f.id}]</span>
-                      {f.text}
+                      <span
+                        className="prose-footnote [&_em]:italic [&_a]:text-accent [&_a]:underline [&_a]:underline-offset-2"
+                        dangerouslySetInnerHTML={{
+                          __html: typeof f.text === "string"
+                            ? f.text.replace(/^<p>([\s\S]*)<\/p>$/, "$1").trim()
+                            : f.text ?? "",
+                        }}
+                      />
                       <a href={`#fnref-${f.id}`} className="ml-2 text-accent hover:underline inline-block" aria-label="Back">↩</a>
                     </li>
                   ))}
