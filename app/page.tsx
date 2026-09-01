@@ -127,24 +127,40 @@ const FeaturedCard = ({ post }: { post: Post }) => {
   );
 };
 
-/** Middle column — text-only article list */
+/** Middle column — article list with thumbnail on the right */
 const ListCard = ({ post }: { post: Post }) => {
   const t = post.post_translations[0];
   if (!t) return null;
   return (
     <div className="py-3 border-b border-border/70 last:border-0">
-      <Link href={`/post/${post.slug}`} className="group block">
-        {post.category_bn && (
-          <p className="text-[10px] font-bn-sans text-gold uppercase tracking-wider mb-1">{post.category_bn}</p>
-        )}
-        <h4 className="font-bn text-[0.95rem] leading-snug mb-1.5 group-hover:text-gold transition-colors">{t.title}</h4>
-        <p className="text-[11px] text-muted-foreground font-bn mb-1.5">{getAuthorName(post)}</p>
-        {t.excerpt && (
-          <p className="text-muted-foreground text-xs font-bn line-clamp-2 mb-1">{t.excerpt}</p>
-        )}
-        {post.published_at && (
-          <p className="text-[10px] text-muted-foreground font-en-sans">{toBengaliDate(post.published_at)}</p>
-        )}
+      <Link href={`/post/${post.slug}`} className="group flex items-start gap-3">
+        {/* Text content */}
+        <div className="flex-1 min-w-0">
+          {post.category_bn && (
+            <p className="text-[10px] font-bn-sans text-gold uppercase tracking-wider mb-1">{post.category_bn}</p>
+          )}
+          <h4 className="font-bn text-[0.95rem] leading-snug mb-1.5 group-hover:text-gold transition-colors">{t.title}</h4>
+          <p className="text-[11px] text-muted-foreground font-bn mb-1.5">{getAuthorName(post)}</p>
+          {post.published_at && (
+            <p className="text-[10px] text-muted-foreground font-en-sans">{toBengaliDate(post.published_at)}</p>
+          )}
+        </div>
+        {/* Thumbnail on the right */}
+        <div className="w-16 h-16 shrink-0 overflow-hidden rounded-sm border border-border/40">
+          {post.cover_url ? (
+            <Image
+              src={post.cover_url}
+              alt={t.title}
+              width={64}
+              height={64}
+              className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-all duration-300"
+            />
+          ) : (
+            <div className="w-full h-full bg-[#CFD8E3] flex items-center justify-center p-1.5">
+              <img src="/kishti logo.png" alt="" className="w-full h-full object-contain mix-blend-multiply opacity-90" />
+            </div>
+          )}
+        </div>
       </Link>
     </div>
   );
