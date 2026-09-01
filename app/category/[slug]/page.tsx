@@ -224,9 +224,9 @@ export default async function CategoryPage({ params }: PageProps) {
         .order("published_at", { ascending: false });
 
       if (postIds.length > 0) {
-        query = query.or(`id.in.(${postIds.join(',')}),category_bn.eq.সম্পাদকীয় কলাম,category_bn.eq.সম্পাদকীয় কলাম,category_bn.eq.${catData.name_bn}`);
+        query = query.or(`id.in.(${postIds.join(',')}),category_bn.eq.${catData.name_bn}`);
       } else {
-        query = query.or(`category_bn.eq.সম্পাদকীয় কলাম,category_bn.eq.সম্পাদকীয় কলাম,category_bn.eq.${catData.name_bn}`);
+        query = query.eq("category_bn", catData.name_bn);
       }
 
       const { data: postsData } = await query.limit(20);
