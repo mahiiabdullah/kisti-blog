@@ -146,13 +146,13 @@ const ListCard = ({ post }: { post: Post }) => {
           )}
         </div>
         {/* Thumbnail on the right */}
-        <div className="w-16 h-16 shrink-0 overflow-hidden rounded-sm border border-border/40">
+        <div className="w-24 h-24 shrink-0 overflow-hidden rounded-sm border border-border/40">
           {post.cover_url ? (
             <Image
               src={post.cover_url}
               alt={t.title}
-              width={64}
-              height={64}
+              width={96}
+              height={96}
               className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-all duration-300"
             />
           ) : (
