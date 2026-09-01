@@ -151,8 +151,10 @@ const ListCard = ({ post }: { post: Post }) => {
             <Image
               src={post.cover_url}
               alt={t.title}
-              width={96}
-              height={96}
+              width={200}
+              height={200}
+              sizes="96px"
+              quality={90}
               className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-all duration-300"
             />
           ) : (
