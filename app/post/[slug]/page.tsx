@@ -6,14 +6,17 @@ interface Props { params: { slug: string } }
 
 // Server-side metadata generation for SEO
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { data } = await supabase
-    .from("posts")
-    .select(`slug, cover_url, category_bn, published_at,
+  const metaSelect = `slug, cover_url, category_bn, published_at,
              writer:writers!posts_writer_id_fkey(bengali_name),
-             post_translations(lang, title, excerpt)`)
-    .eq("slug", params.slug)
-    .eq("status", "published")
-    .maybeSingle();
+             post_translations(lang, title, excerpt)`;
+  let { data } = await supabase
+    .from("posts").select(metaSelect)
+    .eq("slug", params.slug).eq("status", "published").maybeSingle();
+  if (!data) {
+    ({ data } = await supabase
+      .from("posts").select(metaSelect)
+      .eq("slug", encodeURIComponent(params.slug)).eq("status", "published").maybeSingle());
+  }
 
   if (!data) {
     return {
@@ -91,14 +94,17 @@ function ArticleJsonLd({ data }: { data: any }) {
 
 export default async function PostPage({ params }: Props) {
   // Fetch minimal data server-side for JSON-LD
-  const { data } = await supabase
-    .from("posts")
-    .select(`slug, cover_url, category_bn, published_at,
+  const pageSelect = `slug, cover_url, category_bn, published_at,
              writer:writers!posts_writer_id_fkey(bengali_name),
-             post_translations(lang, title, excerpt)`)
-    .eq("slug", params.slug)
-    .eq("status", "published")
-    .maybeSingle();
+             post_translations(lang, title, excerpt)`;
+  let { data } = await supabase
+    .from("posts").select(pageSelect)
+    .eq("slug", params.slug).eq("status", "published").maybeSingle();
+  if (!data) {
+    ({ data } = await supabase
+      .from("posts").select(pageSelect)
+      .eq("slug", encodeURIComponent(params.slug)).eq("status", "published").maybeSingle());
+  }
 
   return (
     <>

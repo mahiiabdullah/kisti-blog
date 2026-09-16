@@ -243,18 +243,24 @@ export default function PostPageClient({ slug }: { slug: string }) {
   useEffect(() => {
     if (!slug) return;
     (async () => {
-      const { data, error } = await supabase
-        .from("posts")
-        .select(`id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id, is_translation, translation_type, has_drop_cap,
+      const postSelect = `id, slug, cover_url, category_bn, category_en, published_at, reading_minutes, author_id, is_translation, translation_type, has_drop_cap,
                  writer:writers!posts_writer_id_fkey(slug, name, bengali_name, bio),
                  translator:writers!posts_translator_id_fkey(slug, name, bengali_name),
                  post_stats(view_count),
                  post_translations(lang, title, excerpt, body, footnotes, citations),
                  post_tags(tag),
-                 post_categories(categories(id, name_bn, name_en, slug))`)
-        .eq("slug", slug)
-        .eq("status", "published")
-        .maybeSingle();
+                 post_categories(categories(id, name_bn, name_en, slug))`;
+
+      // Try decoded slug first (normal case), then encoded (legacy posts saved with %20/%26 etc.)
+      let { data, error } = await supabase
+        .from("posts").select(postSelect)
+        .eq("slug", slug).eq("status", "published").maybeSingle();
+
+      if (!data && !error) {
+        ({ data, error } = await supabase
+          .from("posts").select(postSelect)
+          .eq("slug", encodeURIComponent(slug)).eq("status", "published").maybeSingle());
+      }
 
       if (error) { setError(error.message); setLoading(false); return; }
 
