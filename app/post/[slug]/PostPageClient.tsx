@@ -517,7 +517,7 @@ export default function PostPageClient({ slug }: { slug: string }) {
             {viewCount > 0 && (
               <>
                 <div className="hidden sm:block w-px h-8 bg-white/15" />
-                <span className="flex items-center gap-1.5 text-xs text-white/40 font-en-sans">
+                <span className="flex items-center gap-1.5 text-xs text-white/40 font-bn">
                   <Eye className="w-3.5 h-3.5" /> {viewCount.toLocaleString()}
                 </span>
               </>
